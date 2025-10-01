@@ -1087,12 +1087,15 @@ function saveItems(arr){ try { localStorage.setItem(ITEMS_KEY, JSON.stringify(ar
 
 // ========= App State =========
 // --- Defaults first, then saved items if present (restore stable init) ---
-var ITEMS = DEFAULT_ITEMS.slice();
+var savedItems = [];
 try {
-  var savedItems = loadItems();
-  if (savedItems && savedItems.length) ITEMS = savedItems;
-} catch(e){}
+  savedItems = loadItems();
+} catch(e){ savedItems = []; }
+var ITEMS = (savedItems && savedItems.length > 0) ? savedItems : DEFAULT_ITEMS.slice();
 var TOTAL = ITEMS.length;
+if (!savedItems || savedItems.length === 0) {
+  saveItems(ITEMS); // persist defaults if storage empty
+}
 
 // Only restore defaults if truly empty (do not overwrite custom list)
 if (!TOTAL) {
@@ -3384,6 +3387,8 @@ window.LOCATIONS = {
 })();
 </script>
 
+
+<script>
 
 <script>
 /* Guarantee NOT NEEDED records + advances inside the active category (safeguarded, with full UI refresh) */
