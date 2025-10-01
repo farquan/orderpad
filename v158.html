@@ -930,7 +930,7 @@ button#resetAllBtn {
 </div>
 <div class="editor-tools">
 <input id="newItemInput" placeholder="Add new item…" type="text"/>
-<select id="newItemLocation" title="Category for Add Item">
+<select id="newItemLocation">
   <option>Cold Room</option>
   <option>Garden</option>
   <option>Side Door</option>
@@ -939,17 +939,6 @@ button#resetAllBtn {
 <button class="btn" id="addItemBtn">Add Item</button>
 <button class="btn" id="addQuickBtn">Add “NEW ITEM”</button>
 </div>
-
-<div class="small" style="margin-top:6px">
-  Default category for NEW lines in the editor:
-  <select id="defaultNewLocation">
-    <option>Cold Room</option>
-    <option>Garden</option>
-    <option>Side Door</option>
-    <option selected>Outside</option>
-  </select>
-</div>
-
 <div class="small" style="margin-top:6px">
       No exact duplicates allowed (case-insensitive). Keeping a name the same preserves its saved values.
     </div>
@@ -1447,38 +1436,30 @@ function updateEditorCounts(){
 }
 
 // Add Item via input field (validates duplicates)
-
 function addItemFromField(){
   var s = (newItemInput.value||"").trim();
   if (!s){ alert("Type a name to add."); return; }
+  // s = s.toUpperCase(); // removed forced uppercase
 
-  // Prevent duplicates
-  var raw = (itemsTextarea.value||"").split("
-").map(x=>String(x||"").trim());
-  if (raw.includes(s)){ alert("That item already exists in the list."); return; }
+  // Check against current textarea (case-insensitive)
+  var raw = (itemsTextarea.value||"").split("\n");
+  var seen = {};
+  for (var i=0;i<raw.length;i++){
+    var t = (raw[i]==null?"":String(raw[i])).trim();
+    if (!t) continue;
+    seen[t]=1;
+  }
+  if (seen[s]){ alert("That item already exists in the list."); return; }
 
-  // Append into editor textarea
+  // Append
   var txt = itemsTextarea.value;
-  if (txt && txt.slice(-1)!=="
-") txt += "
-";
+  if (txt && txt.slice(-1)!=="\n") txt += "\n";
   itemsTextarea.value = txt + s;
-
-  // categorise immediately (Add Item path)
-  var locSel = document.getElementById("newItemLocation");
-  var loc = (locSel && locSel.value) ? locSel.value : "Outside";
-
-  // ensure DEFAULT_ITEMS holds it (once) and LOCATIONS has a mapping
-  if (DEFAULT_ITEMS.indexOf(s) === -1) DEFAULT_ITEMS.push(s);
-  if (!window.LOCATIONS) window.LOCATIONS = {};
-  window.LOCATIONS[s] = loc;
-
   newItemInput.value = "";
   updateEditorCounts();
   itemsTextarea.focus();
   itemsTextarea.scrollTop = itemsTextarea.scrollHeight;
 }
-
 addItemBtn.onclick = addItemFromField;
 
 saveItemsBtn.onclick = function(){
@@ -1496,20 +1477,6 @@ saveItemsBtn.onclick = function(){
   // Previous set to spot truly new items
   var prevSet = {}; for (var p=0;p<ITEMS.length;p++){ prevSet[ITEMS[p]] = true; }
 
-  // Assign a category to newly added lines in the editor (Save List path)
-  var defSel = document.getElementById("defaultNewLocation");
-  var defaultLoc = (defSel && defSel.value) ? defSel.value : "Outside";
-  arr.forEach(function(nm){
-    if (!prevSet[nm]) {
-      if (!window.LOCATIONS) window.LOCATIONS = {};
-      if (!LOCATIONS[nm]) LOCATIONS[nm] = defaultLoc;
-    }
-  });
-
-  // Alphabetise before saving
-  arr = arr.map(x=>String(x||"").trim()).filter(Boolean)
-           .sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
-
   // Save to storage
   saveItems(arr);
 
@@ -1521,10 +1488,6 @@ saveItemsBtn.onclick = function(){
     if (state.notes[nm]) newNotes[nm] = state.notes[nm];
   }
   state.map = newMap; state.notes = newNotes;
-
-  // Keep DEFAULT_ITEMS in step and alphabetised too
-  DEFAULT_ITEMS = Array.from(new Set(DEFAULT_ITEMS.concat(arr)))
-    .sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
 
   // Use the just-saved list directly
   ITEMS = arr.slice();
@@ -4467,6 +4430,48 @@ document.addEventListener("DOMContentLoaded", function(){
   note.addEventListener('focus', function(){ btns.forEach(b=>b.style.display='inline-block'); });
   note.addEventListener('blur', function(){ setTimeout(()=>{ btns.forEach(b=>b.style.display='none'); },200); });
 });
+</script>
+
+
+<script>
+// Override addItemFromField with category + alphabetise, and patch saveItemsBtn
+(function(){
+  window.addItemFromField = function(){
+    var s = (newItemInput.value||"").trim();
+    if (!s){ alert("Type a name to add."); return; }
+    var raw = (itemsTextarea.value||"").split("\n").map(x=>x.trim());
+    if (raw.includes(s)){ alert("That item already exists."); return; }
+
+    var txt = itemsTextarea.value;
+    if (txt && txt.slice(-1)!=="\n") txt += "\n";
+    itemsTextarea.value = txt + s;
+
+    var locSel = document.getElementById("newItemLocation");
+    var loc = locSel ? locSel.value : "Outside";
+    if (!window.LOCATIONS) window.LOCATIONS = {};
+    LOCATIONS[s] = loc;
+
+    if (DEFAULT_ITEMS.indexOf(s) === -1) DEFAULT_ITEMS.push(s);
+    DEFAULT_ITEMS.sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+
+    newItemInput.value = "";
+    updateEditorCounts();
+  };
+
+  var btn = document.getElementById("saveItemsBtn");
+  if (btn){
+    var origSave = btn.onclick;
+    btn.onclick = function(){
+      if (origSave) origSave();
+      try{
+        ITEMS.sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+        DEFAULT_ITEMS = Array.from(new Set(DEFAULT_ITEMS.concat(ITEMS)))
+          .sort((a,b)=>a.localeCompare(b,'en',{sensitivity:'base'}));
+        ITEMS.forEach(nm=>{ if (!LOCATIONS[nm]) LOCATIONS[nm] = "Outside"; });
+      }catch(e){}
+    };
+  }
+})();
 </script>
 
 </body>
