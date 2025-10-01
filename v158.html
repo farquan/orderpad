@@ -1076,13 +1076,9 @@ function loadItems(){
     var raw = localStorage.getItem(ITEMS_KEY);
     if (!raw) return DEFAULT_ITEMS.slice();
     var arr = JSON.parse(raw);
-    if (Object.prototype.toString.call(arr) === "[object Array]" && arr.length > 0){
-      var clean = [];
-      for (var i=0;i<arr.length;i++){
-        var s = (arr[i]==null?"":String(arr[i])).trim();
-        if (s) clean.push(s);
-      }
-      return clean.length? clean : DEFAULT_ITEMS.slice();
+    if (Array.isArray(arr) && arr.length > 0){
+      var clean = arr.map(s => (s||"").trim()).filter(Boolean);
+      return clean.length ? clean : DEFAULT_ITEMS.slice();
     }
   } catch(e){}
   return DEFAULT_ITEMS.slice();
