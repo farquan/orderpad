@@ -930,15 +930,26 @@ button#resetAllBtn {
 </div>
 <div class="editor-tools">
 <input id="newItemInput" placeholder="Add new item…" type="text"/>
-<select id="newItemLocation">
-  <option value="Cold Room">Cold Room</option>
-  <option value="Garden">Garden</option>
-  <option value="Side Door">Side Door</option>
-  <option value="Outside" selected>Outside</option>
+<select id="newItemLocation" title="Category for Add Item">
+  <option>Cold Room</option>
+  <option>Garden</option>
+  <option>Side Door</option>
+  <option selected>Outside</option>
 </select>
 <button class="btn" id="addItemBtn">Add Item</button>
 <button class="btn" id="addQuickBtn">Add “NEW ITEM”</button>
 </div>
+
+<div class="small" style="margin-top:6px">
+  Default category for NEW lines in the editor:
+  <select id="defaultNewLocation">
+    <option>Cold Room</option>
+    <option>Garden</option>
+    <option>Side Door</option>
+    <option selected>Outside</option>
+  </select>
+</div>
+
 <div class="small" style="margin-top:6px">
       No exact duplicates allowed (case-insensitive). Keeping a name the same preserves its saved values.
     </div>
@@ -1076,9 +1087,13 @@ function loadItems(){
     var raw = localStorage.getItem(ITEMS_KEY);
     if (!raw) return DEFAULT_ITEMS.slice();
     var arr = JSON.parse(raw);
-    if (Array.isArray(arr) && arr.length > 0){
-      var clean = arr.map(s => (s||"").trim()).filter(Boolean);
-      return clean.length ? clean : DEFAULT_ITEMS.slice();
+    if (Object.prototype.toString.call(arr) === "[object Array]" && arr.length > 0){
+      var clean = [];
+      for (var i=0;i<arr.length;i++){
+        var s = (arr[i]==null?"":String(arr[i])).trim();
+        if (s) clean.push(s);
+      }
+      return clean.length? clean : DEFAULT_ITEMS.slice();
     }
   } catch(e){}
   return DEFAULT_ITEMS.slice();
@@ -1087,15 +1102,12 @@ function saveItems(arr){ try { localStorage.setItem(ITEMS_KEY, JSON.stringify(ar
 
 // ========= App State =========
 // --- Defaults first, then saved items if present (restore stable init) ---
-var savedItems = [];
+var ITEMS = DEFAULT_ITEMS.slice();
 try {
-  savedItems = loadItems();
-} catch(e){ savedItems = []; }
-var ITEMS = (savedItems && savedItems.length > 0) ? savedItems : DEFAULT_ITEMS.slice();
+  var savedItems = loadItems();
+  if (savedItems && savedItems.length) ITEMS = savedItems;
+} catch(e){}
 var TOTAL = ITEMS.length;
-if (!savedItems || savedItems.length === 0) {
-  saveItems(ITEMS); // persist defaults if storage empty
-}
 
 // Only restore defaults if truly empty (do not overwrite custom list)
 if (!TOTAL) {
@@ -1442,8 +1454,8 @@ function addItemFromField(){
 
   // Prevent duplicates
   var raw = (itemsTextarea.value||"").split("
-").map(x=>x.trim());
-  if (raw.includes(s)){ alert("That item already exists."); return; }
+").map(x=>String(x||"").trim());
+  if (raw.includes(s)){ alert("That item already exists in the list."); return; }
 
   // Append into editor textarea
   var txt = itemsTextarea.value;
@@ -1452,10 +1464,14 @@ function addItemFromField(){
 ";
   itemsTextarea.value = txt + s;
 
-  // Add to defaults + locations
-  var loc = document.getElementById("newItemLocation").value || "Outside";
+  // categorise immediately (Add Item path)
+  var locSel = document.getElementById("newItemLocation");
+  var loc = (locSel && locSel.value) ? locSel.value : "Outside";
+
+  // ensure DEFAULT_ITEMS holds it (once) and LOCATIONS has a mapping
   if (DEFAULT_ITEMS.indexOf(s) === -1) DEFAULT_ITEMS.push(s);
-  LOCATIONS[s] = loc;
+  if (!window.LOCATIONS) window.LOCATIONS = {};
+  window.LOCATIONS[s] = loc;
 
   newItemInput.value = "";
   updateEditorCounts();
@@ -1480,6 +1496,20 @@ saveItemsBtn.onclick = function(){
   // Previous set to spot truly new items
   var prevSet = {}; for (var p=0;p<ITEMS.length;p++){ prevSet[ITEMS[p]] = true; }
 
+  // Assign a category to newly added lines in the editor (Save List path)
+  var defSel = document.getElementById("defaultNewLocation");
+  var defaultLoc = (defSel && defSel.value) ? defSel.value : "Outside";
+  arr.forEach(function(nm){
+    if (!prevSet[nm]) {
+      if (!window.LOCATIONS) window.LOCATIONS = {};
+      if (!LOCATIONS[nm]) LOCATIONS[nm] = defaultLoc;
+    }
+  });
+
+  // Alphabetise before saving
+  arr = arr.map(x=>String(x||"").trim()).filter(Boolean)
+           .sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
+
   // Save to storage
   saveItems(arr);
 
@@ -1492,17 +1522,15 @@ saveItemsBtn.onclick = function(){
   }
   state.map = newMap; state.notes = newNotes;
 
+  // Keep DEFAULT_ITEMS in step and alphabetised too
+  DEFAULT_ITEMS = Array.from(new Set(DEFAULT_ITEMS.concat(arr)))
+    .sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
+
   // Use the just-saved list directly
   ITEMS = arr.slice();
   TOTAL = ITEMS.length;
 
   rebuildAZ(); save();
-
-  // Ensure defaults + locations for any missing
-  arr.forEach(function(nm){
-    if (DEFAULT_ITEMS.indexOf(nm) === -1) DEFAULT_ITEMS.push(nm);
-    if (!LOCATIONS[nm]) LOCATIONS[nm] = "Outside";
-  });
 
   // Find which are new
   var newlyAdded = [];
