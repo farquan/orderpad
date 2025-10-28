@@ -1,0 +1,4430 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Running Order Pad (Compat)</title>
+<meta content="#0f1115" name="theme-color"/>
+<style>
+:root{
+  --bg:#0f1115; --card:#161a22; --ink:#e9eef5; --muted:#9fb0c2; --border:#242b3b;
+  --green:#20c997; --accent:#5c7cfa; --red:#ff4d4d; --orange:#ff9f43;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  touch-action: manipulation; /* stop smart zoom double/triple-tap */
+}
+.wrap{max-width:820px;margin:0 auto;padding:8px 14px 24px}
+
+/* Light blue header bar */
+header{
+  position:sticky;top:0;z-index:20;
+  background:#5c7cfa; color:#fff;
+  backdrop-filter:none;
+  border-bottom:1px solid var(--border)
+}
+.head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+h1{
+  margin:0;
+  font-size:32px; /* ~20% smaller */
+  font-weight:900;
+  letter-spacing:.3px;
+  text-align:center;
+  flex:1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Hide the counter under the header */
+.counter{display:none}
+
+.navbtn{background:#0d1219;color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:12px 6px;font-weight:700;width:20%}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin:14px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;font-size:26px;font-weight:800;text-align:center;padding:14px;border-radius:14px;border:2px solid var(--border);background:#0f141d;color:#e9eef5}
+.inp:focus{outline:none;box-shadow:0 0 0 3px rgba(92,124,250,.35)}
+.btn{appearance:none;border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:16px;cursor:pointer;width:100%}
+.btn.green{background:var(--green);color:#00150f}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:#0d1219;color:#e9eef5;border:1px solid var(--border)}
+.note{width:100%;min-height:72px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f141d;color:#e9eef5;font-size:16px}
+.area{min-height:120px;white-space:pre-wrap;background:#0f141d;border:1px solid var(--border);border-radius:14px;padding:12px;font-size:15px;color:#e9eef5}
+.copyopen{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;justify-content:center;}
+#waPassions,#waMk,#waOther{display:block;text-align:center;}
+.small{font-size:12px;color:#c6d2e0}
+hr.sep{border:0;border-top:1px solid var(--border);margin:12px 0}
+
+/* A–Z bar */
+.azbar{display:flex;gap:6px;overflow:auto;padding:8px 10px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);scrollbar-width:none;-ms-overflow-style:none;background:rgba(22,26,34,.9)}
+.azbar::-webkit-scrollbar{display:none}
+.azbtn{min-width:34px;padding:6px 0;border-radius:9px;border:1px solid var(--border);text-align:center;font-weight:800;background:#0d1219;color:#e9eef5;flex:0 0 auto}
+.azbtn.active{outline:2px solid var(--accent)}
+.azbtn:disabled{opacity:.35}
+
+/* Hide the old status line entirely */
+.status{display:none}
+
+/* Button row */
+.btnrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+
+/* Items Editor panel */
+.editor{display:none}
+.editor.open{display:block}
+.textarea{width:100%;min-height:220px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f141d;color:#e9eef5;font-size:14px}
+.editorbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.editor-tools{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.editor-tools input{flex:1;min-width:160px;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0f141d;color:#e9eef5}
+.counterline{margin-top:6px;color:var(--muted);font-size:12px}
+
+/* Save To button colors */
+.btn-passions { background:#20c997; color:#00150f; } /* green */
+.btn-mk       { background:#5c7cfa; color:#ffffff; } /* blue */
+.btn-other    { background:#ff9f43; color:#00150f; } /* orange */
+
+.stepperwrap{display:flex;align-items:center;gap:10px}
+.stepperwrap .inp{flex:1}
+.stepbtn{appearance:none;border:1px solid var(--border);background:#0d1219;color:var(--ink);border-radius:10px;font-weight:900;font-size:18px;line-height:1;padding:10px 12px;min-width:44px}
+.stepbtn:active{transform:translateY(1px)}
+
+
+/* Progress area */
+#progressWrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#5268f6;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+#progressBar{flex:1;height:8px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
+#progressFill{height:100%;width:0%;background:#20c997;transition:width .25s ease}
+#progressRight{display:flex;align-items:center;gap:10px}
+#progressTally{font-size:12px;opacity:.95}
+#nextUnansweredBtn{width:auto;padding:8px 10px;font-size:12px}
+
+#answeredTick { color:white; font-size:22px; margin-left:6px; display:none; }
+
+/* Overall progress (top) */
+#overallProgress{padding:10px 14px}
+#overallBar{position:relative;height:12px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
+#overallFill{height:100%;width:0%;background:#20c997;transition:width .25s ease}
+#overallLabel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:700;color:#fff;white-space:nowrap;pointer-events:none}
+
+/* Fixed bottom A–Z bar (3 rows of 9) */
+#azBar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  z-index:9999;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:900px;
+  margin:0 auto;
+  padding:8px 10px;
+  background:rgba(15,23,48,.96);
+  backdrop-filter:saturate(120%) blur(4px);
+  box-shadow:0 -6px 16px rgba(0,0,0,.35);
+  border-top:1px solid rgba(255,255,255,.08);
+  border-radius:12px 12px 0 0;
+}
+#azBar .azbtn{
+  flex:0 0 calc(100% / 9 - 8px);
+  margin:4px;
+  text-align:center;
+}
+/* Make room so content isn't covered by fixed A–Z */
+body{ padding-bottom: 132px; }
+
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Bottom-fixed A–Z keyboard: 3 rows x 9 (27 chars) */
+#azBar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  z-index: 1000;
+  display:grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px 6px;
+  padding: 10px 12px 12px;
+  background: rgba(13, 18, 25, 0.96);
+  backdrop-filter: saturate(120%) blur(6px);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
+}
+#azBar .azbtn{
+  text-align:center;
+  min-height: 38px;
+}
+/* Keep it centered within reasonable width on large screens */
+@media (min-width: 760px){
+  #azBar{ max-width: 720px; margin: 0 auto; left:0; right:0; }
+}
+/* Make sure page content isn't hidden behind the fixed keyboard */
+body{ padding-bottom: 160px; }
+
+.copyRow{display:flex;justify-content:center;gap:12px;margin-top:8px}
+.copyRow .btn{flex:1}
+
+.copyopen .btn{width:auto;flex:1}
+
+/* --- Safe area for fixed bottom A–Z keyboard --- */
+:root{ --azSafe: 0px; }
+body{ padding-bottom: var(--azSafe); }
+/* If your content uses a main container instead of body, this keeps it safe too */
+main{ padding-bottom: var(--azSafe); }
+
+/* Vertical A–Z index */
+#azIndex{
+  position: fixed;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10010;
+  background: transparent;
+  padding: 4px 0;
+}
+#azIndex .azIndexBtn{
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.06);
+  color: var(--ink, #cfd8e3);
+  border: 1px solid rgba(255,255,255,0.08);
+  user-select: none;
+}
+#azIndex .azIndexBtn.active{ background: rgba(64,147,255,0.35); }
+#azIndex .azIndexBtn.disabled{ opacity: 0.35; pointer-events: none; }
+
+/* Remove bottom A–Z keyboard entirely */
+#azBar{display:none !important;}
+:root{ --azSafe: 0px !important; }
+/* Remove any spacer effect */
+#azSafeSpacer, #azBottomPad{display:none !important; height:0 !important; margin:0 !important; padding:0 !important;}
+
+/* Bigger vertical A–Z index */
+#azIndex{ right: 8px; gap: 8px; }
+#azIndex .azIndexBtn{
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+/* Make right index not block scrolling, and give it its own background */
+#azIndex{
+  position: fixed;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10010;
+  /* visual container so it doesn't look like it's overlaying content */
+  background: rgba(13,18,25,0.72);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 8px 6px;
+  pointer-events: none; /* do NOT block page scroll drags */
+}
+#azIndex .azIndexBtn{
+  pointer-events: auto; /* only the letters are clickable */
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  color: var(--ink, #cfd8e3);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+#azIndex .azIndexBtn.active{ background: rgba(64,147,255,0.35); }
+#azIndex .azIndexBtn.disabled{ opacity: 0.35; pointer-events: none; }
+
+/* Make right index scrollable so you can reach A and Z */
+#azIndex{
+  pointer-events: auto;           /* allow scrolling inside the index */
+  max-height: 88vh;               /* fit on screen */
+  overflow-y: auto;               /* scroll the letters */
+  -webkit-overflow-scrolling: touch; /* smooth on iOS */
+}
+
+/* Anchor right A–Z index just below the header/progress (top set dynamically) */
+#azIndex{
+  position: fixed;
+  right: 6px;
+  transform: none;
+}
+
+/* Visually disable Not Needed when Order > 0 */
+#notNeededBtn:disabled{
+  opacity: .5;
+  pointer-events: none;
+  filter: grayscale(0.2);
+}
+
+/* Plain text Not Needed list at bottom */
+#notNeededSection{ margin-top:24px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
+#notNeededSection h3{ margin:0 0 8px 0; font-size:14px; opacity:.85; }
+#notNeededList{ white-space:pre-wrap; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:13px; line-height:1.4; margin:0; }
+
+/* Fade answered current item */
+.answeredFade { opacity: 0.5; transition: opacity .2s ease; }
+
+/* Auto-shrinking running order window */
+#orderMinus {
+  min-height: 40px;
+  max-height: 40vh;
+  overflow-y: auto;
+  transition: max-height .3s ease;
+}
+
+/* Smaller top item name */
+
+#itemName {
+  background: #FFD700 !important;
+  color: #000 !important;
+  font-weight: bold !important;
+  font-size: clamp(18px, 4vw, 28px) !important;
+  padding: 10px 12px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Bigger top item name */
+
+#itemName {
+  background: #FFD700 !important;
+  color: #000 !important;
+  font-weight: bold !important;
+  font-size: clamp(18px, 4vw, 28px) !important;
+  padding: 10px 12px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+
+/* Top flash notification (appears under header, fades out) */
+#topFlash{
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(25, 135, 84, 0.95); /* subtle green */
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  z-index: 10050;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+#topFlash.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Plain text Unanswered list at bottom */
+#unansweredSection{ margin-top:24px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
+#unansweredSection h3{ margin:0 0 8px 0; font-size:14px; opacity:.85; }
+#unansweredList{ white-space:pre-wrap; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:13px; line-height:1.4; margin:0; }
+
+.keybtn {
+  font-size:22px;
+  padding:14px;
+  min-width:50px;
+  min-height:50px;
+}
+
+
+/* Hold-to-scroll visual feedback */
+.azbtn.hold, .azIndexBtn.hold, .navbtn.hold, .stepbtn.hold, .prev.hold, .next.hold {
+  
+  filter: brightness(1.15);
+}
+
+
+/* Bigger alphabet buttons */
+.azbtn, .azIndexBtn {
+  font-size: clamp(24px, 5vw, 42px) !important;
+  font-weight: bold !important;
+  padding: 14px 20px !important;
+  margin: 6px !important;
+  border: 2px solid #333 !important;
+  border-radius: 8px !important;
+  background-color: #f9f9f9 !important;
+  color: #222 !important;
+}
+.azbtn:hover, .azIndexBtn:hover {
+  background-color: #333 !important;
+  color: #fff !important;
+}
+
+
+/* === A–Z count badges (green style) === */
+.azbtn, .azIndexBtn { position: relative; }
+.az-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  background: #2ecc71; /* green */
+  color: #fff;
+  pointer-events: none;
+
+  pointer-events: none !important;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+.azbtn.az-empty, .azIndexBtn.az-empty { opacity: 0.5; }
+
+
+/* === A–Z count badges (green) === */
+.azbtn, .azIndexBtn { position: relative; }
+.az-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  background: #2ecc71; /* green */
+  color: #fff;
+  pointer-events: none;
+}
+.azbtn.az-empty, .azIndexBtn.az-empty { opacity: 0.5; }
+
+
+.az-badge {
+  pointer-events: none !important;
+  user-select: none !important;
+  touch-action: none !important;
+}
+
+
+/* Hide-empty support */
+.az-hidden { display: none !important; }
+
+
+/* Answered filtering */
+.answered-flag { outline: 2px dashed #2ecc71; outline-offset: 4px; }
+
+</style>
+
+<style>
+#filterCard .btnrow button {
+  flex: 1 1 auto;
+  font-size: 0.9em;
+  padding: 6px 8px;
+  min-width: auto;
+}
+</style>
+
+
+<style>
+#filterRow .btn.filter-active { outline: 5px solid #ff9800 !important; box-shadow: 0 0 25px 8px #ff9800 !important; border-color: #ff9800 !important; }
+</style>
+
+
+<style>
+/* Force the 'All' button to show a thick orange border + glow */
+#filterAllBtn{
+  outline: 5px solid #ff9800 !important;
+  box-shadow: 0 0 25px 8px #ff9800 !important;
+  border-color: #ff9800 !important;
+}
+</style>
+
+
+<style>
+/* Make the selected/tapped (focus/active) category show an orange glow instead of blue */
+#filterRow .btn:focus,
+#filterRow .btn:focus-visible,
+#filterRow .btn:active {
+  outline: 5px solid #ff9800 !important;
+  box-shadow: 0 0 25px 8px #ff9800 !important;
+  border-color: #ff9800 !important;
+}
+/* Kill the global blue focus ring inside the filter row */
+#filterRow .btn:focus { box-shadow: 0 0 25px 8px #ff9800 !important; }
+</style>
+
+
+<style>
+/* Disable focus/active glow on filter buttons so only the active class controls it */
+#filterRow .btn:focus,
+#filterRow .btn:focus-visible,
+#filterRow .btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+</style>
+
+
+<style>
+/* Only glow when .filter-active; explicitly suppress glow on ALL when not active */
+#filterAllBtn:not(.filter-active){
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--ui-2, #2a2f3a) !important; /* neutral border */
+}
+/* Also neutralize the 'ghost' style when not active */
+#filterRow #filterAllBtn.ghost:not(.filter-active){
+  background: var(--chip-bg, #d9dbe3) !important;
+  color: var(--chip-fg, #1a1f2a) !important;
+}
+</style>
+
+
+<style>
+/* Floating Prev/Next controls */
+#floatingNav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  z-index: 9999;
+  pointer-events: none; /* container ignores taps so clicks only hit buttons */
+}
+#floatingNav .float-btn {
+  pointer-events: auto; /* buttons remain clickable */
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 16px;
+  border: 2px solid var(--accent, #ff9800);
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+#floatingNav .float-btn:active {
+  transform: translateY(1px);
+}
+@media (max-width: 480px){
+  #floatingNav .float-btn { padding: 12px 14px; font-size: 15px; }
+}
+</style>
+
+
+<style>
+/* === Category 'left' badges (green like the alphabet counts) === */
+#filterRow .btn { position: relative; } /* anchor */
+.cat-left-badge{
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #26c281;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+</style>
+
+
+<style>
+/* Snugger A–Z alphabet badges */
+.alpha-badge, .alphabet-badge, .letter-btn {
+  padding: 2px 6px !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  font-size: 12px !important;
+  border-radius: 6px !important;
+}
+</style>
+
+
+<style>
+/* Plain A–Z letters, no background bezel */
+.alpha-badge, .alphabet-badge, .letter-btn {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  min-width: auto !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  color: #000 !important; /* black text */
+}
+</style>
+
+
+<style>
+/* Remove any vertical rail/panel background behind the alphabet */
+#azIndex, #azIndex::before, #azIndex::after,
+.azIndexWrap, .alphabet-rail, .alpha-rail, .az-rail, .azContainer, .alphaContainer {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+</style>
+
+
+<style>
+/* Make alphabet letter buttons fully transparent (no blur/box) */
+.azbtn, .azIndexBtn, .alpha-badge, .alphabet-badge, .letter-btn {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+/* Keep letters visible */
+.azbtn, .azIndexBtn {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+</style>
+
+
+<style>
+/* Nuke ALL backgrounds/blur/shadows on the alphabet rail and its descendants */
+#azIndex, #azIndex *,
+.azIndex, .azIndex *, 
+.azbar, .azbar *, 
+.azIndexWrap, .azIndexWrap *,
+.alpha-rail, .alpha-rail *, 
+.alphabet-rail, .alphabet-rail * {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+</style>
+
+
+<style>
+/* Small yellow oval behind alphabet letters (override previous transparent rule) */
+body #azIndex .azbtn,
+body #azIndex button.azbtn,
+body .azIndex .azbtn {
+  background: #FFD54A !important;   /* warm yellow */
+  color: #000 !important;            /* black text */
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 2px 6px !important;       /* snug */
+  min-width: auto !important;
+  height: auto !important;
+  line-height: 1.1 !important;
+  border-radius: 999px !important;   /* oval / pill */
+  text-decoration: none !important;  /* no underline for the letter itself */
+  display: inline-block !important;
+}
+/* Keep the surrounding rail fully transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
+
+
+<style>
+/* Yellow round circle behind alphabet letters - apply to all likely classes */
+#azIndex button,
+#azIndex .azbtn,
+#azIndex .azIndexBtn,
+#azIndex .letter-btn,
+.azbtn, .azIndexBtn, .letter-btn {
+  background: #FFD700 !important;    /* bright yellow */
+  color: #000 !important;            /* black text */
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  width: 22px !important;
+  height: 22px !important;
+  line-height: 22px !important;
+  border-radius: 50% !important;
+  text-align: center !important;
+  font-weight: bold !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+  display: inline-block !important;
+}
+/* Ensure the alphabet rail container is transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
+
+
+<style>
+/* FORCE yellow circular style for ALL alphabet letter buttons */
+#azIndex button,
+#azIndex .azbtn,
+#azIndex .azIndexBtn,
+#azIndex .letter-btn,
+.azIndex .azbtn,
+.azIndex .azIndexBtn,
+.azIndex .letter-btn {
+  background: #FFD700 !important;    /* bright yellow */
+  color: #000 !important;            /* black text */
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  width: 22px !important;
+  height: 22px !important;
+  line-height: 22px !important;
+  border-radius: 50% !important;
+  text-align: center !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+  display: inline-block !important;
+}
+
+/* Make sure any inner spans don't override background */
+#azIndex button *,
+#azIndex .azbtn *,
+#azIndex .azIndexBtn *,
+#azIndex .letter-btn * {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Rail stays transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
+
+
+<style>
+/* Floating Back to Top button (safe-area aware; offset from A–Z rail) */
+#backToTop{
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 86px);
+  right: calc(env(safe-area-inset-right, 0px) + 72px); /* leave room for A–Z rail */
+  z-index: 2147483000;
+  pointer-events: none; /* container ignores taps */
+}
+
+#backToTopBtn {
+  pointer-events: auto;
+  background: #ffcc00;    /* bright yellow */
+  color: #000;
+  font-weight: 800;
+  border: 2px solid #000;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  font-size: 16px;
+  padding: 10px 16px;
+}
+
+@media (max-width: 420px){
+  #backToTop{ right: calc(env(safe-area-inset-right, 0px) + 68px); }
+}
+</style>
+
+
+
+
+
+
+<style>
+/* Only fade elements marked notneeded; no strike-through globally */
+.notneeded {
+  opacity: 0.5 !important;
+  text-decoration: none !important;
+}
+</style>
+
+
+<style>
+/* Ensure strike-through is visible on the big title too */
+#itemName.notneeded, #itemName.notneeded * {
+  text-decoration: line-through !important;
+  text-decoration-color: #ff3b30 !important;
+  text-decoration-thickness: 2px;
+  text-decoration-skip-ink: none;
+}
+#itemName { position: relative; }
+/* Red line fallback overlay for stubborn WebKit cases */
+
+#itemName.notneeded::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 1.1em; /* adjusted to align with text */
+  border-top: 2px solid #ff3b30;
+  pointer-events: none;
+}
+
+</style>
+
+
+<style>
+/* Robust strike-through for the title text */
+#itemName .nn-strike {
+  text-decoration: line-through;
+  text-decoration-color: #ff3b30;
+  text-decoration-thickness: 3px;
+  text-decoration-skip-ink: none;
+}
+</style>
+
+
+
+
+
+
+
+
+<style>
+button#resetAllBtn {
+  background: #d32f2f !important; /* strong red */
+  color: #000 !important;         /* black text */
+  font-weight: 900 !important;
+  font-size: 24px !important;     /* larger text */
+  border: 2px solid #000 !important;
+}
+</style>
+
+</head>
+<body><div id="topFlash"></div>
+<header><div id="progressWrap"><div id="progressBar"><div id="progressFill"></div></div><div id="progressRight"><div id="progressTally">Responded: 0 / 0</div><button class="navbtn" id="nextUnansweredBtn">Next Unanswered ▶</button></div></div>
+<div class="head">
+<button class="navbtn" id="prevBtn">◀ Prev</button>
+<h1 id="itemName">ITEM</h1><span id="answeredTick">✓</span>
+<button class="navbtn" id="nextBtn">Next ▶</button>
+</div>
+<div class="counter" id="counter">0 / 100</div>
+<div class="azbar" id="azBar"></div>
+<div class="status" id="statusLine">Loading…</div></header></div></div>
+<div class="wrap">
+<div class="card" id="filterCard" style="margin-bottom:12px;">
+  <div class="small" style="margin-bottom:6px">FILTER BY LOCATION</div>
+  <div class="btnrow" id="filterRow" style="grid-template-columns: repeat(5, 1fr);">
+    <button class="btn ghost" id="filterAllBtn">All</button>
+    <button class="btn" id="filterColdBtn">Cold Room</button>
+    <button class="btn" id="filterGardenBtn">Garden</button>
+    <button class="btn" id="filterSideBtn">Side Door</button>
+    <button class="btn" id="filterOutsideBtn">Outside</button>
+  </div>
+</div>
+
+<!-- Stock + Order -->
+<div class="card" id="itemCard">
+<div class="grid">
+<div>
+<div class="label">STOCK</div>
+<div class="stepperwrap"><button class="stepbtn" id="stockMinus" type="button">−</button><input class="inp" id="stockInput" type="number" step="0.01" inputmode="decimal"/><button class="stepbtn" id="stockPlus" type="button">+</button></div>
+</div>
+<div>
+<div class="label">ORDER</div>
+<div class="stepperwrap"><button class="stepbtn" id="orderMinus" type="button">−</button><input class="inp" id="orderInput" type="number" step="0.01" inputmode="decimal"/><button class="stepbtn" id="orderPlus" type="button">+</button></div>
+</div>
+</div>
+<div class="btnrow" id="saveButtonsRow"><button class="btn btn-passions" id="savePassionsBtn">SAVE TO PASSIONS</button><button class="btn btn-mk" id="saveMkBtn">SAVE TO MK</button><button class="btn btn-other" id="saveOtherBtn">SAVE TO OTHER</button></div>
+<div class="btnrow" style="margin-top:10px"><button class="btn red" id="notNeededBtn" style="grid-column:1 / span 3">NOT NEEDED</button>
+<div style="width:100%; display:flex; justify-content:center; margin-top:8px;">
+  <button class="btn ghost" id="undoBtn" style="display:none;">UNDO</button>
+</div></div>
+<hr class="sep"/>
+<div>
+<div class="label">NOTES FOR ITEM</div>
+<textarea class="note" id="noteInput" placeholder="Optional note…"></textarea>
+
+
+
+</div>
+</div>
+<!-- Running Order: Passions -->
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — PASSIONS (Needed × Item)</div>
+<div class="area" id="orderListPassions"></div>
+<div class="copyopen">
+<button class="btn" id="copyPassions">COPY</button>
+<a class="btn green" href="#" id="waPassions" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+<!-- Running Order: MK -->
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — MK (Needed × Item)</div>
+<div class="area" id="orderListMk"></div>
+<div class="copyopen">
+<button class="btn" id="copyMk">COPY</button>
+<a class="btn green" href="#" id="waMk" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+<!-- Running Order: Other -->
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — OTHER (Needed × Item)</div>
+<div class="area" id="orderListOther"></div>
+<div class="copyopen">
+<button class="btn" id="copyOther">COPY</button>
+<a class="btn green" href="#" id="waOther" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+<!-- Controls row -->
+<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+<button class="btn red" id="resetBtn">⚠️ RESET ALL ⚠️</button>
+<button class="btn ghost" id="editBtn">EDIT ITEMS</button>
+</div>
+<!-- Items Editor panel -->
+<div class="card editor" id="editorPanel">
+<div class="small" style="margin-bottom:6px">ITEMS EDITOR (one item per line)</div>
+<textarea class="textarea" id="itemsTextarea" spellcheck="false"></textarea>
+<div class="counterline" id="editorCount">Unique lines: 0</div>
+<div class="editorbar">
+<button class="btn green" id="saveItemsBtn">Save List</button>
+<button class="btn ghost" id="cancelEditBtn">Cancel</button>
+</div>
+<div class="editor-tools">
+<input id="newItemInput" placeholder="Add new item… (auto-UPPERCASE)" type="text"/>
+<button class="btn" id="addItemBtn">Add Item</button>
+<button class="btn" id="addQuickBtn">Add “NEW ITEM”</button>
+</div>
+<div class="small" style="margin-top:6px">
+      No exact duplicates allowed (case-insensitive). Keeping a name the same preserves its saved values.
+    </div>
+</div>
+</div>
+<script>
+// ========= Default Items (original 100) =========
+var DEFAULT_ITEMS = ["Amla",
+  "Arvi",
+  "Aubergine",
+  "Avocado",
+  "Baby Cucumber",
+  "Baby Potato",
+  "Bags Blue",
+  "Bags Fruit And Veg",
+  "Bags Jumbo White",
+  "Baking Potato",
+  "Bananas",
+  "Beans",
+  "Beetroot",
+  "Birds Eye",
+  "Blueberries",
+  "Bullet Chilly",
+  "Butcher Bags 10x12",
+  "Butcher Bags 12x15",
+  "Butcher Cloth",
+  "Butternut Squash",
+  "Carrot",
+  "Cauliflower",
+  "Cherries",
+  "Coconut",
+  "Conference Pears",
+  "Coriander",
+  "Courgette",
+  "Cucumber",
+  "Curry Leaf",
+  "Custard Apple",
+  "Cyprus Potato",
+  "Dosa Mix",
+  "Figs",
+  "Frog Melon",
+  "Galia Melon",
+  "Garlic",
+  "Ginger",
+  "Golden Apple",
+  "Green Chilly",
+  "Green Pepper",
+  "Guava",
+  "Haldi Fresh",
+  "Hot Chilly",
+  "Iranian Melon",
+  "Kaki",
+  "Karela",
+  "Lemon",
+  "Lettuce",
+  "Lime",
+  "Long Chilly",
+  "Long Kudoo",
+  "Mangos",
+  "Methi",
+  "Mint",
+  "Mooli",
+  "Mushroom",
+  "Nardacotts",
+  "Nectarines",
+  "Okra",
+  "Onion Bag 22kg",
+  "Onion Bag 4kg",
+  "Onion Bag 8kg",
+  "Onion Bombay",
+  "Onion Red 10kg",
+  "Onion Red 4kg",
+  "Onion Spanish",
+  "Oranges",
+  "Pakistani Carrots",
+  "Pakistani Sugar Cane",
+  "Papaya",
+  "Parsley",
+  "Pineapple",
+  "Pink Lady Apple",
+  "Plantain",
+  "Plums",
+  "Pomelo",
+  "Pomme Small",
+  "Potato Red 4kg",
+  "PP Conference",
+  "Ppk White Potato 2kg",
+  "Prepack Apple",
+  "Prepack Black Grapes",
+  "Prepack Garlic",
+  "Prepack Kaki",
+  "Prepack Kiwi",
+  "Prepack Oranges 2kg",
+  "Prepack Pepper",
+  "Prepack Red Grapes",
+  "Prepack Red Pears",
+  "Raviya",
+  "Raw Mango",
+  "Red Pepper",
+  "Red Potato 20kg",
+  "Red USA Apple",
+  "Round Kudoo",
+  "Royal Gala",
+  "Saag",
+  "Soya",
+  "Spinach",
+  "Spring Onions",
+  "St Ivel Single Cream",
+  "Strawberries",
+  "Sultana Grapes",
+  "Sweet Potato",
+  "Sweet Tamarind",
+  "Sweetcorn",
+  "Thai Aubergine",
+  "Tomato",
+  "Turkish Pomme",
+  "Turnip",
+  "Vine Tomato",
+  "Vitaplus",
+  "Walnuts",
+  "Watermelon",
+  "White Cabbage",
+  "White Potato 25kg",
+  "Yellow Dates",
+  "Yellow Melon"];
+
+// ========= Storage Keys =========
+var ITEMS_KEY = "orderpad.items.v1";
+var KEY = "orderpad.full.compat";
+var BACKUP_KEY = "orderpad.full.backup";
+
+// ========= Load/Save Items =========
+function loadItems(){
+  try {
+    var raw = localStorage.getItem(ITEMS_KEY);
+    if (!raw) return DEFAULT_ITEMS.slice();
+    var arr = JSON.parse(raw);
+    if (Object.prototype.toString.call(arr) === "[object Array]" && arr.length > 0){
+      var clean = [];
+      for (var i=0;i<arr.length;i++){
+        var s = (arr[i]==null?"":String(arr[i])).trim();
+        if (s) clean.push(s);
+      }
+      return clean.length? clean : DEFAULT_ITEMS.slice();
+    }
+  } catch(e){}
+  return DEFAULT_ITEMS.slice();
+}
+function saveItems(arr){ try { localStorage.setItem(ITEMS_KEY, JSON.stringify(arr)); localStorage.setItem(ITEMS_KEY + ".backup", JSON.stringify(arr)); } catch(e){} }
+
+// ========= App State =========
+// --- Defaults first, then saved items if present (restore stable init) ---
+var ITEMS = DEFAULT_ITEMS.slice();
+try {
+  var savedItems = loadItems();
+  if (savedItems && savedItems.length) ITEMS = savedItems;
+} catch(e){}
+var TOTAL = ITEMS.length;
+
+// Only restore defaults if truly empty (do not overwrite custom list)
+if (!TOTAL) {
+  ITEMS = DEFAULT_ITEMS.slice();
+  TOTAL = ITEMS.length;
+  saveItems(ITEMS);
+}
+
+var state = {};
+try {
+  state = JSON.parse(localStorage.getItem(KEY) || "{}");
+  if (!state || (typeof state === "object" && Object.keys(state).length === 0)){
+    var _bk = localStorage.getItem(BACKUP_KEY);
+    if (_bk){ try{ state = JSON.parse(_bk); }catch(e2){} }
+  }
+} catch(e){ state = {}; }
+if (typeof state.i !== "number") state.i = 0;
+if (!state.map) state.map = {};            // per-item: {stock, order, note, status, bucket}
+if (!state.notes) state.notes = {};
+
+// ========= Elements =========
+function $(id){ return document.getElementById(id); }
+var itemName=$("itemName"), counter=$("counter");
+var stockInput=$("stockInput"), orderInput=$("orderInput"), noteInput=$("noteInput");
+
+var savePassionsBtn=$("savePassionsBtn"), saveMkBtn=$("saveMkBtn"), saveOtherBtn=$("saveOtherBtn"), notNeededBtn=$("notNeededBtn");
+var prevBtn=$("prevBtn"), nextBtn=$("nextBtn");
+
+var orderListPassions=$("orderListPassions"), orderListMk=$("orderListMk"), orderListOther=$("orderListOther");
+var copyPassions=$("copyPassions"), copyMk=$("copyMk"), copyOther=$("copyOther");
+var waPassions=$("waPassions"), waMk=$("waMk"), waOther=$("waOther");
+
+var azBar=$("azBar");
+var resetBtn=$("resetBtn"), editBtn=$("editBtn");
+var editorPanel=$("editorPanel"), itemsTextarea=$("itemsTextarea");
+var saveItemsBtn=$("saveItemsBtn"), cancelEditBtn=$("cancelEditBtn");
+var addQuickBtn=$("addQuickBtn"), newItemInput=$("newItemInput"), addItemBtn=$("addItemBtn");
+var editorCount=$("editorCount");
+
+
+// ======== Temporary UNDO (last action only) ========
+var undoBtn = document.getElementById('undoBtn');
+var __lastUndo = null; // { name: string, rec: object|null }
+
+function __cloneRec(obj){ try { return obj ? JSON.parse(JSON.stringify(obj)) : null; } catch(e){ return obj; } }
+function __setUndoSnapshot(name, prevRec){
+  __lastUndo = { name: name, rec: __cloneRec(prevRec) };
+  try { if (undoBtn) undoBtn.style.display = 'block'; } catch(e){}
+}
+
+if (undoBtn){
+  undoBtn.addEventListener('click', function(){
+    try{
+      if (!__lastUndo || !__lastUndo.name){
+        this.style.display = 'none';
+        return;
+      }
+      var nm = __lastUndo.name;
+      var prev = __lastUndo.rec;
+      if (prev === null){
+        if (state.map && state.map[nm]) delete state.map[nm];
+        if (state.notes && state.notes[nm]==='') delete state.notes[nm];
+      } else {
+        if (!state.map) state.map = {};
+        state.map[nm] = prev;
+      }
+      save();
+      try{ updateProgressUI(); }catch(e){}
+      try{ buildRunning(); buildNotNeededList(); }catch(e){}
+      try{ updateAnsweredFade(); }catch(e){}
+      try{ show(state.i); }catch(e){}
+      this.style.display = 'none';
+      __lastUndo = null;
+      try{ showTopFlash('Undid last action', 1200); }catch(e){}
+    }catch(e){}
+  });
+}
+
+// ========= Helpers =========
+function digits(v){ return (v==null?"":String(v)).replace(/[^0-9.]/g,""); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); localStorage.setItem(BACKUP_KEY, JSON.stringify(state)); }catch(e){} }
+
+// ========= A–Z bar =========
+
+function rebuildAZ(){
+  while (azBar.firstChild) azBar.removeChild(azBar.firstChild);
+  var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  var groups = {}, positions = {};
+  // group items
+  for (var i=0;i<ITEMS.length;i++){
+    var nm = ITEMS[i];
+    var L = (nm && nm[0] ? nm[0] : "").toUpperCase();
+    if (/^[0-9]/.test(nm)) L = "#";
+    if (!groups[L]) groups[L] = [];
+    groups[L].push(nm);
+  }
+  // build buttons
+  for (var j=0;j<letters.length;j++){
+    (function(L){
+      var b = document.createElement("button");
+      b.className = "azbtn"; b.textContent = L;
+      if (!groups[L] || !groups[L].length) b.disabled = true;
+      b.onclick = function(){
+        if (!groups[L] || !groups[L].length) return;
+        if (positions[L]==null) positions[L] = 0; else positions[L] = (positions[L]+1)%groups[L].length;
+        currentAZGroup = L; currentAZItems = groups[L];
+        var nextName = groups[L][positions[L]];
+        var idx = ITEMS.indexOf(nextName);
+        if (idx>=0){
+          azInfo = { letter: L, index: (positions[L]||0)+1, total: groups[L].length };
+          clearInputsOnce = true;
+          show(idx);
+          var kids=azBar.children; for(var k=0;k<kids.length;k++){ kids[k].classList.remove("active"); }
+          b.classList.add("active");
+        }
+      };
+      azBar.appendChild(b);
+    })(letters[j]);
+  }
+}
+
+
+
+// ========= Name Formatting Helper =========
+function toTitleCaseName(nm){
+  if (!nm) return "";
+  var disp = (/^[0-9]/.test(nm) ? "#" + nm : nm);
+  disp = (disp + "").toLowerCase();
+  var parts = disp.split(/\s+/);
+  for (var i=0; i<parts.length; i++){
+    var w = parts[i];
+    if (!w) continue;
+    if (w[0] === "#"){
+      parts[i] = "#" + (w.slice(1) || "");
+    } else {
+      parts[i] = w.charAt(0).toUpperCase() + w.slice(1);
+    }
+  }
+  return parts.join(" ");
+}
+// ========= Core UI =========
+function show(i){
+  var max = Math.max(0, TOTAL-1);
+  state.i = Math.max(0, Math.min(max, i));
+  var name = ITEMS[state.i];
+  var rec = state.map[name] || {stock:"",order:"",note:state.notes[name]||"",status:"",bucket:""};
+  itemName.textContent = name;
+  counter.textContent = (state.i+1) + " / " + TOTAL;
+  stockInput.value = (rec.stock!=null? String(rec.stock) : "");
+  orderInput.value = (rec.order!=null? String(rec.order) : "");
+  noteInput.value  = state.notes[name] || "";
+  save();
+
+  try{ updateProgressUI(); playClick(); buildUnansweredList(); }catch(e){}
+
+  try{ updateSaveButtons(); }catch(e){}
+  try{ updateAnsweredFade(); }catch(e){}
+}
+
+function buildRunning(){
+  function joinInFives(lines){ if(!lines||!lines.length) return ""; var out=[],count=0; for(var i=0;i<lines.length;i++){ out.push(lines[i]); count++; if(count===5 && i!==lines.length-1){ out.push(""); count=0; } } return out.join("\n"); }
+  var p=[], m=[], o=[];
+  for (var idx=0; idx<ITEMS.length; idx++){
+    var nm = ITEMS[idx];
+    var rec = state.map[nm]; if (!rec) continue;
+    if (rec.status==="notneeded") continue;
+    var need = parseInt(rec.order||"0",10)||0;
+    if (need<=0) continue;
+    var line = rec.note ? (need+" × "+nm+"\n→ "+rec.note) : (need+" × "+nm);
+    var bucket = (rec.bucket||"other").toLowerCase();
+    if (bucket==="passions") p.push(line);
+    else if (bucket==="mk") m.push(line);
+    else o.push(line);
+  }
+  var tp = joinInFives(p), tm = joinInFives(m), to = joinInFives(o);
+  orderListPassions.textContent = tp;
+  orderListMk.textContent = tm;
+  orderListOther.textContent = to;
+  waPassions.href = "https://wa.me/?text="+encodeURIComponent(tp);
+  waMk.href       = "https://wa.me/?text="+encodeURIComponent(tm);
+  waOther.href    = "https://wa.me/?text="+encodeURIComponent(to);
+}
+
+function commitTo(bucket){
+  // guard: require order>0 for save
+  var orderInputEl = (typeof orderInput!=="undefined")? orderInput : document.getElementById('orderInput');
+  var orderVal = parseInt((orderInputEl && orderInputEl.value) ? orderInputEl.value : "0", 10);
+  if (isNaN(orderVal) || orderVal <= 0){
+    // do nothing; do not change state; do not update progress
+    return;
+  }
+
+  if (!TOTAL) return;
+  var name = ITEMS[state.i];
+  var rec = state.map[name] || {};
+  // Undo snapshot (before mutation)
+  var __prevRec = state.map[name] ? JSON.parse(JSON.stringify(state.map[name])) : null;
+  __setUndoSnapshot(name, __prevRec);
+
+  rec.stock = digits(stockInput.value);
+  rec.order = digits(orderInput.value);
+  rec.note  = (noteInput.value||"").trim();
+  rec.status = "saved";
+  rec.bucket = bucket; // "passions" | "mk" | "other"
+  state.map[name] = rec;
+  if (rec.note) state.notes[name]=rec.note; else delete state.notes[name];
+  save(); try{updateProgressUI(); playClick(); buildUnansweredList();}catch(e){}; buildRunning(); buildNotNeededList(); if (typeof updateProgressUI==="function") updateProgressUI(); playClick(); buildUnansweredList(); if (typeof updateAZDimming==="function") updateAZDimming(); autoAdvanceIfGroupDone(); updateProgressUI(); playClick(); buildUnansweredList(); buildUnansweredList(); 
+
+
+  
+
+safeShow(state.i+1);
+
+  try{ if (typeof window.focusOrderSoon==='function') window.focusOrderSoon(); }catch(e){}
+}
+
+
+function markNotNeeded(){
+  if (!TOTAL) return;
+  var name = ITEMS[state.i];
+  var rec = state.map[name] || {};
+  // Undo snapshot (before mutation)
+  var __prevRec = state.map[name] ? JSON.parse(JSON.stringify(state.map[name])) : null;
+  __setUndoSnapshot(name, __prevRec);
+
+  rec.stock = digits(stockInput.value);
+  rec.order = digits(orderInput.value);
+  rec.note  = (noteInput.value||"").trim();
+  rec.status = "notneeded";
+  rec.bucket = ""; // clear bucket
+  state.map[name] = rec;
+  if (rec.note) state.notes[name]=rec.note; else delete state.notes[name];
+  save(); try{updateProgressUI(); playClick(); buildUnansweredList();}catch(e){}; buildRunning(); buildNotNeededList(); if (typeof updateProgressUI==="function") updateProgressUI(); playClick(); buildUnansweredList(); if (typeof updateAZDimming==="function") updateAZDimming(); autoAdvanceIfGroupDone(); updateProgressUI(); playClick(); buildUnansweredList(); buildUnansweredList(); // --- Append current item name to bottom list visibly ---
+  try {
+    var nameEl = ITEMS[state.i];
+    var listEl = document.getElementById('notNeededList');
+    if (nameEl && listEl) {
+      // avoid duplicates via id
+      var id = 'nn-' + nameEl;
+      if (!document.getElementById(id)) {
+        var li = document.createElement('li');
+        li.id = id;
+        li.textContent = nameEl;
+        listEl.appendChild(li);
+      }
+    }
+  } catch(e) {}
+
+  try {
+    var nameEl = ITEMS[state.i];
+    var row = document.getElementById(nameEl);
+    if (row) row.classList.add("notneeded");
+  } catch(e) {}
+
+  safeShow(state.i+1);
+
+  try{ if (typeof window.focusOrderSoon==='function') window.focusOrderSoon(); }catch(e){}
+}
+
+
+// ========= Events =========
+savePassionsBtn.onclick = function(){ commitTo("passions"); };
+saveMkBtn.onclick       = function(){ commitTo("mk"); };
+saveOtherBtn.onclick    = function(){ commitTo("other"); };
+notNeededBtn.onclick = function(){
+  var orderEl = document.getElementById('orderInput');
+  var val = parseInt(orderEl && orderEl.value ? orderEl.value : "0", 10);
+  if (!isNaN(val) && val > 0) {
+    return; // silently ignore if Order > 0
+  }
+  markNotNeeded();
+};
+
+prevBtn.onclick = function(){ if (TOTAL) show(state.i-1); };
+nextBtn.onclick = function(){ if (TOTAL) safeShow(state.i+1); };
+
+stockInput.oninput = function(){ stockInput.value = digits(stockInput.value); };
+orderInput.oninput = function(){ orderInput.value = digits(orderInput.value); };
+noteInput.oninput = function(){
+  var v = (noteInput.value||"").trim();
+  var name = ITEMS[state.i];
+  if (v) state.notes[name]=v; else delete state.notes[name];
+  save(); buildRunning(); buildNotNeededList();
+};
+
+// Copy helpers for each box
+function wireCopy(btn, area){
+  btn.onclick = function(){
+    var t = area.textContent||"";
+    if (!t) return;
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){
+        var old = btn.textContent; btn.textContent="COPIED"; setTimeout(function(){ btn.textContent=old; }, 900);
+      });
+    } else {
+      var ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); ta.parentNode.removeChild(ta);
+    }
+  };
+}
+wireCopy(copyPassions, orderListPassions);
+wireCopy(copyMk,       orderListMk);
+wireCopy(copyOther,    orderListOther);
+
+// Reset-all
+resetBtn.onclick = function(){
+  if (!confirm("Clear ALL saved stock, order, and notes?")) return;
+  state = { i: 0, map: {}, notes: {} };
+  save(); show(0); buildRunning(); buildNotNeededList();
+};
+
+// ========= Items Editor =========
+function openEditor(){
+  itemsTextarea.value = ITEMS.slice().join("\n");
+  updateEditorCounts();
+  editorPanel.classList.add("open");
+  itemsTextarea.focus();
+}
+function closeEditor(){ editorPanel.classList.remove("open"); }
+editBtn.onclick = openEditor;
+cancelEditBtn.onclick = closeEditor;
+addQuickBtn.onclick = function(){
+  newItemInput.value = "NEW ITEM";
+  addItemFromField();
+};
+itemsTextarea.addEventListener("input", updateEditorCounts);
+
+function updateEditorCounts(){
+  var raw = (itemsTextarea.value||"").split("\n");
+  var seen = {}, uniq = 0;
+  for (var i=0;i<raw.length;i++){
+    var s = (raw[i]==null?"":String(raw[i])).trim();
+    if (!s) continue;
+    if (!seen[s]){ seen[s]=1; uniq++; }
+  }
+  editorCount.textContent = "Unique lines: " + uniq;
+}
+
+// Add Item via input field (validates duplicates)
+function addItemFromField(){
+  var s = (newItemInput.value||"").trim();
+  if (!s){ alert("Type a name to add."); return; }
+  // s = s.toUpperCase(); // removed forced uppercase
+
+  // Check against current textarea (case-insensitive)
+  var raw = (itemsTextarea.value||"").split("\n");
+  var seen = {};
+  for (var i=0;i<raw.length;i++){
+    var t = (raw[i]==null?"":String(raw[i])).trim();
+    if (!t) continue;
+    seen[t]=1;
+  }
+  if (seen[s]){ alert("That item already exists in the list."); return; }
+
+  // Append
+  var txt = itemsTextarea.value;
+  if (txt && txt.slice(-1)!=="\n") txt += "\n";
+  itemsTextarea.value = txt + s;
+  newItemInput.value = "";
+  updateEditorCounts();
+  itemsTextarea.focus();
+  itemsTextarea.scrollTop = itemsTextarea.scrollHeight;
+}
+addItemBtn.onclick = addItemFromField;
+
+saveItemsBtn.onclick = function(){
+  // Parse, normalise, and reject exact duplicates (case-insensitive)
+  var raw = (itemsTextarea.value||"").split("\n");
+  var arr = [], seen = {}, dupes = [];
+  for (var i=0;i<raw.length;i++){
+    var s = (raw[i]==null?"":String(raw[i])).trim();
+    if (!s) continue;
+    if (seen[s]) { dupes.push(s); continue; }
+    seen[s] = true; arr.push(s);
+  }
+  if (!arr.length){ alert("List cannot be empty."); return; }
+
+  // Previous set to spot truly new items
+  var prevSet = {}; for (var p=0;p<ITEMS.length;p++){ prevSet[ITEMS[p]] = true; }
+
+  // Save to storage
+  saveItems(arr);
+
+  // Keep state only for names still present
+  var newMap = {}, newNotes = {};
+  for (var j=0;j<arr.length;j++){
+    var nm = arr[j];
+    if (state.map[nm]) newMap[nm] = state.map[nm];
+    if (state.notes[nm]) newNotes[nm] = state.notes[nm];
+  }
+  state.map = newMap; state.notes = newNotes;
+
+  // Use the just-saved list directly
+  ITEMS = arr.slice();
+  TOTAL = ITEMS.length;
+
+  rebuildAZ(); save();
+
+  // Find which are new
+  var newlyAdded = [];
+  for (var k=0;k<ITEMS.length;k++){
+    var nm2 = ITEMS[k];
+    if (!prevSet[nm2]) newlyAdded.push(nm2);
+  }
+  // Jump to first new if any
+  state.i = newlyAdded.length>0 ? ITEMS.indexOf(newlyAdded[0]) : 0;
+
+  show(state.i);
+  buildRunning(); buildNotNeededList();
+  closeEditor();
+
+  // Feedback message
+  var msg = "Items list saved ("+TOTAL+" total).";
+  if (newlyAdded.length>0) msg += " Added: " + newlyAdded[0] + (newlyAdded.length>1? " +" + (newlyAdded.length-1) : "");
+  if (dupes.length>0){
+    var uniqDupes = [], seenD={};
+    for (var d=0; d<dupes.length; d++){ var dd=dupes[d]; if(!seenD[dd]){ uniqDupes.push(dd); seenD[dd]=1; } }
+    msg += " | Duplicates removed: " + uniqDupes.join(", ");
+  }
+  if (newlyAdded.length===0 && dupes.length===0){ msg = "No new items. ("+TOTAL+" total)."; }
+  alert(msg);
+};
+
+
+// ========= Steppers =========
+function stepValue(inputEl, delta){
+  var v = parseInt((inputEl.value||"").replace(/[^0-9]/g,""),10);
+  if (isNaN(v)) v = 0;
+  v += delta;
+  if (v < 0) v = 0;
+  inputEl.value = String(v);
+}
+(function(){
+  var sm = document.getElementById("stockMinus");
+  var sp = document.getElementById("stockPlus");
+  var om = document.getElementById("orderMinus");
+  var op = document.getElementById("orderPlus");
+  if (sm) sm.onclick = function(){ stepValue(document.getElementById("stockInput"), -1); updateSaveButtons(); };
+if (sp) sp.onclick = function(){ stepValue(document.getElementById("stockInput"), +1); updateSaveButtons(); };
+  if (om) om.onclick = function(){ stepValue(document.getElementById("orderInput"), -1); updateSaveButtons(); };
+  if (op) op.onclick = function(){ stepValue(document.getElementById("orderInput"), +1); updateSaveButtons(); };
+})();
+
+// ========= Progress Helpers =========
+function isResponded(rec){
+  if (!rec) return false;
+  if (rec.status === "notneeded") return true;
+  if (rec.status === "saved") {
+    var qty = parseInt(rec.order || "0", 10);
+    return qty > 0;
+  }
+  return false;
+}
+function computeProgress(){ var responded=0; for (var idx=0; idx<ITEMS.length; idx++){ var nm=ITEMS[idx]; var rec=state.map[nm]; if (isResponded(rec)) responded++; } return {responded:responded, total:TOTAL}; }
+function updateProgressUI(){ var p=computeProgress(); var pct=p.total>0? Math.round((p.responded/p.total)*100):0; var bar=document.getElementById("progressFill"); var tally=document.getElementById("progressTally"); if (bar) bar.style.width=pct+"%"; if (tally) tally.textContent="Responded: "+p.responded+" / "+p.total; var btn=document.getElementById("nextUnansweredBtn"); if (btn){ btn.disabled=(p.responded>=p.total); btn.style.opacity=btn.disabled?.5:1;  var of=document.getElementById('overallFill'); if(of) of.style.width=pct+'%';  var ol=document.getElementById('overallLabel'); if(ol){ var left=Math.max(0,(p.total||0)-(p.responded||0)); ol.textContent = left+' / '+(p.total||0)+' left'; } } }
+function nextUnanswered(){ if (!TOTAL) return; var start=(state.i+1)%TOTAL; var i=start; do{ var nm=ITEMS[i]; var rec=state.map[nm]; if (!isResponded(rec)){ azInfo=null; currentAZGroup=""; currentAZItems=[]; show(i); return; } i=(i+1)%TOTAL; } while (i!==start); alert("All items have been responded to. ✅"); }
+setTimeout(function(){ var btn=document.getElementById("nextUnansweredBtn"); if (btn) btn.onclick=nextUnanswered; updateProgressUI(); playClick(); buildUnansweredList(); },0);
+
+
+// ========= Auto-advance to next letter when current letter is finished =========
+function firstLetterOf(name){
+  var L = (name && name[0] ? name[0] : "").toUpperCase();
+  if (/^[0-9]/.test(name)) L = "#";
+  return L;
+}
+function _letterGroupsLocal(){
+  var groups = {};
+  for (var i=0;i<ITEMS.length;i++){
+    var nm = ITEMS[i];
+    var L = firstLetterOf(nm);
+    if (!groups[L]) groups[L] = [];
+    groups[L].push(nm);
+  }
+  return groups;
+}
+function autoAdvanceIfGroupDone(){
+  try{
+    if (!ITEMS || !ITEMS.length) return;
+    var name = ITEMS[state.i] || "";
+    var L = firstLetterOf(name);
+    var groups = (typeof letterGroups === "function") ? letterGroups() : _letterGroupsLocal();
+    var arr = groups[L] || [];
+    if (!arr.length) return;
+    // helper for responded
+    function _isResp(nm){
+      var rec = state.map[nm];
+      return rec && (rec.status === "saved" || rec.status === "notneeded");
+    }
+    var allDone = true;
+    for (var i=0;i<arr.length;i++){ if (!_isResp(arr[i])){ allDone=false; break; } }
+    if (!allDone) return;
+    // find next letter with items
+    var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    var idx = letters.indexOf(L);
+    for (var hops=0; hops<letters.length-1; hops++){
+      idx = (idx + 1) % letters.length;
+      var L2 = letters[idx];
+      var arr2 = groups[L2] || [];
+      if (arr2.length){
+        // pick first unresponded item in next letter, else first
+        var targetIdx = -1;
+        for (var t=0;t<arr2.length;t++){
+          var nm = arr2[t];
+          if (!_isResp(nm)){ targetIdx = ITEMS.indexOf(nm); break; }
+        }
+        if (targetIdx < 0) targetIdx = ITEMS.indexOf(arr2[0]);
+        if (targetIdx >= 0){
+          // update azInfo and highlight
+          azInfo = { letter: L2, index: 1, total: arr2.length };
+          if (typeof azBar !== "undefined" && azBar){
+            var kids = azBar.children;
+            for (var k=0;k<kids.length;k++){
+              if (kids[k]) kids[k].classList.remove("active");
+            }
+            for (var k=0;k<kids.length;k++){
+              if (kids[k] && kids[k].textContent === L2){ kids[k].classList.add("active"); break; }
+            }
+          }
+          show(targetIdx);
+        }
+        break;
+      }
+    }
+  }catch(e){/* no-op */}
+}
+
+// ========= Prevent double/triple-tap zoom (but keep taps working) =========
+(function(){
+  var lastTouch = 0;
+  document.addEventListener('touchend', function(e){
+    var now = Date.now();
+    if (now - lastTouch <= 350) {
+      e.preventDefault();
+      var t = e.target;
+      if (t && typeof t.click === 'function') t.click();
+    }
+    lastTouch = now;
+  }, {passive:false});
+
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+})();
+  
+// ========= Initial Mount =========
+rebuildAZ();
+if (TOTAL>0){ show(state.i||0); buildRunning(); buildNotNeededList(); try{updateProgressUI(); playClick(); buildUnansweredList();}catch(e){}; } else { counter.textContent="0 / 0"; itemName.textContent="(No items found)"; }
+
+
+// Safety mount in case earlier init was skipped
+
+function updateSaveButtons(){
+  var el = (typeof orderInput!=="undefined")? orderInput : document.getElementById('orderInput');
+  var val = parseInt((el && el.value) ? el.value : "0", 10);
+  var dis = isNaN(val) || val <= 0;
+  var b1=document.getElementById('savePassionsBtn');
+  var b2=document.getElementById('saveMkBtn');
+  var b3=document.getElementById('saveOtherBtn');
+  if (b1) b1.disabled = dis;
+  if (b2) b2.disabled = dis;
+  if (b3) b3.disabled = dis;
+}
+
+// wire order input to toggle save buttons
+(function(){
+  var el = (typeof orderInput!=="undefined")? orderInput : document.getElementById('orderInput');
+  if (el){
+    el.addEventListener('input', function(){ try{ updateSaveButtons(); }catch(e){}
+  try{ updateAnsweredFade(); }catch(e){}; /* no progress update here */ });
+  }
+})();
+
+// --- Bottom safe-area to avoid the fixed A–Z keyboard overlapping actions ---
+(function(){
+  function setBottomSafeArea(){
+    try{
+      var bar = null;
+      var h = bar ? bar.offsetHeight : 0;
+      var extra = 12; // tiny breathing room
+      var val = (h + extra) + 'px';
+      document.documentElement.style.setProperty('--azSafe', val);
+      var m = document.querySelector('main');
+      if (m) m.style.paddingBottom = 'var(--azSafe)';
+      else document.body.style.paddingBottom = 'var(--azSafe)';
+    }catch(e){}
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setBottomSafeArea);
+  } else {
+    setBottomSafeArea();
+  }
+  window.addEventListener('resize', setBottomSafeArea);
+  // in case fonts/UI shift height after load
+  setTimeout(setBottomSafeArea, 300);
+  setTimeout(setBottomSafeArea, 1200);
+})();
+
+
+// --- Build vertical A–Z index from existing az buttons ---
+(function(){
+  function buildAZIndex(){
+    var host = document.getElementById('azIndex');
+    if (!host) return;
+    host.innerHTML = '';
+    var azBtns = document.querySelectorAll('#azBar .azbtn');
+    var letters = [];
+    if (azBtns.length){
+      azBtns.forEach(function(b){
+        var L = b.dataset.letter || (b.textContent||'').trim();
+        if (!L) return;
+        letters.push({L:L, btn:b});
+      });
+    } else {
+      // fallback: default sequence
+      var seq = ['#','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+      seq.forEach(function(L){ letters.push({L:L, btn:null}); });
+    }
+    letters.forEach(function(it){
+      var el = document.createElement('div');
+      el.className = 'azIndexBtn';
+      el.textContent = it.L;
+      el.dataset.letter = it.L;
+      el.addEventListener('click', function(){
+        // Prefer to delegate to existing bottom-az button logic, if present
+        var target = it.btn || document.querySelector('#azBar .azbtn[data-letter="'+it.L+'"]');
+        if (target) { target.click(); }
+        // Otherwise, try to call a global handler if available
+        else if (window.handleAZClick) { window.handleAZClick(it.L); }
+        else if (window.selectLetter) { window.selectLetter(it.L); }
+      });
+      host.appendChild(el);
+    });
+    syncAZIndex();
+  }
+  function syncAZIndex(){
+    var activeBtn = document.querySelector('#azBar .azbtn.active');
+    var active = activeBtn ? (activeBtn.dataset.letter || activeBtn.textContent.trim()) : null;
+    var dimMap = {};
+    document.querySelectorAll('#azBar .azbtn').forEach(function(b){
+      var L = b.dataset.letter || b.textContent.trim();
+      dimMap[L] = !!b.disabled;
+    });
+    document.querySelectorAll('#azIndex .azIndexBtn').forEach(function(el){
+      var L = el.dataset.letter;
+      el.classList.toggle('active', active && L===active);
+      if (dimMap.hasOwnProperty(L)){
+        el.classList.toggle('disabled', dimMap[L]);
+      }
+    });
+  }
+  document.addEventListener('click', function(ev){
+    if (ev.target && ev.target.classList && ev.target.classList.contains('azbtn')){
+      setTimeout(syncAZIndex, 0);
+    }
+  });
+  // Try to hook into existing rebuild
+  var _reb = window.rebuildAZ;
+  window.rebuildAZ = function(){
+    if (typeof _reb === 'function') _reb();
+    try { buildAZIndex(); } catch(e){}
+  };
+  // Initial build after DOM loaded
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', buildAZIndex);
+  } else {
+    buildAZIndex();
+  }
+  window.syncAZIndex = syncAZIndex;
+})();
+
+
+// Dynamically anchor the vertical A–Z index below the Responded/progress line
+(function(){
+  function setAzIndexTop(){
+    try{
+      var idx = document.getElementById('azIndex');
+      if (!idx) return;
+      var hdr = document.querySelector('header');
+      var prog = document.getElementById('overallProgress');
+      var anchor = prog || hdr;
+      if (!anchor) return;
+      var rect = anchor.getBoundingClientRect();
+      var top = Math.ceil(rect.bottom + 8); // 8px breathing room
+      // Constrain within viewport
+      if (top < 0) top = 0;
+      if (top > window.innerHeight - 40) top = window.innerHeight - 40;
+      idx.style.top = top + 'px';
+    }catch(e){}
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setAzIndexTop);
+  } else {
+    setAzIndexTop();
+  }
+  window.addEventListener('resize', setAzIndexTop);
+  window.addEventListener('orientationchange', setAzIndexTop);
+  // Some UIs adjust height after fonts/layout settle
+  setTimeout(setAzIndexTop, 300);
+  setTimeout(setAzIndexTop, 1000);
+})();
+
+// --- Persist stock/order per item and restore on navigation ---
+(function(){
+  var stockEl = (typeof stockInput!=="undefined")? stockInput : document.getElementById('stockInput');
+  var orderEl = (typeof orderInput!=="undefined")? orderInput : document.getElementById('orderInput');
+  var nameEl  = (typeof itemName!=="undefined")? itemName : document.getElementById('itemName');
+  if (!stockEl || !orderEl || !nameEl) return;
+
+  function currName(){ return (nameEl && nameEl.textContent) ? nameEl.textContent.trim() : null; }
+  function persist(){
+    try{
+      var nm = currName(); if (!nm) return;
+      if (!state.map) state.map = {};
+      var rec = state.map[nm] || {stock:"",order:"",note:state.notes&&state.notes[nm]||"",status:"",bucket:""};
+      rec.stock = stockEl.value || "";
+      rec.order = orderEl.value || "";
+      state.map[nm] = rec;
+      save();
+    }catch(e){}
+  }
+
+  // Save on input changes
+  stockEl.addEventListener('input', persist);
+  orderEl.addEventListener('input', persist);
+
+  // Also intercept stepper clicks to persist
+  ['stockMinus','stockPlus','orderMinus','orderPlus'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ setTimeout(persist, 0); });
+  });
+
+  // When switching items (prev/next/nextUnanswered or AZ clicks), persist first
+  ['prevBtn','nextBtn','nextUnansweredBtn'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ try{ persist(); }catch(e){} });
+  });
+  document.addEventListener('click', function(ev){
+    if (ev.target && ev.target.classList && ev.target.classList.contains('azbtn')){
+      try{ persist(); }catch(e){}
+    }
+  });
+
+})();
+
+// --- Enable/disable Not Needed based on ORDER field ---
+(function(){
+  var orderEl = document.getElementById('orderInput');
+  var nnBtn   = document.getElementById('notNeededBtn');
+  if (!orderEl || !nnBtn) return;
+
+  function updateNotNeededState(){
+    var v = parseInt(orderEl.value ? orderEl.value : "0", 10);
+    if (isNaN(v)) v = 0;
+    nnBtn.disabled = v > 0;
+  }
+
+  // Update on load & whenever ORDER changes
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', updateNotNeededState);
+  } else {
+    updateNotNeededState();
+  }
+  orderEl.addEventListener('input', updateNotNeededState);
+  orderEl.addEventListener('change', updateNotNeededState);
+
+  // Also update after stepper clicks
+  ['orderMinus','orderPlus'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ setTimeout(updateNotNeededState, 0); });
+  });
+
+  // If your show(i) function exists, hook into it to refresh state on navigation
+  try {
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        try{ updateNotNeededState(); }catch(e){}
+        return r;
+      };
+    }
+  } catch(e){}
+})();
+
+// --- Enable/disable Not Needed based on ORDER field ---
+(function(){
+  var orderEl = document.getElementById('orderInput');
+  var nnBtn   = document.getElementById('notNeededBtn');
+  if (!orderEl || !nnBtn) return;
+
+  function updateNotNeededState(){
+    var v = parseInt(orderEl.value ? orderEl.value : "0", 10);
+    if (!isFinite(v)) v = 0;
+    nnBtn.disabled = v > 0;
+  }
+
+  // Run now and on changes
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', updateNotNeededState);
+  } else {
+    updateNotNeededState();
+  }
+  orderEl.addEventListener('input', updateNotNeededState);
+  orderEl.addEventListener('change', updateNotNeededState);
+
+  // Also after stepper clicks
+  ['orderMinus','orderPlus'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ setTimeout(updateNotNeededState, 0); });
+  });
+
+  // Refresh after navigation (if show() exists)
+  try {
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        try{ updateNotNeededState(); }catch(e){}
+        return r;
+      };
+    }
+  } catch(e){}
+})();
+function buildNotNeededList(){
+  try{
+    var box = document.getElementById('notNeededList');
+    if (!box) return;
+    var list = [];
+    for (var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm];
+      if (rec && rec.status === "notneeded") list.push(nm);
+    }
+    list.sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
+    box.textContent = list.join("\n");
+  }catch(e){}
+}
+
+function updateAnsweredFade(){
+  try {
+    var name = ITEMS[state.i];
+    var rec = state.map[name];
+    var answered = isResponded(rec);
+    var nm = document.getElementById('itemName');
+    var card = document.getElementById('itemCard');
+    if (nm) nm.classList.toggle('answeredFade', !!answered);
+    if (card) card.classList.toggle('answeredFade', !!answered);
+  } catch(e){}
+}
+</script>
+<div id="azIndex"></div><script>
+// --- Auto-jump from STOCK to ORDER ---
+document.addEventListener('DOMContentLoaded', function(){
+  var stock = document.getElementById('stockInput');
+  var order = document.getElementById('orderInput');
+  if (!stock || !order) return;
+
+  function focusOrderAggressive(){
+    try {
+      order.setAttribute('type','tel');
+      order.setAttribute('inputmode','numeric');
+      order.setAttribute('pattern','[0-9]*');
+      order.setAttribute('autocomplete','one-time-code');
+    } catch(e){}
+    try { order.focus(); order.select && order.select(); } catch(e){}
+    try { order.click && order.click(); } catch(e){}
+    setTimeout(function(){
+      try { order.focus(); order.select && order.select(); } catch(e){}
+    }, 0);
+  }
+
+  stock.addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      focusOrderAggressive();
+    }
+  });
+
+  stock.addEventListener('blur', function(){
+    if (!order.value) {
+      focusOrderAggressive();
+    }
+  });
+});
+
+
+// --- Top flash helper ---
+function showTopFlash(msg, ms){
+  try{
+    // Suppress the green top banner specifically for "Not Needed" notices
+    if (msg && /not\s+needed/i.test(msg)) { return; }
+    var node = document.getElementById('topFlash');
+    if (!node) return;
+    node.textContent = msg || 'Done';
+    node.classList.add('show');
+    clearTimeout(window.__topFlashTimer);
+    window.__topFlashTimer = setTimeout(function(){
+      node.classList.remove('show');
+    }, ms || 1400);
+  }catch(e){}
+}
+
+
+
+function buildUnansweredList(){
+  try{
+    var box = document.getElementById('unansweredList');
+    if (!box) return;
+    var list = [];
+    for (var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm];
+      var answered = false;
+      try{
+        if (typeof isResponded === 'function'){
+          answered = isResponded(rec);
+        } else {
+          answered = !!(rec && (rec.status === 'notneeded' || rec.bucket));
+        }
+      }catch(e){ answered = false; }
+      if (!answered) list.push(nm);
+    }
+    list.sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
+    box.textContent = list.join("\n");
+  }catch(e){}
+}
+</script><section id="unansweredSection"><h3>Unanswered (A–Z)</h3><pre id="unansweredList"></pre></section>
+<section id="notNeededSection"><h3>Not Needed (A–Z)</h3><pre id="notNeededList"></pre></section><script>try{buildUnansweredList();}catch(e){}
+
+// --- Soft click sound (always on) ---
+(function(){
+  var AC = window.AudioContext || window.webkitAudioContext;
+  var ctx = null;
+  window.playClick = function(){
+    try{
+      if (!AC) return;
+      ctx = ctx || new AC();
+      var t = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, t);
+      gain.gain.setValueAtTime(0.0001, t);
+      // Softer peak and shorter duration
+      gain.gain.exponentialRampToValueAtTime(0.03, t + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    }catch(e){ /* no-op */ }
+  };
+})();</script>
+<script>
+// Simple hold-to-repeat utility that just triggers .click() on the target
+(function(){
+  function addHoldRepeat(el, opts){
+    opts = opts || {};
+    var initDelay = opts.initialDelay || 500;
+    var repeat = opts.repeat || 160;
+    var accelerate = !!opts.accelerate;
+    var timer = null, repeater = null, interval = repeat, accelStep = 0;
+    var down = false;
+
+    function clearTimers(){
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (repeater) { clearInterval(repeater); repeater = null; }
+      if (down) { el.classList.remove('hold'); down = false; }
+      interval = repeat; accelStep = 0;
+    }
+
+    function step(){
+      try {
+        // Prefer lightweight direct calls over .click()
+        var L = (el.dataset && el.dataset.letter) || (el.textContent||'').trim();
+        if ((el.classList && (el.classList.contains('azbtn') || el.classList.contains('azIndexBtn'))) && (typeof window.azCycleContinuous === 'function' || typeof window.azCycle === 'function')){
+          if (typeof window.azCycleContinuous==='function') window.azCycleContinuous(L, +1); else window.azCycle(L, +1);
+        } else if ((el.id === 'nextBtn' || el.classList.contains('next') || el.getAttribute('data-role') === 'next') && typeof window.show === 'function'){
+          if (!window.__inFlight){ window.__inFlight = true; window.show((window.state && window.state.i || 0) + 1); requestAnimationFrame(function(){ window.__inFlight = false; }); }
+        } else if ((el.id === 'prevBtn' || el.classList.contains('prev') || el.getAttribute('data-role') === 'prev') && typeof window.show === 'function'){
+          if (!window.__inFlight){ window.__inFlight = true; window.show((window.state && window.state.i || 0) - 1); requestAnimationFrame(function(){ window.__inFlight = false; }); }
+        } else {
+          el.click();
+        }
+      } catch(e) {}
+    }
+
+    function start(){
+      down = true;
+      el.classList.add('hold');
+      step(); // immediate for snappy feel
+      timer = setTimeout(function(){
+        repeater = setInterval(function(){
+          step();
+          if (accelerate && interval > 25){
+            accelStep++;
+            if (accelStep % 6 === 0){ interval = Math.max(120, interval - 4);
+              clearInterval(repeater);
+              repeater = setInterval(step, interval);
+            }
+          }
+        }, interval);
+      }, initDelay);
+    }
+
+    // Mouse
+    el.addEventListener('mousedown', function(ev){ if (ev.button===0) start(); });
+    document.addEventListener('mouseup', clearTimers);
+    el.addEventListener('mouseleave', clearTimers);
+
+    // Touch
+    el.addEventListener('touchstart', function(){ start(); }, {passive:true});
+    el.addEventListener('touchend', clearTimers, {passive:true});
+    el.addEventListener('touchcancel', clearTimers, {passive:true});
+  }
+
+  function wire(){
+    // A–Z bars (bottom and side)
+    document.querySelectorAll('.azbtn, .azIndexBtn').forEach(function(btn){
+      addHoldRepeat(btn, {initialDelay: 300, repeat: 100, accelerate: true});
+    });
+
+    // Prev/Next style controls if present
+    var prev = document.getElementById('prevBtn') || document.querySelector('.prev, [data-role="prev"]');
+    var next = document.getElementById('nextBtn') || document.querySelector('.next, [data-role="next"]');
+    if (prev) addHoldRepeat(prev, {initialDelay: 300, repeat: 90, accelerate: true});
+    if (next) addHoldRepeat(next, {initialDelay: 300, repeat: 90, accelerate: true});
+
+    // Keyboard shortcuts: arrows trigger existing clicks
+    document.addEventListener('keydown', function(ev){
+      if (ev.altKey || ev.metaKey || ev.ctrlKey) return;
+      var tag = (ev.target && ev.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (ev.key === 'ArrowRight'){ if (typeof window.show==='function' && !window.__inFlight){ window.__inFlight=true; window.show((window.state&&window.state.i||0)+1); requestAnimationFrame(function(){ window.__inFlight=false; }); ev.preventDefault(); } } }
+      else if (ev.key === 'ArrowLeft'){ if (typeof window.show==='function' && !window.__inFlight){ window.__inFlight=true; window.show((window.state&&window.state.i||0)-1); requestAnimationFrame(function(){ window.__inFlight=false; }); ev.preventDefault(); } } }
+      else if (ev.key === 'ArrowDown'){
+        var activeAZ = document.querySelector('.azbtn.active') || document.querySelector('.azIndexBtn.active') || document.querySelector('.azbtn') || document.querySelector('.azIndexBtn');
+        if (activeAZ){ activeAZ.click(); ev.preventDefault(); }
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+})();
+</script>
+
+
+<script>
+(function(){
+  function getNames(){
+    if (Array.isArray(window.ITEMS) && window.ITEMS.length){
+      return window.ITEMS.slice();
+    }
+    var names = [];
+    var cand = document.querySelectorAll('[data-name], .item-name, .product-name, .name');
+    if (cand && cand.length){
+      cand.forEach(function(el){
+        var n = el.getAttribute('data-name') || (el.textContent || '').trim();
+        if (n) names.push(n);
+      });
+    }
+    return names;
+  }
+  function makeGroups(arr){
+    var groups = {};
+    var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    letters.forEach(function(L){ groups[L] = []; });
+    arr.forEach(function(nm){
+      var L = (nm && nm[0]) ? nm[0].toUpperCase() : '';
+      if (!L || !/[A-Z]/.test(L)) L = '#';
+      groups[L].push(nm);
+    });
+    return groups;
+  }
+  function applyBadges(){
+    try{
+      var arr = getNames();
+      if (!arr || !arr.length) return;
+      var groups = makeGroups(arr);
+      function setBadge(btn){
+        var L = (btn.dataset.letter || (btn.textContent||'').trim()).toUpperCase();
+        if (!L) return;
+        var count = (groups[L] || []).length;
+        var badge = btn.querySelector('.az-badge');
+        if (!badge){
+          badge = document.createElement('span');
+          badge.className = 'az-badge';
+          btn.appendChild(badge);
+        }
+        badge.textContent = count;
+        btn.setAttribute('aria-label', L + ' (' + count + ' items)');
+        if (count === 0) btn.classList.add('az-empty'); else btn.classList.remove('az-empty');
+      }
+      document.querySelectorAll('.azbtn, .azIndexBtn').forEach(setBadge);
+    }catch(e){}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyBadges);
+  else applyBadges();
+  if (window.MutationObserver){
+    var __azBadgeTimer=null; var mo = new MutationObserver(function(){ clearTimeout(__azBadgeTimer); __azBadgeTimer=setTimeout(applyBadges, 300); });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  function getNames(){
+    if (Array.isArray(window.ITEMS) && window.ITEMS.length){
+      return window.ITEMS.slice();
+    }
+    var names = [];
+    var cand = document.querySelectorAll('[data-name], .item-name, .product-name, .name');
+    if (cand && cand.length){
+      cand.forEach(function(el){
+        var n = el.getAttribute('data-name') || (el.textContent || '').trim();
+        if (n) names.push(n);
+      });
+    }
+    return names;
+  }
+  function makeGroups(arr){
+    var groups = {};
+    var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    letters.forEach(function(L){ groups[L] = []; });
+    arr.forEach(function(nm){
+      var L = (nm && nm[0]) ? nm[0].toUpperCase() : '';
+      if (!L || !/[A-Z]/.test(L)) L = '#';
+      groups[L].push(nm);
+    });
+    return groups;
+  }
+  function applyBadges(){
+    try{
+      var arr = getNames();
+      if (!arr || !arr.length) return;
+      var groups = makeGroups(arr);
+      function setBadge(btn){
+        var L = (btn.dataset.letter || (btn.textContent||'').trim()).toUpperCase();
+        if (!L) return;
+        var count = (groups[L] || []).length;
+        var badge = btn.querySelector('.az-badge');
+        if (!badge){
+          badge = document.createElement('span');
+          badge.className = 'az-badge';
+          btn.appendChild(badge);
+        }
+        badge.textContent = count;
+        btn.setAttribute('aria-label', L + ' (' + count + ' items)');
+        if (count === 0) btn.classList.add('az-empty'); else btn.classList.remove('az-empty');
+      }
+      document.querySelectorAll('.azbtn, .azIndexBtn').forEach(setBadge);
+    }catch(e){}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyBadges);
+  else applyBadges();
+  if (window.MutationObserver){
+    var __azBadgeTimer=null; var mo = new MutationObserver(function(){ clearTimeout(__azBadgeTimer); __azBadgeTimer=setTimeout(applyBadges, 300); });
+    mo.observe(document.body, { childList: true, subtree: true });
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  // Continuous cycler: keeps moving through items of the chosen letter,
+  // and when it reaches the end, it automatically continues into the next non-empty letter.
+  window.azCycleContinuous = function(letter, dir){
+    dir = dir || 1;
+    try{
+      var lettersOrder = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+      var names = window.ITEMS || [];
+      if (!names || !names.length) return;
+
+      // Build groups once per call (cheap) and list of non-empty letters
+      var groups = {};
+      lettersOrder.forEach(function(L){ groups[L] = []; });
+      for (var i=0;i<names.length;i++){
+        var nm = names[i] || "";
+        var L = nm ? nm[0].toUpperCase() : '';
+        if (!/[A-Z]/.test(L)) L = '#';
+        groups[L].push(nm);
+      }
+      var nonEmpty = lettersOrder.filter(function(L){ return (groups[L] && groups[L].length); });
+      if (!nonEmpty.length) return;
+
+      // Derive active letter if none provided
+      if (!letter){
+        var active = document.querySelector('#azBar .azbtn.active, .azIndexBtn.active');
+        letter = active ? (active.dataset.letter || active.textContent.trim()) : nonEmpty[0];
+      }
+      letter = letter ? letter.toUpperCase() : nonEmpty[0];
+
+      // Ensure we are on a real letter with items
+      if (!groups[letter] || !groups[letter].length){
+        // Jump to the next non-empty letter
+        var idxL = nonEmpty.indexOf(letter);
+        if (idxL < 0) idxL = 0;
+        var nextL = nonEmpty[(idxL + 1) % nonEmpty.length];
+        letter = nextL;
+      }
+
+      // Track per-letter positions
+      window.positions = window.positions || {};
+      if (window.positions[letter] == null) window.positions[letter] = 0;
+
+      var pos = window.positions[letter] + dir;
+      var arr = groups[letter];
+
+      // If we walked past the end (or before start), roll into next/prev letter
+      if (pos >= arr.length){
+        // advance to next letter with items
+        var iL = nonEmpty.indexOf(letter);
+        var nextLetter = nonEmpty[(iL + 1) % nonEmpty.length];
+        letter = nextLetter;
+        arr = groups[letter];
+        pos = 0;
+      } else if (pos < 0){
+        var iL = nonEmpty.indexOf(letter);
+        var prevLetter = nonEmpty[(iL - 1 + nonEmpty.length) % nonEmpty.length];
+        letter = prevLetter;
+        arr = groups[letter];
+        pos = arr.length - 1;
+      }
+
+      window.positions[letter] = pos;
+      var nextName = arr[pos];
+      var idx = names.indexOf(nextName);
+      if (idx >= 0 && typeof window.show === 'function'){
+        // in-flight guard to avoid overlapping renders
+        if (!window.__inFlight){
+          window.__inFlight = true;
+          window.currentAZGroup = letter; window.currentAZItems = arr;
+          window.azInfo = { letter: letter, index: pos+1, total: arr.length };
+          window.show(idx);
+          requestAnimationFrame(function(){ window.__inFlight = false; });
+        }
+      }
+
+      // Update active highlight to the current letter
+      try{
+        var kids = document.querySelectorAll('#azBar .azbtn, .azIndexBtn');
+        kids.forEach(function(k){
+          k.classList.remove('active');
+          var KL = (k.dataset.letter || k.textContent.trim()).toUpperCase();
+          if (KL === letter){ k.classList.add('active'); }
+        });
+        if (typeof window.syncAZIndex === 'function') window.syncAZIndex();
+      }catch(e){}
+    }catch(e){}
+  };
+})();
+</script>
+
+
+<script>
+(function(){
+  function getNames(){
+    if (Array.isArray(window.ITEMS) && window.ITEMS.length){
+      return window.ITEMS.slice();
+    }
+    var names = [];
+    var cand = document.querySelectorAll('[data-name], .item-name, .product-name, .name');
+    if (cand && cand.length){
+      cand.forEach(function(el){
+        var n = el.getAttribute('data-name') || (el.textContent || '').trim();
+        if (n) names.push(n);
+      });
+    }
+    return names;
+  }
+  function makeGroups(arr){
+    var groups = {};
+    var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    letters.forEach(function(L){ groups[L] = []; });
+    arr.forEach(function(nm){
+      var L = (nm && nm[0]) ? nm[0].toUpperCase() : '';
+      if (!L || !/[A-Z]/.test(L)) L = '#';
+      groups[L].push(nm);
+    });
+    return groups;
+  }
+  function hideEmptyLetters(){
+    try{
+      var arr = getNames();
+      if (!arr || !arr.length) return;
+      var groups = makeGroups(arr);
+      var updateBtn = function(btn){
+        var L = (btn.dataset.letter || (btn.textContent||'').trim()).toUpperCase();
+        var count = (groups[L] || []).length;
+        if (count === 0){ btn.classList.add('az-hidden'); }
+        else { btn.classList.remove('az-hidden'); }
+      };
+      document.querySelectorAll('.azbtn, .azIndexBtn').forEach(updateBtn);
+    }catch(e){}
+  }
+  function debounced(fn, wait){
+    var t=null; return function(){ clearTimeout(t); t=setTimeout(fn, wait||150); };
+  }
+  var run = debounced(function(){ hideEmptyLetters(); }, 200);
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+
+  if (window.MutationObserver){
+    var mo = new MutationObserver(run);
+    mo.observe(document.body, { childList:true, subtree:true, attributes:false });
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  window.ANSWERED_SET = window.ANSWERED_SET || new Set();
+  window.filterHideAnswered = true;
+
+  function getItemKeyByIndex(i){
+    try{
+      if (!window.ITEMS || i==null) return null;
+      var name = window.ITEMS[i];
+      var ids = window.ITEM_IDS || [];
+      if (ids && ids[i] != null) return String(ids[i]);
+      return String(name);
+    }catch(e){ return null; }
+  }
+  function markCurrentAsAnswered(){
+    try{
+      var i = (window.state && window.state.i) != null ? window.state.i : null;
+      var key = getItemKeyByIndex(i);
+      if (!key) return;
+      window.ANSWERED_SET.add(key);
+      var host = document.querySelector('.item, .card, .product, [data-role="item"]');
+      if (host) host.classList.add('answered-flag');
+    }catch(e){}
+  }
+
+  var toggle = document.getElementById('showAnsweredToggle');
+  if (toggle){
+    toggle.checked = false;
+    toggle.addEventListener('change', function(){
+      window.filterHideAnswered = !this.checked;
+      setTimeout(function(){
+        try{
+          if (window.filterHideAnswered && typeof window.findNextAllowedIndex === 'function'){
+            var i = (window.state && window.state.i) || 0;
+            var j = window.findNextAllowedIndex(i, +1);
+            if (j !== null && j !== i && typeof window.show === 'function'){
+              window.show(j);
+            }
+          }
+        }catch(e){}
+      }, 0);
+    });
+  }
+
+  window.isAnswered = function(idx){
+    try{
+      var key = getItemKeyByIndex(idx);
+      return key ? window.ANSWERED_SET.has(key) : false;
+    }catch(e){ return false; }
+  };
+
+  window.findNextAllowedIndex = function(fromIdx, dir){
+    dir = dir || +1;
+    try{
+      if (!Array.isArray(window.ITEMS) || !window.ITEMS.length) return fromIdx;
+      var n = window.ITEMS.length;
+      var steps = 0;
+      var i = fromIdx;
+      while (steps < n){
+        i = (i + dir + n) % n;
+        steps++;
+        if (!window.filterHideAnswered || !window.isAnswered(i)){
+          return i;
+        }
+      }
+      return fromIdx;
+    }catch(e){ return fromIdx; }
+  };
+
+  window.stepNextFiltered = function(){
+    if (typeof window.show !== 'function') return;
+    var i = (window.state && window.state.i) || 0;
+    var j = window.filterHideAnswered ? window.findNextAllowedIndex(i, +1) : (i+1);
+    if (window.filterHideAnswered && j === i) return;
+    if (!window.__inFlight){ window.__inFlight = true; window.show(j); requestAnimationFrame(function(){ window.__inFlight=false; }); }
+  };
+  window.stepPrevFiltered = function(){
+    if (typeof window.show !== 'function') return;
+    var i = (window.state && window.state.i) || 0;
+    var j = window.filterHideAnswered ? window.findNextAllowedIndex(i, -1) : (i-1);
+    if (window.filterHideAnswered && j === i) return;
+    if (!window.__inFlight){ window.__inFlight = true; window.show(j); requestAnimationFrame(function(){ window.__inFlight=false; }); }
+  };
+
+  document.addEventListener('keydown', function(ev){
+    try{
+      if (ev.altKey || ev.metaKey || ev.ctrlKey) return;
+      var tag = (ev.target && ev.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (ev.key === 'ArrowRight'){ window.stepNextFiltered(); ev.preventDefault(); }
+      else if (ev.key === 'ArrowLeft'){ window.stepPrevFiltered(); ev.preventDefault(); }
+    }catch(e){}
+  }, true);
+
+  var _azCont = window.azCycleContinuous;
+  if (typeof _azCont === 'function'){
+    window.azCycleContinuous = function(letter, dir){
+      _azCont(letter, dir);
+      try{
+        if (window.filterHideAnswered){
+          var i = (window.state && window.state.i) || 0;
+          if (window.isAnswered(i)){
+            var j = window.findNextAllowedIndex(i, +1);
+            if (j !== null && j !== i) window.show(j);
+          }
+        }
+      }catch(e){}
+    };
+  }
+
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if (!t) return;
+    if (t.classList && (t.classList.contains('azbtn') || t.classList.contains('azIndexBtn'))){
+      setTimeout(function(){
+        try{
+          if (!window.filterHideAnswered) return;
+          var i = (window.state && window.state.i) || 0;
+          if (window.isAnswered(i)){
+            var j = window.findNextAllowedIndex(i, +1);
+            if (j !== null && j !== i) window.show(j);
+          }
+        }catch(e){}
+      }, 0);
+    }
+  }, true);
+
+  document.addEventListener('click', function(ev){
+    var el = ev.target;
+    if (!el) return;
+    var txt = (el.textContent || '').toLowerCase().trim();
+    var isAnsweredAction = el.matches('[data-action="not-needed"], [data-action="save"], .btn-not-needed, .btn-save, .save1, .save2, .save3')
+                          || txt === 'not needed' || txt === 'save' || txt === 'save to 1' || txt === 'save to 2' || txt === 'save to 3';
+    if (isAnsweredAction){
+      setTimeout(function(){
+        markCurrentAsAnswered();
+        if (window.filterHideAnswered){
+          window.stepNextFiltered();
+        }
+      }, 0);
+    }
+  }, true);
+})();
+</script>
+
+
+<script>
+// Debounced show wrapper to prevent accidental double-advance (+2)
+(function(){
+  var lastShowTime = 0;
+  window.safeShow = function(i){
+    try{
+      var now = Date.now();
+      if (now - lastShowTime < 200) return; // ignore rapid second call
+      lastShowTime = now;
+      if (typeof window.show === 'function'){ window.show(i); }
+    }catch(e){ /* no-op */ }
+  };
+})();
+</script>
+
+
+<script>
+// Guard against rapid duplicate clicks on A–Z buttons (prevents skipping within a letter)
+(function(){
+  var lastAZTime = 0;
+  var lastAZLetter = '';
+  document.addEventListener('click', function(ev){
+    try{
+      var el = ev.target;
+      if (!el || !el.classList || !el.classList.contains('azbtn')) return;
+      var L = (el.dataset && el.dataset.letter) ? el.dataset.letter : (el.textContent || '').trim();
+      var now = Date.now();
+      if (L === lastAZLetter && (now - lastAZTime) < 250){
+        // Suppress this duplicate click
+        if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+        if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
+        if (typeof ev.preventDefault === 'function') ev.preventDefault();
+        return;
+      }
+      lastAZLetter = L;
+      lastAZTime = now;
+    }catch(e){}
+  }, true); // capture phase to intercept before handlers
+})();
+</script>
+
+
+<script>
+// Prevent double-advance after Not Needed / Save by coordinating with auto-advance
+(function(){
+  // Mark when autoAdvanceIfGroupDone() actually navigates
+  try {
+    var _autoAdv = window.autoAdvanceIfGroupDone;
+    if (typeof _autoAdv === 'function'){
+      window.autoAdvanceIfGroupDone = function(){
+        var before = (window.state && typeof state.i === 'number') ? state.i : null;
+        var r = _autoAdv.apply(this, arguments);
+        try {
+          var after = (window.state && typeof state.i === 'number') ? state.i : null;
+          if (before !== null && after !== null && after !== before){
+            window.__autoAdvancedRecently = Date.now();
+          }
+        } catch(e){}
+        return r;
+      };
+    }
+  } catch(e){}
+
+  // Wrap safeShow to skip if an auto-advance just occurred
+  try {
+    var _safe = window.safeShow;
+    if (typeof _safe !== 'function'){
+      _safe = function(i){ if (typeof window.show === 'function') window.show(i); };
+    }
+    window.safeShow = function(i){
+      try {
+        var t = window.__autoAdvancedRecently || 0;
+        var now = Date.now();
+        if (now - t < 300){
+          // consume the follow-up advance and reset the flag
+          window.__autoAdvancedRecently = 0;
+          return;
+        }
+      } catch(e){}
+      _safe(i);
+    };
+  } catch(e){}
+})();
+</script>
+
+
+<script>
+// Anti-double-trigger for "Not Needed" button (prevents +2 on single tap)
+(function(){
+  var DEBOUNCE_MS = 350;
+  var lastClickTs = 0;
+
+  // Capture-phase guard: swallow rapid duplicate clicks at the root
+  document.addEventListener('click', function(ev){
+    try{
+      var el = ev.target;
+      if (!el) return;
+      // walk up to find the button by id
+      while (el && el !== document.body && el.id !== 'notNeededBtn'){ el = el.parentElement; }
+      if (!el || el.id !== 'notNeededBtn') return;
+      var now = Date.now();
+      if (now - lastClickTs < DEBOUNCE_MS){
+        if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+        if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
+        if (typeof ev.preventDefault === 'function') ev.preventDefault();
+        return;
+      }
+      lastClickTs = now;
+    }catch(e){}
+  }, true);
+
+  // Wrap the existing onclick to also debounce the handler
+  try {
+    var btn = document.getElementById('notNeededBtn');
+    if (btn){
+      var _orig = btn.onclick;
+      btn.onclick = function(ev){
+        var now = Date.now();
+        if (now - lastClickTs < DEBOUNCE_MS){ return; }
+        lastClickTs = now;
+        if (typeof _orig === 'function') return _orig.call(this, ev);
+      };
+    }
+  } catch(e){}
+})();
+</script>
+
+
+<script>
+// Anti-double-trigger for all "Save To" buttons
+(function(){
+  var DEBOUNCE_MS = 350;
+  var lastClickTs = {};
+
+  function guardButton(btnId){
+    try{
+      var btn = document.getElementById(btnId);
+      if (!btn) return;
+      // capture-phase guard
+      document.addEventListener('click', function(ev){
+        var el = ev.target;
+        if (!el) return;
+        while (el && el !== document.body && el.id !== btnId){ el = el.parentElement; }
+        if (!el || el.id !== btnId) return;
+        var now = Date.now();
+        if (lastClickTs[btnId] && (now - lastClickTs[btnId] < DEBOUNCE_MS)){
+          if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+          if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
+          if (typeof ev.preventDefault === 'function') ev.preventDefault();
+          return;
+        }
+        lastClickTs[btnId] = now;
+      }, true);
+      // wrap onclick
+      var _orig = btn.onclick;
+      btn.onclick = function(ev){
+        var now = Date.now();
+        if (lastClickTs[btnId] && (now - lastClickTs[btnId] < DEBOUNCE_MS)){ return; }
+        lastClickTs[btnId] = now;
+        if (typeof _orig === 'function') return _orig.call(this, ev);
+      };
+    }catch(e){}
+  }
+
+  ['saveBtn1','saveBtn2','saveBtn3'].forEach(guardButton);
+})();
+</script>
+
+
+<script>
+// Ensure alphabet letter presses scroll to top of page
+(function(){
+  document.addEventListener('click', function(ev){
+    try{
+      var el = ev.target;
+      if (!el) return;
+      if (el.classList && (el.classList.contains('azbtn') || el.classList.contains('azIndexBtn'))){
+        // Scroll window to top smoothly
+        window.scrollTo({top:0, behavior:'smooth'});
+      }
+    }catch(e){}
+  }, true);
+})();
+</script>
+
+
+<script>
+(function(){
+  // --- Location per-item persistence ---
+  var locationSelect = document.getElementById('locationSelect');
+  function currentItemName(){
+    try{ return (window.ITEMS && window.state && typeof state.i==='number') ? ITEMS[state.i] : null; }catch(e){ return null; }
+  }
+  function loadLocation(){
+    try{
+      var nm = currentItemName(); if (!nm) return;
+      var rec = (state.map && state.map[nm]) || {};
+      var v = rec.loc || '';
+      if (locationSelect) locationSelect.value = v;
+    }catch(e){}
+  }
+  function saveLocation(){
+    try{
+      var nm = currentItemName(); if (!nm) return;
+      if (!state.map) state.map = {};
+      var rec = state.map[nm] || {stock:"",order:"",note:(state.notes && state.notes[nm])||"",status:"",bucket:""};
+      rec.loc = (locationSelect && locationSelect.value) || "";
+      state.map[nm] = rec;
+      if (typeof save === 'function') save();
+    }catch(e){}
+  }
+  if (locationSelect){
+    locationSelect.addEventListener('change', saveLocation);
+  }
+  // Hook show() so the select reflects the current item
+  try{
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        try{ loadLocation(); }catch(e){}
+        return r;
+      };
+    } else {
+      // initial attempt if show not yet wrapped
+      setTimeout(loadLocation, 0);
+    }
+  }catch(e){}
+
+  // --- Filter buttons ---
+  var currentFilter = 'all'; // 'all' | 'Cold Room' | 'Garden' | 'Side Door' | 'Outside'
+  function setFilter(f){
+    currentFilter = f || 'all';
+    // Visual states
+    function setActive(id, on){
+      var b = document.getElementById(id);
+      if (b) b.style.outline = on ? '2px solid var(--accent)' : 'none';
+    }
+    setActive('filterAllBtn', currentFilter==='all');
+    setActive('filterColdBtn', currentFilter==='Cold Room');
+    setActive('filterGardenBtn', currentFilter==='Garden');
+    setActive('filterSideBtn', currentFilter==='Side Door');
+    setActive('filterOutsideBtn', currentFilter==='Outside');
+    // Ensure current item matches filter; if not, jump to next matching
+    try {
+      var nm = currentItemName();
+      if (!matchesFilter(nm)){
+        var idx = findNextIndexFrom((state && typeof state.i==='number')? state.i : 0, +1, /*unansweredOnly*/false);
+        if (idx >= 0) show(idx);
+      }
+    }catch(e){}
+  }
+  function matchesFilter(name){
+    if (!name) return false;
+    if (currentFilter === 'all') return true;
+    try{
+      var rec = (state.map && state.map[name]) || null;
+      return !!(rec && rec.loc === currentFilter);
+    }catch(e){ return true; }
+  }
+  // Wire buttons
+  var _w = function(id, f){ var b=document.getElementById(id); if(b) b.addEventListener('click', function(){ setFilter(f); }); };
+  _w('filterAllBtn', 'all');
+  _w('filterColdBtn', 'Cold Room');
+  _w('filterGardenBtn', 'Garden');
+  _w('filterSideBtn', 'Side Door');
+  _w('filterOutsideBtn', 'Outside');
+  // Default to All
+  setTimeout(function(){ setFilter('all'); }, 0);
+
+  // --- Filter-aware navigation helpers ---
+  function isResponded(rec){
+    try{
+      if (!rec) return false;
+      if (rec.status === "notneeded") return true;
+      if (rec.status === "saved"){
+        var qty = parseInt(rec.order || "0", 10);
+        return qty > 0;
+      }
+      return false;
+    }catch(e){ return false; }
+  }
+  function findNextIndexFrom(start, dir, unansweredOnly){
+    if (!Array.isArray(ITEMS) || !ITEMS.length) return -1;
+    var n = ITEMS.length;
+    var i = ((start % n) + n) % n;
+    for (var step=1; step<=n; step++){
+      var j = (i + dir*step + n) % n;
+      var nm = ITEMS[j];
+      if (!matchesFilter(nm)) continue;
+      if (unansweredOnly){
+        var rec = (state.map && state.map[nm]) || null;
+        if (isResponded(rec)) continue;
+      }
+      return j;
+    }
+    return -1;
+  }
+
+  // Override Prev / Next to obey filter
+  try{
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    if (prevBtn){
+      var _prev = prevBtn.onclick;
+      prevBtn.onclick = function(){
+        var idx = findNextIndexFrom((state && state.i)||0, -1, false);
+        if (idx >= 0) return show(idx);
+        if (typeof _prev === 'function') return _prev();
+      };
+    }
+    if (nextBtn){
+      var _next = nextBtn.onclick;
+      nextBtn.onclick = function(){
+        var idx = findNextIndexFrom((state && state.i)||0, +1, false);
+        if (idx >= 0) return show(idx);
+        if (typeof _next === 'function') return _next();
+      };
+    }
+  }catch(e){}
+
+  // Override Next Unanswered to obey filter
+  try{
+    var nextUnBtn = document.getElementById('nextUnansweredBtn');
+    if (nextUnBtn){
+      nextUnBtn.onclick = function(){
+        var start = (state && typeof state.i==='number') ? state.i : 0;
+        var idx = findNextIndexFrom(start, +1, true);
+        if (idx >= 0) return show(idx);
+        alert("All items in this filter have been responded to. ✅");
+      };
+    }
+  }catch(e){}
+
+  // When location changes, ensure current item still matches; if not, move
+  if (locationSelect){
+    locationSelect.addEventListener('change', function(){
+      setTimeout(function(){
+        try{
+          var nm = currentItemName();
+          if (nm && !matchesFilter(nm)){
+            var idx = findNextIndexFrom((state && state.i)||0, +1, false);
+            if (idx >= 0) show(idx);
+          }
+        }catch(e){}
+      }, 0);
+    });
+  }
+})();
+</script>
+
+
+<script>
+// === Robust LOCATION persistence ===
+(function(){
+  function ensureState(){
+    try{
+      if (!window.state || typeof state !== 'object') window.state = {};
+      if (!state.map || typeof state.map !== 'object') state.map = {};
+      if (!state.locs || typeof state.locs !== 'object') state.locs = {};
+    }catch(e){}
+  }
+  function migrateLocs(){
+    // Move any rec.loc into state.locs for durability
+    try{
+      ensureState();
+      var map = state.map || {};
+      Object.keys(map).forEach(function(name){
+        var rec = map[name];
+        if (rec && typeof rec.loc === 'string' && rec.loc){
+          state.locs[name] = rec.loc;
+        }
+      });
+      if (typeof save === 'function') save();
+    }catch(e){}
+  }
+  function currentName(){
+    try{ return (window.ITEMS && window.state && typeof state.i==='number') ? ITEMS[state.i] : null; }catch(e){ return null; }
+  }
+  function setSelectFromState(){
+    try{
+      var sel = document.getElementById('locationSelect');
+      if (!sel) return;
+      var nm = currentName(); if (!nm) return;
+      ensureState();
+      var v = (state.locs && state.locs[nm]) || (state.map && state.map[nm] && state.map[nm].loc) || "";
+      sel.value = v || "";
+    }catch(e){}
+  }
+  function persistCurrent(){
+    try{
+      ensureState();
+      var nm = currentName(); if (!nm) return;
+      var sel = document.getElementById('locationSelect');
+      var v = sel ? (sel.value||"") : "";
+      // mirror into both places
+      state.locs[nm] = v;
+      var rec = state.map[nm] || {stock:"",order:"",note:(state.notes&&state.notes[nm])||"",status:"",bucket:""};
+      rec.loc = v;
+      state.map[nm] = rec;
+      if (typeof save === 'function') save();
+    }catch(e){}
+  }
+
+  // Init: ensure/migrate
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ ensureState(); migrateLocs(); setSelectFromState(); });
+  } else {
+    ensureState(); migrateLocs(); setSelectFromState();
+  }
+
+  // Hook show() so LOCATION reflects the current item after navigation
+  try{
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        try{ setSelectFromState(); }catch(e){}
+        return r;
+      };
+    } else {
+      // fallback update shortly after load
+      setTimeout(setSelectFromState, 0);
+    }
+  }catch(e){}
+
+  // Save immediately when LOCATION changes (and mirror to rec.loc)
+  (function(){
+    var sel = document.getElementById('locationSelect');
+    if (!sel) return;
+    function onChange(){
+      try{
+        persistCurrent();
+        setTimeout(persistCurrent, 0); // iOS Safari flush
+      }catch(e){}
+    }
+    sel.addEventListener('change', onChange);
+    sel.addEventListener('input', onChange);
+  })();
+
+  // Persist current record on page close
+  window.addEventListener('beforeunload', function(){ try{ persistCurrent(); }catch(e){} });
+})();
+</script>
+
+
+<script>
+window.LOCATIONS = {
+  "Amla": "Side Door",
+  "Arvi": "Side Door",
+  "Aubergine": "Cold Room",
+  "Avocado": "Cold Room",
+  "Baby Cucumber": "Cold Room",
+  "Baby Potato": "Garden",
+  "Bags Blue": "Side Door",
+  "Bags Fruit And Veg": "Side Door",
+  "Bags Jumbo White": "Side Door",
+  "Baking Potato": "Garden",
+  "Bananas": "Outside",
+  "Beans": "Cold Room",
+  "Beetroot": "Cold Room",
+  "Birds Eye": "Cold Room",
+  "Blueberries": "Outside",
+  "Bullet Chilly": "Cold Room",
+  "Butcher Bags 10x12": "Side Door",
+  "Butcher Bags 12x15": "Side Door",
+  "Butcher Cloth": "Side Door",
+  "Butternut Squash": "Cold Room",
+  "Carrot": "Cold Room",
+  "Cauliflower": "Cold Room",
+  "Cherries": "Outside",
+  "Coconut": "Garden",
+  "Conference Pears": "Outside",
+  "Coriander": "Cold Room",
+  "Courgette": "Cold Room",
+  "Cucumber": "Cold Room",
+  "Curry Leaf": "Cold Room",
+  "Custard Apple": "Outside",
+  "Cyprus Potato": "Garden",
+  "Dosa Mix": "Side Door",
+  "Figs": "Outside",
+  "Frog Melon": "Outside",
+  "Galia Melon": "Outside",
+  "Garlic": "Garden",
+  "Ginger": "Garden",
+  "Golden Apple": "Outside",
+  "Green Chilly": "Cold Room",
+  "Green Pepper": "Cold Room",
+  "Guava": "Outside",
+  "Haldi Fresh": "Side Door",
+  "Hot Chilly": "Cold Room",
+  "Iranian Melon": "Outside",
+  "Karela": "Cold Room",
+  "Lemon": "Garden",
+  "Lettuce": "Cold Room",
+  "Lime": "Cold Room",
+  "Long Chilly": "Cold Room",
+  "Long Kudoo": "Cold Room",
+  "Lychees": "Outside",
+  "Mangos": "Outside",
+  "Methi": "Cold Room",
+  "Mint": "Cold Room",
+  "Mooli": "Cold Room",
+  "Mushroom": "Cold Room",
+  "Nardacotts": "Outside",
+  "Nectarines": "Outside",
+  "Okra": "Cold Room",
+  "Onion Bag 22kg": "Garden",
+  "Onion Bag 4kg": "Garden",
+  "Onion Bag 8kg": "Garden",
+  "Onion Bombay": "Garden",
+  "Onion Red 10kg": "Garden",
+  "Onion Red 4kg": "Garden",
+  "Onion Spanish": "Garden",
+  "Oranges": "Outside",
+  "Papaya": "Cold Room",
+  "Parsley": "Cold Room",
+  "Pineapple": "Outside",
+  "Pink Lady Apple": "Outside",
+  "Plantain": "Side Door",
+  "Plums": "Outside",
+  "Pomelo": "Outside",
+  "Pomme Small": "Outside",
+  "Potato Red 4kg": "Garden",
+  "PP Conference": "Outside",
+  "Ppk White Potato 2kg": "Garden",
+  "Prepack Apple": "Outside",
+  "Prepack Black Grapes": "Outside",
+  "Prepack Garlic": "Garden",
+  "Prepack Kiwi": "Outside",
+  "Prepack Oranges 2kg": "Outside",
+  "Prepack Pepper": "Cold Room",
+  "Prepack Prickly": "Outside",
+  "Prepack Red Grapes": "Outside",
+  "Prepack Red Pears": "Outside",
+  "Raviya": "Cold Room",
+  "Raw Mango": "Side Door",
+  "Red Pepper": "Cold Room",
+  "Red Potato 20kg": "Garden",
+  "Red USA Apple": "Outside",
+  "Round Kudoo": "Cold Room",
+  "Royal Gala": "Outside",
+  "Saag": "Cold Room",
+  "Soya": "Cold Room",
+  "Spinach": "Cold Room",
+  "Spring Onions": "Cold Room",
+  "St Ivel Single Cream": "Cold Room",
+  "Strawberries": "Cold Room",
+  "Sultana Grapes": "Outside",
+  "Sweet Potato": "Cold Room",
+  "Sweet Tamarind": "Outside",
+  "Sweetcorn": "Cold Room",
+  "Thai Aubergine": "Cold Room",
+  "Tomato": "Cold Room",
+  "Turkish Pomme": "Outside",
+  "Turnip": "Cold Room",
+  "Vine Tomato": "Cold Room",
+  "Vitaplus": "Side Door",
+  "Walnuts": "Side Door",
+  "Watermelon": "Outside",
+  "White Cabbage": "Cold Room",
+  "White Potato 25kg": "Garden",
+  "Yellow Dates": "Outside",
+  "Yellow Melon": "Outside"
+};
+(function(){
+  function applyHardwiredLocations(){
+    try{ 
+      if (!window.ITEMS || !window.state){ return; }
+      if (!state.map) state.map = {}
+      ITEMS.forEach(function(name){
+        var loc = window.LOCATIONS[name];
+        if (!loc) return;
+        var rec = state.map[name] || {stock:"",order:"",note:(state.notes&&state.notes[name])||"",status:"",bucket:""};
+        rec.loc = loc;
+        state.map[name] = rec;
+      });
+      if (typeof save === 'function') save();
+    }catch(e){}
+  }
+  if (document.readyState === 'loading'){ 
+    document.addEventListener('DOMContentLoaded', applyHardwiredLocations);
+  } else { 
+    applyHardwiredLocations();
+  }
+})();
+</script>
+
+
+<script>
+// Highlight active category with orange glow and jump to that category's first item
+(function(){
+  function getLoc(name){
+    try{
+      if (!name) return '';
+      if (window.LOCATIONS && LOCATIONS[name]) return LOCATIONS[name];
+      if (window.state && state.map && state.map[name] && state.map[name].loc) return state.map[name].loc;
+      return '';
+    }catch(e){ return ''; }
+  }
+  function firstIndexFor(filter){
+    if (filter === 'all') return 0;
+    if (!Array.isArray(ITEMS)) return -1;
+    for (var i=0;i<ITEMS.length;i++){
+      if (getLoc(ITEMS[i]) === filter) return i;
+    }
+    return -1;
+  }
+  function setActiveGlow(which){
+    var ids = ['filterAllBtn','filterColdBtn','filterGardenBtn','filterSideBtn','filterOutsideBtn'];
+    ids.forEach(function(id){
+      var b = document.getElementById(id);
+      if (b) b.classList.remove('filter-active');
+    });
+    var map = {
+      'all':'filterAllBtn',
+      'Cold Room':'filterColdBtn',
+      'Garden':'filterGardenBtn',
+      'Side Door':'filterSideBtn',
+      'Outside':'filterOutsideBtn'
+    };
+    if (map[which]) {
+      var btn = document.getElementById(map[which]);
+      if (btn) btn.classList.add('filter-active');
+    }
+  }
+  function bindJump(id, filter){
+    var b = document.getElementById(id);
+    if (!b) return;
+    b.addEventListener('click', function(ev){
+      try{
+        // Visual
+        setActiveGlow(filter);
+        // Navigate to first item in this category
+        var idx = firstIndexFor(filter);
+        if (idx >= 0 && typeof window.show === 'function') window.show(idx);
+      }catch(e){}
+    });
+  }
+  function init(){
+    bindJump('filterAllBtn','all');
+    bindJump('filterColdBtn','Cold Room');
+    bindJump('filterGardenBtn','Garden');
+    bindJump('filterSideBtn','Side Door');
+    bindJump('filterOutsideBtn','Outside');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+
+<script>
+(function(){
+  function clearActive(){
+    ['filterAllBtn','filterColdBtn','filterGardenBtn','filterSideBtn','filterOutsideBtn'].forEach(function(id){
+      var b = document.getElementById(id);
+      if (b) b.classList.remove('filter-active');
+    });
+  }
+  function setActive(id){
+    clearActive();
+    var b = document.getElementById(id);
+    if (b){ b.classList.add('filter-active'); b.blur && b.blur(); }
+  }
+  function bindOnce(id){
+    var b = document.getElementById(id);
+    if (!b) return;
+    b.addEventListener('click', function(){ setActive(id); }, true);
+  }
+  function init(){
+    bindOnce('filterAllBtn');
+    bindOnce('filterColdBtn');
+    bindOnce('filterGardenBtn');
+    bindOnce('filterSideBtn');
+    bindOnce('filterOutsideBtn');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+
+<script>
+(function(){
+  // Helper: item location using hard-wired map (fallback to state.map.loc if present)
+  function getLoc(name){
+    try{
+      if (!name) return '';
+      if (window.LOCATIONS && LOCATIONS[name]) return LOCATIONS[name];
+      if (window.state && state.map && state.map[name] && state.map[name].loc) return state.map[name].loc;
+      return '';
+    }catch(e){ return ''; }
+  }
+  // Find next index within a category
+  function nextIndexInCategoryFrom(start, dir, category){
+    if (!Array.isArray(ITEMS) || !ITEMS.length) return -1;
+    var n = ITEMS.length;
+    var i = ((start % n) + n) % n;
+    for (var step=1; step<=n; step++){
+      var j = (i + dir*step + n) % n;
+      if (getLoc(ITEMS[j]) === category || (category==='all')) return j;
+    }
+    return -1;
+  }
+  // First index for a category
+  function firstIndexFor(category){
+    if (category==='all') return 0;
+    if (!Array.isArray(ITEMS)) return -1;
+    for (var i=0;i<ITEMS.length;i++){
+      if (getLoc(ITEMS[i]) === category) return i;
+    }
+    return -1;
+  }
+  // Read which button is currently active based on .filter-active
+  function activeCategory(){
+    if (document.getElementById('filterColdBtn')?.classList.contains('filter-active')) return 'Cold Room';
+    if (document.getElementById('filterGardenBtn')?.classList.contains('filter-active')) return 'Garden';
+    if (document.getElementById('filterSideBtn')?.classList.contains('filter-active')) return 'Side Door';
+    if (document.getElementById('filterOutsideBtn')?.classList.contains('filter-active')) return 'Outside';
+    return 'all';
+  }
+  // Switch glow to exactly one button
+  function setActiveButton(which){
+    var ids = ['filterAllBtn','filterColdBtn','filterGardenBtn','filterSideBtn','filterOutsideBtn'];
+    var map = { all:'filterAllBtn','Cold Room':'filterColdBtn','Garden':'filterGardenBtn','Side Door':'filterSideBtn','Outside':'filterOutsideBtn' };
+    ids.forEach(function(id){ var b=document.getElementById(id); if (b) b.classList.remove('filter-active'); });
+    var id = map[which]; if (id){ var b=document.getElementById(id); if (b) b.classList.add('filter-active'); }
+  }
+  // Bind so clicking a category cycles within that category
+  function bindCycler(id, category){
+    var btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', function(ev){
+      try{
+        var current = activeCategory();
+        // If switching to a NEW category: activate + go to first item in that category
+        if (current !== category){
+          setActiveButton(category);
+          var first = firstIndexFor(category);
+          if (first >= 0 && typeof window.show==='function') window.show(first);
+          return;
+        }
+        // If clicking the SAME active category: cycle to next item in that category
+        var start = (window.state && typeof state.i==='number') ? state.i : 0;
+        var next  = nextIndexInCategoryFrom(start, +1, category);
+        if (next >= 0 && typeof window.show==='function') window.show(next);
+      }catch(e){}
+    }, true); // capture to run before other handlers
+  }
+  function init(){
+    bindCycler('filterAllBtn','all');
+    bindCycler('filterColdBtn','Cold Room');
+    bindCycler('filterGardenBtn','Garden');
+    bindCycler('filterSideBtn','Side Door');
+    bindCycler('filterOutsideBtn','Outside');
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+
+<script>
+// Make "NOT NEEDED" advance within the active category
+(function(){
+  function activeCategory(){
+    try{
+      if (document.getElementById('filterColdBtn')?.classList.contains('filter-active')) return 'Cold Room';
+      if (document.getElementById('filterGardenBtn')?.classList.contains('filter-active')) return 'Garden';
+      if (document.getElementById('filterSideBtn')?.classList.contains('filter-active')) return 'Side Door';
+      if (document.getElementById('filterOutsideBtn')?.classList.contains('filter-active')) return 'Outside';
+      return 'all';
+    }catch(e){ return 'all'; }
+  }
+  function getLoc(name){
+    try{
+      if (!name) return '';
+      if (window.LOCATIONS && LOCATIONS[name]) return LOCATIONS[name];
+      if (window.state && state.map && state.map[name] && state.map[name].loc) return state.map[name].loc;
+      return '';
+    }catch(e){ return ''; }
+  }
+  function matchesFilter(name, filter){
+    if (!name) return false;
+    if (filter === 'all') return true;
+    return getLoc(name) === filter;
+  }
+  function nextIndexFrom(start, dir, filter){
+    if (!Array.isArray(ITEMS) || !ITEMS.length) return -1;
+    var n = ITEMS.length;
+    var i = ((start % n) + n) % n;
+    for (var step=1; step<=n; step++){
+      var j = (i + dir*step + n) % n;
+      if (matchesFilter(ITEMS[j], filter)) return j;
+    }
+    return -1;
+  }
+
+  function bindNotNeededAdvance(){
+    var btn = document.getElementById('notNeededBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function(){
+      // Allow the original handler to mark status & save first,
+      // then navigate to the next item inside the active category.
+      setTimeout(function(){
+        try{
+          var filter = activeCategory();
+          if (!window.state || typeof state.i!=='number') return;
+          var start = state.i;
+          var next = nextIndexFrom(start, +1, filter);
+          if (next >= 0 && typeof window.show==='function') window.show(next);
+        }catch(e){}
+      }, 0);
+    }, false); // bubble: run after the default handler
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindNotNeededAdvance);
+  else bindNotNeededAdvance();
+})();
+</script>
+
+
+<script>
+
+<script>
+/* Guarantee NOT NEEDED records + advances inside the active category (safeguarded, with full UI refresh) */
+(function(){
+  function activeCategory(){
+    try{
+      if (document.getElementById('filterColdBtn')?.classList.contains('filter-active')) return 'Cold Room';
+      if (document.getElementById('filterGardenBtn')?.classList.contains('filter-active')) return 'Garden';
+      if (document.getElementById('filterSideBtn')?.classList.contains('filter-active')) return 'Side Door';
+      if (document.getElementById('filterOutsideBtn')?.classList.contains('filter-active')) return 'Outside';
+      return 'all';
+    }catch(e){ return 'all'; }
+  }
+  function getLoc(name){
+    try{
+      if (!name) return '';
+      if (window.LOCATIONS && LOCATIONS[name]) return LOCATIONS[name];
+      if (window.state && state.map && state.map[name] && state.map[name].loc) return state.map[name].loc;
+      return '';
+    }catch(e){ return ''; }
+  }
+  function matchesFilter(name, filter){
+    if (!name) return false;
+    if (filter === 'all') return true;
+    return getLoc(name) === filter;
+  }
+  function nextIndexFrom(start, dir, filter){
+    if (!Array.isArray(ITEMS) || !ITEMS.length) return -1;
+    var n = ITEMS.length;
+    var i = ((start % n) + n) % n;
+    for (var step=1; step<=n; step++){
+      var j = (i + dir*step + n) % n;
+      if (matchesFilter(ITEMS[j], filter)) return j;
+    }
+    return -1;
+  }
+  function refreshAllUI(){
+    try{ if (typeof updateProgressUI === 'function') updateProgressUI(); }catch(e){}
+    try{ if (typeof buildUnansweredList === 'function') buildUnansweredList(); }catch(e){}
+    try{ if (typeof updateNotNeededState === 'function') updateNotNeededState(); }catch(e){}
+    try{ if (typeof updateSaveButtons === 'function') updateSaveButtons(); }catch(e){}
+  }
+  function bindGuaranteedNotNeeded(){
+    var btn = document.getElementById('notNeededBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function(){
+      // Let original handler run (mark + save + counters) then enforce + advance
+      setTimeout(function(){
+        try{
+          if (window.state && Array.isArray(ITEMS) && typeof state.i==='number'){
+            var name = ITEMS[state.i];
+            if (name){
+              if (!state.map) state.map = {};
+              var rec = state.map[name] || {stock:"",order:"",note:(state.notes&&state.notes[name])||"",status:"",bucket:""};
+              if (rec.status !== 'notneeded'){
+                rec.status = 'notneeded';
+                state.map[name] = rec;
+                if (typeof save === 'function') save();
+              }
+            }
+          }
+          refreshAllUI();
+          if (typeof forceProgressRefresh==="function") forceProgressRefresh(); 
+    try{ if (typeof updateNotNeededState === 'function') updateNotNeededState(); }catch(e){}
+    try{ if (typeof buildUnansweredList === 'function') buildUnansweredList(); }catch(e){}
+    var filter = activeCategory();
+          var start = (window.state && typeof state.i==='number') ? state.i : 0;
+          var next = nextIndexFrom(start, +1, filter);
+          if (next >= 0 && typeof window.show==='function') {
+            window.show(next);
+            // after navigation, refresh again to ensure counters reflect state
+            setTimeout(function(){ try{ refreshAllUI(); if (typeof forceProgressRefresh==="function") forceProgressRefresh(); }catch(e){} }, 30);
+          }
+        }catch(e){}
+      }, 80);
+    }, false);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindGuaranteedNotNeeded);
+  else bindGuaranteedNotNeeded();
+})();
+</script>
+
+
+
+<script>
+// ROBUST NOT NEEDED: record + update counters + advance within category (single authoritative handler)
+(function(){
+  function activeCategory(){
+    try{
+      if (document.getElementById('filterColdBtn')?.classList.contains('filter-active')) return 'Cold Room';
+      if (document.getElementById('filterGardenBtn')?.classList.contains('filter-active')) return 'Garden';
+      if (document.getElementById('filterSideBtn')?.classList.contains('filter-active')) return 'Side Door';
+      if (document.getElementById('filterOutsideBtn')?.classList.contains('filter-active')) return 'Outside';
+      return 'all';
+    }catch(e){ return 'all'; }
+  }
+  function getLoc(name){
+    try{
+      if (!name) return '';
+      if (window.LOCATIONS && LOCATIONS[name]) return LOCATIONS[name];
+      if (window.state && state.map && state.map[name] && state.map[name].loc) return state.map[name].loc;
+      return '';
+    }catch(e){ return ''; }
+  }
+  function matchesFilter(name, filter){
+    if (!name) return false;
+    if (filter === 'all') return true;
+    return getLoc(name) === filter;
+  }
+  function nextIndexFrom(start, dir, filter){
+    if (!Array.isArray(ITEMS) || !ITEMS.length) return -1;
+    var n = ITEMS.length;
+    var i = ((start % n) + n) % n;
+    for (var step=1; step<=n; step++){
+      var j = (i + dir*step + n) % n;
+      if (matchesFilter(ITEMS[j], filter)) return j;
+    }
+    return -1;
+  }
+  function refreshAllUI(){
+    try{ if (typeof updateProgressUI === 'function') updateProgressUI(); }catch(e){}
+    try{ if (typeof buildUnansweredList === 'function') buildUnansweredList(); }catch(e){}
+    try{ if (typeof updateNotNeededState === 'function') updateNotNeededState(); }catch(e){}
+    try{ if (typeof updateSaveButtons === 'function') updateSaveButtons(); }catch(e){}
+  }
+
+  function bindRobustNotNeeded(){
+    var btn = document.getElementById('notNeededBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function(ev){
+      try{
+        // Cancel legacy handler to avoid double-navigation or mis-index
+        if (ev && typeof ev.preventDefault==='function') ev.preventDefault();
+        if (ev && typeof ev.stopImmediatePropagation==='function') ev.stopImmediatePropagation();
+
+        if (!window.state || !Array.isArray(ITEMS) || typeof state.i!=='number') return;
+        var curIndex = state.i;
+        var name = ITEMS[curIndex];
+        if (!state.map) state.map = {};
+        var rec = state.map[name] || {stock:"",order:"",note:(state.notes&&state.notes[name])||"",status:"",bucket:""};
+        rec.status = 'notneeded';
+        state.map[name] = rec;
+
+        // Persist and refresh UI counters
+        if (typeof save === 'function') save();
+        refreshAllUI();
+
+        if (typeof forceProgressRefresh==="function") forceProgressRefresh(); // Advance within active category
+        var filter = activeCategory();
+        var next = nextIndexFrom(curIndex, +1, filter);
+        if (next >= 0 && typeof window.show==='function') {
+          window.show(next);
+          // Refresh again after navigation to ensure top bar reflects new current index
+          setTimeout(function(){ try{ refreshAllUI(); if (typeof forceProgressRefresh==="function") forceProgressRefresh(); }catch(e){} }, 20);
+        }
+      }catch(e){}
+    }, true); // capture phase -> our handler runs first and takes control
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindRobustNotNeeded);
+  else bindRobustNotNeeded();
+})();
+</script>
+
+
+<script>
+// Direct, deterministic progress refresh (does not rely on other functions)
+(function(){
+  function isResp(rec){
+    if (!rec) return false;
+    if (rec.status === 'notneeded') return true;
+    if (rec.status === 'saved'){
+      var q = parseInt(rec.order||'0',10);
+      return q > 0;
+    }
+    return false;
+  }
+  window.forceProgressRefresh = function(){
+    try{
+      var responded = 0;
+      var total = (typeof TOTAL==='number') ? TOTAL : (Array.isArray(ITEMS)?ITEMS.length:0);
+      if (Array.isArray(ITEMS)){
+        for (var i=0;i<ITEMS.length;i++){
+          var nm = ITEMS[i];
+          var rec = (window.state && state.map) ? state.map[nm] : null;
+          if (isResp(rec)) responded++;
+        }
+      }
+      var left = Math.max(0, total - responded);
+      // Update the simple counter (0 / 111)
+      var ctr = document.getElementById('counter');
+      if (ctr) ctr.textContent = responded + ' / ' + total;
+      // Update any other tally labels if present
+      var pr = document.getElementById('progressTally');
+      if (pr) pr.textContent = 'Responded: ' + responded + ' / ' + total;
+      // Update progress bar fill
+      var fill = document.getElementById('progressFill');
+      if (fill){
+        var pct = total ? Math.round((responded/total)*100) : 0;
+        fill.style.width = pct + '%';
+      }
+    }catch(e){}
+  };
+})();
+</script>
+
+
+<div id="floatingNav" aria-hidden="false">
+  <button id="floatPrev" class="float-btn" type="button">Prev</button>
+  <button id="floatNext" class="float-btn" type="button">Next</button>
+</div>
+
+
+<script>
+// Wire floating Prev/Next to existing navigation (preserves category-aware hooks)
+(function(){
+  function clickIf(id){
+    var el = document.getElementById(id);
+    if (el) { el.click(); return true; }
+    return false;
+  }
+  function bindFloating(){
+    var fp = document.getElementById('floatPrev');
+    var fn = document.getElementById('floatNext');
+    if (fp) fp.addEventListener('click', function(e){
+      e.preventDefault();
+      // Trigger existing Prev logic (which is already category-aware if present)
+      if (!clickIf('prevBtn')){
+        // fallback: try arrow-left key event
+        try{
+          var evt = new KeyboardEvent('keydown', {key:'ArrowLeft'});
+          document.dispatchEvent(evt);
+        }catch(_){}
+      }
+    });
+    if (fn) fn.addEventListener('click', function(e){
+      e.preventDefault();
+      if (!clickIf('nextBtn')){
+        try{
+          var evt = new KeyboardEvent('keydown', {key:'ArrowRight'});
+          document.dispatchEvent(evt);
+        }catch(_){}
+      }
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bindFloating);
+  else bindFloating();
+})();
+</script>
+
+
+<script>
+// === Strict category-locked navigation ===
+(function(){
+  // Determine current active category from the glowing button
+  function activeCategory(){
+    try{
+      if (document.getElementById('filterColdBtn')?.classList.contains('filter-active')) return 'Cold Room';
+      if (document.getElementById('filterGardenBtn')?.classList.contains('filter-active')) return 'Garden';
+      if (document.getElementById('filterSideBtn')?.classList.contains('filter-active')) return 'Side Door';
+      if (document.getElementById('filterOutsideBtn')?.classList.contains('filter-active')) return 'Outside';
+      return 'all';
+    }catch(e){ return 'all'; }
+  }
+  function getLoc(name){
+    try{
+      if (!name) return '';
+      if (window.LOCATIONS && LOCATIONS[name]) return LOCATIONS[name];
+      if (window.state && state.map && state.map[name] && state.map[name].loc) return state.map[name].loc;
+      return '';
+    }catch(e){ return ''; }
+  }
+  function matchesFilter(name, filter){
+    if (!name) return false;
+    if (filter === 'all') return true;
+    return getLoc(name) === filter;
+  }
+  function nextIndexFrom(start, dir, unansweredOnly, filter){
+    if (!Array.isArray(ITEMS) || !ITEMS.length) return -1;
+    var n = ITEMS.length;
+    var i = ((start % n) + n) % n;
+    for (var step=1; step<=n; step++){
+      var j = (i + dir*step + n) % n;
+      var nm = ITEMS[j];
+      if (!matchesFilter(nm, filter)) continue;
+      if (unansweredOnly){
+        var rec = (state.map && state.map[nm]) || null;
+        var responded = !!(rec && (rec.status === 'notneeded' || (rec.status === 'saved' && parseInt(rec.order||'0',10)>0)));
+        if (responded) continue;
+      }
+      return j;
+    }
+    return -1;
+  }
+  function firstIndexFor(filter){
+    if (!Array.isArray(ITEMS)) return -1;
+    for (var i=0;i<ITEMS.length;i++) if (matchesFilter(ITEMS[i], filter)) return i;
+    return -1;
+  }
+
+  // Enforce category on any show() calls
+  (function(){
+    var _show = window.show;
+    if (typeof _show !== 'function') return;
+    window.show = function(i){
+      try{
+        var f = activeCategory();
+        if (Array.isArray(ITEMS) && typeof i === 'number' && !matchesFilter(ITEMS[i], f)){
+          var j = nextIndexFrom(i, +1, false, f);
+          if (j >= 0) i = j;
+        }
+      }catch(e){}
+      return _show.apply(this, [i]);
+    };
+  })();
+
+  // Intercept Prev / Next / Next Unanswered to stay inside category
+  function bindNavLock(){
+    var prev = document.getElementById('prevBtn');
+    var next = document.getElementById('nextBtn');
+    var nextU= document.getElementById('nextUnansweredBtn');
+    if (prev) prev.addEventListener('click', function(ev){
+      var f = activeCategory();
+      if (!window.state || typeof state.i!=='number') return;
+      var start = state.i;
+      var idx = nextIndexFrom(start, -1, false, f);
+      if (idx >= 0){ ev.preventDefault(); ev.stopImmediatePropagation && ev.stopImmediatePropagation(); show(idx); }
+    }, true);
+    if (next) next.addEventListener('click', function(ev){
+      var f = activeCategory();
+      if (!window.state || typeof state.i!=='number') return;
+      var start = state.i;
+      var idx = nextIndexFrom(start, +1, false, f);
+      if (idx >= 0){ ev.preventDefault(); ev.stopImmediatePropagation && ev.stopImmediatePropagation(); show(idx); }
+    }, true);
+    if (nextU) nextU.addEventListener('click', function(ev){
+      var f = activeCategory();
+      if (!window.state || typeof state.i!=='number') return;
+      var start = state.i;
+      var idx = nextIndexFrom(start, +1, true, f);
+      if (idx >= 0){ ev.preventDefault(); ev.stopImmediatePropagation && ev.stopImmediatePropagation(); show(idx); }
+      else { ev.preventDefault(); alert('All items in this category are answered. ✅'); }
+    }, true);
+  }
+
+  // Ensure category jump when user changes category (if not already handled)
+  function bindCategoryJump(){
+    function jump(){
+      var f = activeCategory();
+      var first = firstIndexFor(f);
+      if (first >= 0 && typeof window.show==='function') window.show(first);
+    }
+    ['filterAllBtn','filterColdBtn','filterGardenBtn','filterSideBtn','filterOutsideBtn'].forEach(function(id){
+      var b = document.getElementById(id);
+      if (b) b.addEventListener('click', function(){ setTimeout(jump, 0); }, true);
+    });
+  }
+
+  // Floating buttons already click prev/next; our capture handlers above will apply.
+
+  function init(){
+    bindNavLock();
+    bindCategoryJump();
+    // On load, if current item doesn't match active category, jump to first match
+    setTimeout(function(){
+      try{
+        var f = activeCategory();
+        var cur = (window.state && typeof state.i==='number') ? state.i : 0;
+        var nm = (Array.isArray(ITEMS) && ITEMS[cur]) ? ITEMS[cur] : null;
+        if (!matchesFilter(nm, f)){
+          var first = firstIndexFor(f);
+          if (first >= 0) show(first);
+        }
+      }catch(e){}
+    }, 60);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+
+
+
+
+<script>
+// Minimal navigation debounce: only wrap show() to prevent double-advance
+(function(){
+  var NAV_DEBOUNCE_MS = 350;
+  var _lastNavTs = 0;
+  var _show = window.show;
+  if (typeof _show === 'function'){
+    window.show = function(i){
+      var now = Date.now();
+      if (now - _lastNavTs < NAV_DEBOUNCE_MS) return;
+      _lastNavTs = now;
+      return _show.apply(this, [i]);
+    };
+  }
+})();
+</script>
+
+
+<script>
+(function(){
+  function isResponded(rec){
+    if (!rec) return false;
+    if (rec.status === 'notneeded') return true;
+    if (rec.status === 'saved'){
+      var q = parseInt(rec.order||'0',10);
+      return q > 0;
+    }
+    return false;
+  }
+  function getLoc(name){
+    try{
+      if (!name) return '';
+      if (window.LOCATIONS && LOCATIONS[name]) return LOCATIONS[name];
+      if (window.state && state.map && state.map[name] && state.map[name].loc) return state.map[name].loc;
+      return '';
+    }catch(e){ return ''; }
+  }
+  function ensureBadge(btnId){
+    var btn = document.getElementById(btnId);
+    if (!btn) return null;
+    var b = btn.querySelector('.cat-left-badge');
+    if (!b){
+      b = document.createElement('span');
+      b.className = 'cat-left-badge';
+      b.textContent = '';
+      btn.appendChild(b);
+    }
+    return b;
+  }
+  function updateCategoryBadges(){
+    try{
+      if (!Array.isArray(ITEMS)) return;
+      var left = { 'all':0, 'Cold Room':0, 'Garden':0, 'Side Door':0, 'Outside':0 };
+      for (var i=0;i<ITEMS.length;i++){
+        var nm = ITEMS[i];
+        var rec = (window.state && state.map) ? state.map[nm] : null;
+        var loc = getLoc(nm);
+        if (!isResponded(rec)){
+          left['all']++;
+          if (left.hasOwnProperty(loc)) left[loc]++;
+        }
+      }
+      var map = {
+        'filterAllBtn':'all',
+        'filterColdBtn':'Cold Room',
+        'filterGardenBtn':'Garden',
+        'filterSideBtn':'Side Door',
+        'filterOutsideBtn':'Outside'
+      };
+      Object.keys(map).forEach(function(id){
+        var badge = ensureBadge(id);
+        if (badge) badge.textContent = left[map[id]] || 0;
+      });
+    }catch(e){}
+  }
+  // expose
+  window.updateCategoryBadges = updateCategoryBadges;
+
+  // refresh on load
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', updateCategoryBadges);
+  else updateCategoryBadges();
+
+  // refresh after each navigation
+  var _show = window.show;
+  if (typeof _show === 'function'){
+    window.show = function(i){
+      var r = _show.apply(this, [i]);
+      try{ updateCategoryBadges(); }catch(e){}
+      return r;
+    };
+  }
+
+  // Try to refresh after Not Needed button clicks (if present)
+  var nn = document.getElementById('notNeededBtn');
+  if (nn){
+    nn.addEventListener('click', function(){ setTimeout(function(){ try{ updateCategoryBadges(); }catch(e){} }, 60); }, false);
+  }
+
+  // Periodic safety refresh (in case other actions changed state)
+  setInterval(function(){ try{ updateCategoryBadges(); }catch(e){} }, 1500);
+})();
+</script>
+
+
+<script>
+/* Reset-fix + trim-aware mapping: keeps 23 added items after Reset */
+(function(){
+  var ADD = {
+  "Bags Fruit And Veg": "Side Door",
+  "Bags Jumbo White": "Side Door",
+  "Beans": "Cold Room",
+  "Birds Eye": "Cold Room",
+  "Blueberries": "Outside",
+  "Butternut Squash": "Cold Room",
+  "Cherries": "Outside",
+  "Conference Pears": "Outside",
+  "Custard Apple": "Outside",
+  "Galia Melon": "Outside",
+  "Haldi Fresh": "Side Door",
+  "Hot Chilly": "Cold Room",
+  "Karela": "Cold Room",
+  "Long Kudoo": "Cold Room",
+  "Nectarines": "Outside",
+  "Oranges": "Outside",
+  "Parsley": "Cold Room",
+  "Pomelo": "Outside",
+  "Prepack Cherry": "Outside",
+  "Prepack Garlic": "Garden",
+  "Prepack Pepper": "Cold Room",
+  "Prepack Prickly": "Outside",
+  "Prepack Red Pears": "Outside",
+  "Red Potato 20kg": "Garden",
+  "Soya": "Cold Room",
+  "Spring Onions": "Cold Room",
+  "Strawberries": "Cold Room",
+  "Thai Aubergine": "Cold Room",
+  "Turkish Pomme": "Outside",
+  "Walnuts": "Side Door"
+};
+
+  function mergeLocations(){
+    if (!window.LOCATIONS) window.LOCATIONS = {
+  "Amla": "Side Door",
+  "Arvi": "Side Door",
+  "Aubergine": "Cold Room",
+  "Avocado": "Cold Room",
+  "Baby Cucumber": "Cold Room",
+  "Baby Potato": "Garden",
+  "Bags Blue": "Side Door",
+  "Bags Fruit And Veg": "Side Door",
+  "Bags Jumbo White": "Side Door",
+  "Baking Potato": "Garden",
+  "Bananas": "Outside",
+  "Beans": "Cold Room",
+  "Beetroot": "Cold Room",
+  "Birds Eye": "Cold Room",
+  "Blueberries": "Outside",
+  "Bullet Chilly": "Cold Room",
+  "Butcher Bags 10x12": "Side Door",
+  "Butcher Bags 12x15": "Side Door",
+  "Butcher Cloth": "Side Door",
+  "Butternut Squash": "Cold Room",
+  "Carrot": "Cold Room",
+  "Cauliflower": "Cold Room",
+  "Cherries": "Outside",
+  "Coconut": "Garden",
+  "Conference Pears": "Outside",
+  "Coriander": "Cold Room",
+  "Courgette": "Cold Room",
+  "Cucumber": "Cold Room",
+  "Curry Leaf": "Cold Room",
+  "Custard Apple": "Outside",
+  "Cyprus Potato": "Garden",
+  "Dosa Mix": "Side Door",
+  "Figs": "Outside",
+  "Frog Melon": "Outside",
+  "Galia Melon": "Outside",
+  "Garlic": "Garden",
+  "Ginger": "Garden",
+  "Golden Apple": "Outside",
+  "Green Chilly": "Cold Room",
+  "Green Pepper": "Cold Room",
+  "Guava": "Outside",
+  "Haldi Fresh": "Side Door",
+  "Hot Chilly": "Cold Room",
+  "Iranian Melon": "Outside",
+  "Karela": "Cold Room",
+  "Lemon": "Garden",
+  "Lettuce": "Cold Room",
+  "Lime": "Cold Room",
+  "Long Chilly": "Cold Room",
+  "Long Kudoo": "Cold Room",
+  "Lychees": "Outside",
+  "Mangos": "Outside",
+  "Methi": "Cold Room",
+  "Mint": "Cold Room",
+  "Mooli": "Cold Room",
+  "Mushroom": "Cold Room",
+  "Nardacotts": "Outside",
+  "Nectarines": "Outside",
+  "Okra": "Cold Room",
+  "Onion Bag 22kg": "Garden",
+  "Onion Bag 4kg": "Garden",
+  "Onion Bag 8kg": "Garden",
+  "Onion Bombay": "Garden",
+  "Onion Red 10kg": "Garden",
+  "Onion Red 4kg": "Garden",
+  "Onion Spanish": "Garden",
+  "Oranges": "Outside",
+  "Papaya": "Cold Room",
+  "Parsley": "Cold Room",
+  "Pineapple": "Outside",
+  "Pink Lady Apple": "Outside",
+  "Plantain": "Side Door",
+  "Plums": "Outside",
+  "Pomelo": "Outside",
+  "Pomme Small": "Outside",
+  "Potato Red 4kg": "Garden",
+  "PP Conference": "Outside",
+  "Ppk White Potato 2kg": "Garden",
+  "Prepack Apple": "Outside",
+  "Prepack Black Grapes": "Outside",
+  "Prepack Garlic": "Garden",
+  "Prepack Kiwi": "Outside",
+  "Prepack Oranges 2kg": "Outside",
+  "Prepack Pepper": "Cold Room",
+  "Prepack Prickly": "Outside",
+  "Prepack Red Grapes": "Outside",
+  "Prepack Red Pears": "Outside",
+  "Raviya": "Cold Room",
+  "Raw Mango": "Side Door",
+  "Red Pepper": "Cold Room",
+  "Red Potato 20kg": "Garden",
+  "Red USA Apple": "Outside",
+  "Round Kudoo": "Cold Room",
+  "Royal Gala": "Outside",
+  "Saag": "Cold Room",
+  "Soya": "Cold Room",
+  "Spinach": "Cold Room",
+  "Spring Onions": "Cold Room",
+  "St Ivel Single Cream": "Cold Room",
+  "Strawberries": "Cold Room",
+  "Sultana Grapes": "Outside",
+  "Sweet Potato": "Cold Room",
+  "Sweet Tamarind": "Outside",
+  "Sweetcorn": "Cold Room",
+  "Thai Aubergine": "Cold Room",
+  "Tomato": "Cold Room",
+  "Turkish Pomme": "Outside",
+  "Turnip": "Cold Room",
+  "Vine Tomato": "Cold Room",
+  "Vitaplus": "Side Door",
+  "Walnuts": "Side Door",
+  "Watermelon": "Outside",
+  "White Cabbage": "Cold Room",
+  "White Potato 25kg": "Garden",
+  "Yellow Dates": "Outside",
+  "Yellow Melon": "Outside"
+};
+    Object.keys(ADD).forEach(function(k){
+      if (!LOCATIONS[k]) LOCATIONS[k] = ADD[k];
+    });
+  }
+
+  function hydrateState(){
+    if (!window.state) window.state = {};
+    if (!state.map) state.map = {};
+    if (Array.isArray(window.ITEMS)){
+      for (var i=0;i<ITEMS.length;i++){
+        var raw = ITEMS[i];
+        var key = (raw||'').trim();
+        var rec = state.map[raw] || (state.map[raw] = {});
+        if (!rec.loc || rec.loc === "" || rec.loc === "Not set"){
+          var loc = (window.LOCATIONS && (LOCATIONS[raw] || LOCATIONS[key])) || "";
+          if (loc) rec.loc = loc;
+        }
+      }
+    }
+  }
+
+  function refresh(){
+    try{ if (typeof updateCategoryBadges==='function') updateCategoryBadges(); }catch(e){}
+    try{ if (typeof forceProgressRefresh==='function') forceProgressRefresh(); }catch(e){}
+  }
+
+  function run(){
+    mergeLocations();
+    hydrateState();
+    refresh();
+  }
+
+  // Run on load
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+
+  // Hook reset buttons and functions to re-run after reset
+  function isResetEl(el){
+    if (!el) return false;
+    if (el.id && /reset/i.test(el.id)) return true;
+    var txt = (el.textContent || "").trim().toLowerCase();
+    return txt === "reset" || txt.includes("reset all");
+  }
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    for (var i=0;i<3 && t; i++, t=t.parentElement){
+      if (isResetEl(t)){ setTimeout(run, 50); break; }
+    }
+  }, true);
+  ["reset","resetAll","clearAll","doReset"].forEach(function(name){
+    try{
+      var fn = window[name];
+      if (typeof fn === "function"){
+        window[name] = function(){
+          var r = fn.apply(this, arguments);
+          setTimeout(run, 50);
+          return r;
+        };
+      }
+    }catch(e){}
+  });
+})();
+</script>
+
+
+<script>
+(function(){
+  function setFrog(){
+    try{
+      if (!window.state) window.state = {};
+      if (!state.map) state.map = {};
+      var name = "Frog Melon";
+      var rec = state.map[name] || (state.map[name] = {});
+      if (!rec.loc) rec.loc = "Outside";
+      // Optional: if you keep category badges, refresh them
+      try{ if (typeof updateCategoryBadges==='function') updateCategoryBadges(); }catch(e){}
+    }catch(e){}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setFrog);
+  else setFrog();
+})();
+</script>
+
+
+<style>
+/* --- Undo toast for Not Needed --- */
+#undoToast {
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+  display: none; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 999px;
+  background: rgba(0,0,0,0.82); color: #fff; z-index: 99999;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+#undoToast button {
+  border: 0; padding: 6px 12px; border-radius: 999px; font-weight: 700;
+  background: #ffb300; color: #000; cursor: pointer;
+}
+#undoMsg { font-size: 14px; }
+</style>
+
+<div id="undoToast" aria-live="polite" aria-atomic="true">
+  <span id="undoMsg">Marked Not Needed.</span>
+  <button id="undoBtn" type="button">Undo</button>
+</div>
+
+<script>
+// ---- Not Needed: Undo support (non-invasive) ----
+(function(){
+  var undo = { name:null, prev:null, after:null, index:-1 };
+  var hideTimer = null;
+
+  function deepClone(o){ try{return JSON.parse(JSON.stringify(o||{}));}catch(e){return (o?Object.assign({},o):{});} }
+  function showToast(msg){
+    var t = document.getElementById('undoToast');
+    var m = document.getElementById('undoMsg');
+    if (!t || !m) return;
+    m.textContent = msg || 'Marked Not Needed.';
+    t.style.display = 'flex';
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hideToast, 5000);
+  }
+  function hideToast(){
+    var t = document.getElementById('undoToast');
+    if (t) t.style.display = 'none';
+    clearTimeout(hideTimer); hideTimer = null;
+  }
+
+  // Restore previous snapshot
+  function doUndo(){
+    try{
+      if (!undo || !undo.name) return hideToast();
+      if (!window.state) window.state = {};
+      if (!state.map) state.map = {};
+      state.map[undo.name] = deepClone(undo.prev);
+      try{ if (typeof saveState==='function') saveState(); }catch(e){}
+      try{ if (typeof updateNotNeededState==='function') updateNotNeededState(); }catch(e){}
+      try{ if (typeof buildUnansweredList==='function') buildUnansweredList(); }catch(e){}
+      try{ if (typeof forceProgressRefresh==='function') forceProgressRefresh(); }catch(e){}
+      try{ if (typeof refreshAllUI==='function') refreshAllUI(); }catch(e){}
+      try{
+        if (typeof show==='function' && Array.isArray(ITEMS) && undo.index>=0) show(undo.index);
+      }catch(e){}
+    }finally{
+      hideToast();
+      undo = { name:null, prev:null, after:null, index:-1 };
+    }
+  }
+
+  // Bind Undo button
+  (function(){
+    var b = document.getElementById('undoBtn');
+    if (b) b.addEventListener('click', function(ev){ ev.preventDefault(); doUndo(); });
+  })();
+
+  // Helper: current item name & index
+  function currentName(){
+    try{
+      if (Array.isArray(window.ITEMS) && window.state && typeof state.i==='number'){
+        var idx = state.i;
+        var nm = ITEMS[idx];
+        return {name:nm, index:idx};
+      }
+    }catch(e){}
+    return {name:null,index:-1};
+  }
+
+  // CAPTURE phase: before original handler runs, take a snapshot
+  function beforeNotNeeded(){
+    var cur = currentName();
+    if (!cur.name) return;
+    if (!window.state) window.state = {};
+    if (!state.map) state.map = {};
+    undo.name = cur.name;
+    undo.index = cur.index;
+    undo.prev  = deepClone(state.map[cur.name] || {});
+  }
+
+  // After original handler completes, capture "after", then show toast
+  function afterNotNeeded(){
+    setTimeout(function(){
+      var cur = currentName();
+      if (!cur.name || cur.name !== undo.name) {
+        // If navigated, still show toast for the one we changed
+      }
+      try{
+        undo.after = deepClone((state.map && state.map[undo.name]) || {});
+      }catch(e){}
+      showToast((undo.name || 'Item') + ' marked Not Needed');
+    }, 40);
+  }
+
+  // Attach to the Not Needed button if present
+  function bind(){
+    var btn = document.getElementById('notNeededBtn');
+    if (!btn) return;
+    // Capture BEFORE
+    btn.addEventListener('click', function(ev){ beforeNotNeeded(); }, true);
+    // Then AFTER
+    btn.addEventListener('click', function(ev){ afterNotNeeded(); }, false);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+
+  // Hide toast on orientation change
+  window.addEventListener('orientationchange', function(){ hideToast(); }, {passive:true});
+})();
+</script>
+
+
+<script>
+(function(){
+  function renderNotNeeded(){
+    try {
+      var box = document.getElementById('notNeededList');
+      if (!box || !window.ITEMS || !window.state || !state.map) return;
+      var names = [];
+      for (var i=0;i<ITEMS.length;i++){
+        var nm = ITEMS[i];
+        var rec = state.map[nm];
+        if (rec && rec.status === "notneeded") names.push(nm);
+      }
+      names.sort(function(a,b){ return (''+a).localeCompare((''+b),'en',{sensitivity:'base'}); });
+      if (box.tagName === 'PRE'){
+        box.textContent = names.join("\n");
+      } else {
+        while (box.firstChild) box.removeChild(box.firstChild);
+        for (var j=0;j<names.length;j++){
+          var li = document.createElement('li');
+li.textContent = names[j];
+li.style.cursor = 'pointer';
+li.addEventListener('click', function(){
+  try {
+    var idx = ITEMS.indexOf(this.textContent);
+    if (idx >= 0) {
+      safeShow(idx);
+      try { window.scrollTo({top: 0, behavior: 'smooth'}); } catch(e) { window.scrollTo(0,0); }
+    }
+  } catch(e) {}
+});
+box.appendChild(li);
+        }
+      }
+    } catch(e) {}
+  }
+  // Re-render after "Not Needed" clicks
+  document.addEventListener('DOMContentLoaded', function(){
+    var nn = document.getElementById('notNeededBtn');
+    if (nn) nn.addEventListener('click', function(){ setTimeout(renderNotNeeded, 0); }, {passive:true});
+  });
+  // Re-render after navigation (wrap show())
+  try {
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        setTimeout(renderNotNeeded, 0);
+        return r;
+      };
+    }
+  } catch(e) {}
+  // Initial render
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', renderNotNeeded);
+  } else {
+    renderNotNeeded();
+  }
+  // Expose for debugging
+  window.renderNotNeeded = renderNotNeeded;
+})();
+</script>
+
+
+<!-- Back to Top (minimal, fixed) -->
+<div id="backToTop" aria-hidden="false">
+  <button id="backToTopBtn" class="btn pill small" type="button" aria-label="Back to top">Top ⬆️</button>
+</div>
+
+
+<script>
+(function(){
+  var btn = document.getElementById('backToTopBtn');
+  if (btn){
+    btn.addEventListener('click', function(){
+      try { window.scrollTo({top: 0, behavior: 'smooth'}); }
+      catch(e){ window.scrollTo(0,0); }
+    });
+  }
+})();
+</script>
+
+
+<script>
+// Keep the red strike-through in sync with the CURRENT item
+(function(){
+  function updateTitleStrike(){
+    try {
+      var title = document.getElementById('itemName');
+      if (!title || !window.state || !window.ITEMS) return;
+      var name = ITEMS[state.i];
+      var rec = state.map ? state.map[name] : null;
+      if (rec && rec.status === 'notneeded') {
+        title.classList.add('notneeded');
+      } else {
+        title.classList.remove('notneeded');
+      }
+    } catch(e){}
+  }
+  // After Not Needed tap
+  document.addEventListener('DOMContentLoaded', function(){
+    var btn = document.getElementById('notNeededBtn');
+    if (btn) btn.addEventListener('click', function(){ setTimeout(updateTitleStrike, 0); }, {passive:true});
+  });
+  // After navigation: wrap show()
+  try {
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        setTimeout(updateTitleStrike, 0);
+        return r;
+      };
+    }
+  } catch(e){}
+  // First paint
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', updateTitleStrike);
+  } else {
+    updateTitleStrike();
+  }
+  // expose for debug
+  window.updateTitleStrike = updateTitleStrike;
+})();
+</script>
+
+
+<script>
+(function(){
+  window.focusOrderSoon = function(){
+    try{
+      setTimeout(function(){
+        try{
+          var orderEl = document.getElementById('orderInput') 
+                      || document.getElementById('order') 
+                      || document.querySelector('input[name="order"]');
+          if (orderEl){
+            if (!orderEl.getAttribute('inputmode')) orderEl.setAttribute('inputmode','numeric');
+            if (!orderEl.getAttribute('pattern')) orderEl.setAttribute('pattern','[0-9]*');
+            orderEl.focus();
+            if (typeof orderEl.select === 'function') orderEl.select();
+          }
+        }catch(e){}
+      }, 40);
+    }catch(e){}
+  };
+})();
+</script>
+
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  var note = document.getElementById('noteInput');
+  if (!note) return;
+
+  function createBtn(label, insertText){
+    let btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.style.display = 'none';
+    btn.style.marginTop = '6px';
+    btn.style.marginLeft = '8px';
+    btn.style.padding = '6px 12px';
+    btn.style.borderRadius = '6px';
+    btn.style.fontWeight = 'bold';
+    btn.style.background = '#ffcc00';
+    btn.style.border = '1px solid #aaa';
+    note.insertAdjacentElement('afterend', btn);
+
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      var insert = insertText + ' ';
+      var start = note.selectionStart ?? note.value.length;
+      var end   = note.selectionEnd ?? note.value.length;
+      note.value = note.value.slice(0, start) + insert + note.value.slice(end);
+      note.focus();
+      var pos = start + insert.length;
+      if (note.setSelectionRange) note.setSelectionRange(pos, pos);
+    });
+    return btn;
+  }
+
+  const btns = [
+    createBtn('Size','Size'),
+    createBtn('Pls Check','Pls Check'),
+    createBtn('Small','Small'),
+    createBtn('Medium','Medium'),
+    createBtn('Large','Large')
+  ];
+
+  note.addEventListener('focus', function(){ btns.forEach(b=>b.style.display='inline-block'); });
+  note.addEventListener('blur', function(){ setTimeout(()=>{ btns.forEach(b=>b.style.display='none'); },200); });
+});
+</script>
+
+</body>
+</html>
