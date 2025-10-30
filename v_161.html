@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0"/>
+<title>Running Order Pad – v161 (Stock Submit + Compact URL)</title>
+<meta name="theme-color" content="#0f1115"/>
+<style>
+:root{
+  --bg:#0f1115; --card:#161a22; --ink:#e9eef5; --muted:#9fb0c2; --border:#242b3b;
+  --green:#20c997; --accent:#5c7cfa; --red:#ff4d4d; --orange:#ff9f43;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;touch-action:manipulation}
+.wrap{max-width:860px;margin:0 auto;padding:8px 14px 140px}
+
+header{position:sticky;top:0;z-index:20;background:#5c7cfa;color:#fff;border-bottom:1px solid var(--border)}
+.head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+h1{margin:0;font-size:28px;font-weight:900;letter-spacing:.3px;text-align:center;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navbtn{background:#0d1219;color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:10px 8px;font-weight:800}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;margin:14px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;font-size:26px;font-weight:800;text-align:center;padding:14px;border-radius:14px;border:2px solid var(--border);background:#0f141d;color:#e9eef5}
+.inp:focus{outline:none;box-shadow:0 0 0 3px rgba(92,124,250,.35)}
+.btn{appearance:none;border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:16px;cursor:pointer}
+.btn.green{background:var(--green);color:#00150f}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:#0d1219;color:#e9eef5;border:1px solid var(--border)}
+.stepperwrap{display:flex;align-items:center;gap:10px}
+.stepbtn{border:1px solid var(--border);background:#0d1219;color:var(--ink);border-radius:10px;font-weight:900;font-size:18px;line-height:1;padding:10px 12px;min-width:44px}
+.small{font-size:12px;color:#c6d2e0}
+.area{min-height:120px;white-space:pre-wrap;background:#0f141d;border:1px solid var(--border);border-radius:14px;padding:12px;font-size:15px;color:#e9eef5}
+
+/* Progress */
+#progressWrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#5268f6;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+#progressBar{flex:1;height:8px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
+#progressFill{height:100%;width:0%;background:#20c997;transition:width .25s ease}
+#progressRight{display:flex;align-items:center;gap:10px}
+#progressTally{font-size:12px;opacity:.95}
+
+/* Answered indicator on current card */
+.answeredFade{opacity:.55}
+
+/* Top red banner */
+#alertBar{display:none;position:sticky;top:0;z-index:30;background:#ff4d4d;color:#fff;font-weight:900;padding:10px 14px;text-align:center}
+#alertBar.show{display:block}
+
+/* Unanswered side panel */
+#unansweredPanel{position:sticky;top:72px}
+#unansweredList{white-space:pre-wrap;font-family:system-ui,-apple-system, Segoe UI, Roboto, sans-serif;font-size:13px;line-height:1.35;margin:6px 0 0}
+.badge{display:inline-block;background:#ff4d4d;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px;font-weight:900}
+.badge.ok{background:#20c997;color:#00150f}
+
+/* Highlight missing */
+.missing{outline:3px solid #ff4d4d !important;outline-offset:3px;border-color:#ff4d4d !important}
+
+/* Bottom action bar */
+.actionRow{display:flex;gap:10px;flex-wrap:wrap}
+
+/* WhatsApp links block */
+.copyopen{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+
+/* Alphabet rail (minimal for this cut) */
+#azBar{display:none}
+
+/* Safe bottom padding for mobile */
+:root{ --safePad: 120px }
+body{ padding-bottom: var(--safePad) }
+
+/* Submit Stock button visual when ready */
+#submitStockBtn.ready{background:#00d084;color:#002b1e}
+#submitStockBtn:disabled{opacity:.5;cursor:not-allowed}
+
+</style>
+</head>
+<body>
+<div id="alertBar"></div>
+<header>
+  <div id="progressWrap">
+    <div id="progressBar"><div id="progressFill"></div></div>
+    <div id="progressRight">
+      <div id="progressTally">Responded: 0 / 0</div>
+      <button class="navbtn" id="nextUnansweredBtn">Next Unanswered ▶</button>
+    </div>
+  </div>
+  <div class="head">
+    <button class="navbtn" id="prevBtn">◀ Prev</button>
+    <h1 id="itemName">ITEM</h1>
+    <button class="navbtn" id="nextBtn">Next ▶</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Filter (kept minimal) -->
+  <div class="card" id="filterCard">
+    <div class="small" style="margin-bottom:6px">FILTER BY LOCATION</div>
+    <div class="actionRow" id="filterRow" style="flex-wrap:wrap">
+      <button class="btn ghost" id="filterAllBtn">All</button>
+      <button class="btn" id="filterColdBtn">Cold Room</button>
+      <button class="btn" id="filterGardenBtn">Garden</button>
+      <button class="btn" id="filterSideBtn">Side Door</button>
+      <button class="btn" id="filterOutsideBtn">Outside</button>
+    </div>
+  </div>
+
+  <!-- Main editor + unanswered side -->
+  <div class="grid" style="grid-template-columns: 3fr 2fr;align-items:start">
+    <div>
+      <div class="card" id="itemCard">
+        <div class="grid">
+          <div>
+            <div class="label">STOCK</div>
+            <div class="stepperwrap">
+              <button class="stepbtn" id="stockMinus" type="button">−</button>
+              <input class="inp" id="stockInput" type="number" step="0.01" inputmode="decimal"/>
+              <button class="stepbtn" id="stockPlus" type="button">+</button>
+            </div>
+          </div>
+          <div>
+            <div class="label">ORDER</div>
+            <div class="stepperwrap">
+              <button class="stepbtn" id="orderMinus" type="button">−</button>
+              <input class="inp" id="orderInput" type="number" step="0.01" inputmode="decimal"/>
+              <button class="stepbtn" id="orderPlus" type="button">+</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="actionRow" style="margin-top:12px">
+          <button class="btn" id="savePassionsBtn">SAVE TO PASSIONS</button>
+          <button class="btn" id="saveMkBtn">SAVE TO MK</button>
+          <button class="btn" id="saveOtherBtn">SAVE TO OTHER</button>
+        </div>
+
+        <div class="actionRow" style="margin-top:10px">
+          <button class="btn red" id="notNeededBtn" style="flex:1">NOT NEEDED</button>
+          <button class="btn ghost" id="undoBtn" style="display:none">UNDO</button>
+        </div>
+
+        <hr class="sep"/>
+        <div>
+          <div class="label">NOTES FOR ITEM</div>
+          <textarea class="note" id="noteInput" placeholder="Optional note…"></textarea>
+        </div>
+      </div>
+
+      <!-- Running Orders (unchanged) -->
+      <div class="card">
+        <div class="small" style="margin-bottom:6px">RUNNING ORDER — PASSIONS (Needed × Item)</div>
+        <div class="area" id="orderListPassions"></div>
+        <div class="copyopen">
+          <button class="btn" id="copyPassions">COPY</button>
+          <a class="btn green" href="#" id="waPassions" rel="noopener" target="_blank">WHATSAPP</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="small" style="margin-bottom:6px">RUNNING ORDER — MK (Needed × Item)</div>
+        <div class="area" id="orderListMk"></div>
+        <div class="copyopen">
+          <button class="btn" id="copyMk">COPY</button>
+          <a class="btn green" href="#" id="waMk" rel="noopener" target="_blank">WHATSAPP</a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="small" style="margin-bottom:6px">RUNNING ORDER — OTHER (Needed × Item)</div>
+        <div class="area" id="orderListOther"></div>
+        <div class="copyopen">
+          <button class="btn" id="copyOther">COPY</button>
+          <a class="btn green" href="#" id="waOther" rel="noopener" target="_blank">WHATSAPP</a>
+        </div>
+      </div>
+
+      <div class="actionRow" style="margin-top:10px">
+        <button class="btn red" id="resetBtn">⚠️ RESET ALL ⚠️</button>
+        <button class="btn ghost" id="editBtn">EDIT ITEMS</button>
+        <button class="btn" id="submitStockBtn" title="Creates a compact URL once all items are answered" disabled>SUBMIT STOCK (Compact URL)</button>
+      </div>
+
+      <!-- Items editor -->
+      <div class="card editor" id="editorPanel">
+        <div class="small" style="margin-bottom:6px">ITEMS EDITOR (one item per line)</div>
+        <textarea class="textarea" id="itemsTextarea" spellcheck="false"></textarea>
+        <div class="small" id="editorCount">Unique lines: 0</div>
+        <div class="actionRow" style="margin-top:10px">
+          <button class="btn green" id="saveItemsBtn">Save List</button>
+          <button class="btn ghost" id="cancelEditBtn">Cancel</button>
+          <input id="newItemInput" placeholder="Add new item… (auto‑UPPERCASE)" type="text" style="flex:1;min-width:160px"/>
+          <button class="btn" id="addItemBtn">Add Item</button>
+          <button class="btn" id="addQuickBtn">Add “NEW ITEM”</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Unanswered (Always Visible, Alphabetical) -->
+    <div id="unansweredPanel">
+      <div class="card">
+        <div class="small" style="margin-bottom:6px">UNANSWERED ITEMS</div>
+        <div id="unansweredCounter" class="badge">0 remaining</div>
+        <pre id="unansweredList"></pre>
+        <div class="actionRow">
+          <button class="btn" id="nextUnansweredBtn2">Next Unanswered ▶</button>
+          <button class="btn ghost" id="copyMissingBtn">Copy List</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/***** === DATA === *****/
+const DEFAULT_ITEMS = [
+  "Amla","Arvi","Aubergine","Avocado","Baby Cucumber","Baby Potato","Bags Blue","Bags Fruit And Veg","Bags Jumbo White","Baking Potato","Bananas","Beans","Beetroot","Birds Eye","Blueberries","Bullet Chilly","Butcher Bags 10x12","Butcher Bags 12x15","Butcher Cloth","Butternut Squash","Carrot","Cauliflower","Cherries","Coconut","Conference Pears","Coriander","Courgette","Cucumber","Curry Leaf","Custard Apple","Cyprus Potato","Dosa Mix","Figs","Frog Melon","Galia Melon","Garlic","Ginger","Golden Apple","Green Chilly","Green Pepper","Guava","Haldi Fresh","Hot Chilly","Iranian Melon","Kaki","Karela","Lemon","Lettuce","Lime","Long Chilly","Long Kudoo","Mangos","Methi","Mint","Mooli","Mushroom","Nardacotts","Nectarines","Okra","Onion Bag 22kg","Onion Bag 4kg","Onion Bag 8kg","Onion Bombay","Onion Red 10kg","Onion Red 4kg","Onion Spanish","Oranges","Pakistani Carrots","Pakistani Sugar Cane","Papaya","Parsley","Pineapple","Pink Lady Apple","Plantain","Plums","Pomelo","Pomme Small","Potato Red 4kg","PP Conference","Ppk White Potato 2kg","Prepack Apple","Prepack Black Grapes","Prepack Garlic","Prepack Kaki","Prepack Kiwi","Prepack Oranges 2kg","Prepack Pepper","Prepack Red Grapes","Prepack Red Pears","Raviya","Raw Mango","Red Pepper","Red Potato 20kg","Red USA Apple","Round Kudoo","Royal Gala","Saag","Soya","Spinach","Spring Onions","St Ivel Single Cream","Strawberries","Sultana Grapes","Sweet Potato","Sweet Tamarind","Sweetcorn","Thai Aubergine","Tomato","Turkish Pomme","Turnip","Vine Tomato","Vitaplus","Walnuts","Watermelon","White Cabbage","White Potato 25kg","Yellow Dates","Yellow Melon"
+];
+
+const ITEMS_KEY = "orderpad.items.v1";
+const KEY = "orderpad.full.compat";
+const BACKUP_KEY = "orderpad.full.backup";
+
+function loadItems(){
+  try{
+    const raw = localStorage.getItem(ITEMS_KEY);
+    if(!raw) return DEFAULT_ITEMS.slice();
+    const arr = JSON.parse(raw);
+    if(Array.isArray(arr) && arr.length){
+      const clean = arr.map(s => String(s||"").trim()).filter(Boolean);
+      return clean.length ? clean : DEFAULT_ITEMS.slice();
+    }
+  }catch(e){}
+  return DEFAULT_ITEMS.slice();
+}
+function saveItemsList(arr){ try{ localStorage.setItem(ITEMS_KEY, JSON.stringify(arr)); }catch(e){} }
+
+let ITEMS = loadItems();
+if(!ITEMS.length){ ITEMS = DEFAULT_ITEMS.slice(); saveItemsList(ITEMS); }
+let TOTAL = ITEMS.length;
+
+let state = {};
+try{
+  state = JSON.parse(localStorage.getItem(KEY) || "{}") || {};
+}catch(e){ state = {}; }
+if(typeof state.i !== 'number') state.i = 0;
+if(!state.map) state.map = {}; // name -> {stock, order, note, status, bucket}
+if(!state.notes) state.notes = {};
+
+/***** === ELs === *****/
+const $ = id => document.getElementById(id);
+const itemName = $("itemName");
+const stockInput = $("stockInput");
+const orderInput = $("orderInput");
+const noteInput  = $("noteInput");
+const prevBtn = $("prevBtn"), nextBtn=$("nextBtn");
+const alertBar = $("alertBar");
+const progressFill = $("progressFill");
+const progressTally = $("progressTally");
+const nextUnansweredBtn = $("nextUnansweredBtn"), nextUnansweredBtn2=$("nextUnansweredBtn2");
+const unansweredCounter = $("unansweredCounter"), unansweredList = $("unansweredList");
+const submitStockBtn = $("submitStockBtn");
+
+/***** === HELPERS === *****/
+const digits = v => (v==null?"":String(v)).replace(/[^0-9.]/g, "");
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); localStorage.setItem(BACKUP_KEY, JSON.stringify(state)); }catch(e){} }
+
+function currentName(){ return ITEMS[state.i] || ""; }
+function recOf(name){ return state.map[name] || (state.map[name]={stock:"",order:"",note:"",status:"",bucket:""}); }
+
+/***** === STOCK ANSWERED LOGIC (separate from ORDER) === *****/
+function isStockAnswered(rec){
+  if(!rec) return false;
+  if(rec.status === 'notneeded') return true;
+  // Consider it answered if stock is a number (including 0). Blank means unanswered.
+  const s = (rec.stock==null?"":String(rec.stock)).trim();
+  return s !== "";
+}
+
+function countUnansweredStock(){
+  let cnt = 0;
+  for(const nm of ITEMS){ if(!isStockAnswered(state.map[nm])) cnt++; }
+  return cnt;
+}
+
+function buildUnansweredPanel(){
+  const missing = [];
+  for(const nm of ITEMS){ if(!isStockAnswered(state.map[nm])) missing.push(nm); }
+  // Alphabetical as requested
+  missing.sort((a,b)=>a.localeCompare(b));
+  unansweredCounter.textContent = missing.length ? (missing.length+" remaining") : "All done";
+  unansweredCounter.className = "badge" + (missing.length?"":" ok");
+  unansweredList.textContent = missing.length ? missing.join("\n") : "✅ All items completed — ready to Submit STOCK";
+  // Enable submit only when none missing
+  submitStockBtn.disabled = !!missing.length;
+  submitStockBtn.classList.toggle('ready', !missing.length);
+}
+
+function showRedBanner(msg){
+  alertBar.textContent = msg;
+  alertBar.classList.add('show');
+  clearTimeout(showRedBanner._t); showRedBanner._t = setTimeout(()=>{ alertBar.classList.remove('show'); }, 3000);
+}
+
+/***** === UI CORE === *****/
+function show(i){
+  state.i = Math.max(0, Math.min(TOTAL-1, i));
+  const name = currentName();
+  const rec = recOf(name);
+  itemName.textContent = name;
+  stockInput.value = rec.stock || "";
+  orderInput.value = rec.order || "";
+  noteInput.value  = state.notes[name] || "";
+  updateProgressUI();
+}
+
+function updateProgressUI(){
+  // Progress for STOCK answered (not ORDER)
+  let answered = 0;
+  for(const nm of ITEMS){ if(isStockAnswered(state.map[nm])) answered++; }
+  const pct = TOTAL ? Math.round(answered*100/TOTAL) : 0;
+  progressFill.style.width = pct+"%";
+  progressTally.textContent = `Answered: ${answered} / ${TOTAL}`;
+  buildUnansweredPanel();
+}
+
+function nextUnansweredStock(){
+  if(!TOTAL) return;
+  const start = (state.i+1)%TOTAL; let i = start;
+  do{
+    const nm = ITEMS[i]; const rec = state.map[nm];
+    if(!isStockAnswered(rec)){ show(i); highlightMissingRow(); return; }
+    i=(i+1)%TOTAL;
+  }while(i!==start);
+  showRedBanner("All items have been answered. ✅");
+}
+
+function highlightMissingRow(){
+  // flash the inputs red briefly for visual
+  stockInput.classList.add('missing'); noteInput.classList.add('missing');
+  setTimeout(()=>{ stockInput.classList.remove('missing'); noteInput.classList.remove('missing'); }, 900);
+}
+
+/***** === EVENTS === *****/
+prevBtn.onclick = ()=> show(state.i-1);
+nextBtn.onclick = ()=> show(state.i+1);
+
+stockInput.oninput = ()=>{ stockInput.value = digits(stockInput.value); const nm=currentName(); const r=recOf(nm); r.stock = stockInput.value; save(); updateProgressUI(); };
+orderInput.oninput = ()=>{ orderInput.value = digits(orderInput.value); const nm=currentName(); const r=recOf(nm); r.order = orderInput.value; save(); };
+noteInput.oninput  = ()=>{ const nm=currentName(); const v=(noteInput.value||"").trim(); if(v) state.notes[nm]=v; else delete state.notes[nm]; save(); };
+
+$("stockMinus").onclick = ()=>{ step($("stockInput"),-1); };
+$("stockPlus").onclick  = ()=>{ step($("stockInput"),+1); };
+$("orderMinus").onclick = ()=>{ step($("orderInput"),-1); };
+$("orderPlus").onclick  = ()=>{ step($("orderInput"),+1); };
+function step(el, d){ let v = parseInt(el.value||"0",10); if(isNaN(v)) v=0; v+=d; if(v<0) v=0; el.value=String(v); el.dispatchEvent(new Event('input')); }
+
+// Save to buckets keeps your existing semantics (requires ORDER>0)
+$("savePassionsBtn").onclick = ()=> commitTo("passions");
+$("saveMkBtn").onclick       = ()=> commitTo("mk");
+$("saveOtherBtn").onclick    = ()=> commitTo("other");
+$("notNeededBtn").onclick    = ()=> markNotNeeded();
+
+function commitTo(bucket){
+  const name = currentName(); const rec = recOf(name);
+  const need = parseInt(rec.order||"0",10)||0; if(need<=0) return; // keep old rule
+  rec.status = 'saved'; rec.bucket=bucket; rec.stock = rec.stock||""; rec.note = state.notes[name]||"";
+  state.map[name]=rec; save(); updateProgressUI(); show(state.i+1);
+}
+
+function markNotNeeded(){
+  const name=currentName(); const rec=recOf(name);
+  // If ORDER > 0, do nothing (old safety)
+  const need = parseInt(rec.order||"0",10)||0; if(need>0) return;
+  rec.status='notneeded'; state.map[name]=rec; save(); updateProgressUI(); show(state.i+1);
+}
+
+nextUnansweredBtn.onclick = nextUnansweredStock;
+nextUnansweredBtn2.onclick = nextUnansweredStock;
+
+$("copyMissingBtn").onclick = ()=>{
+  const txt = unansweredList.textContent||""; if(!txt) return;
+  if(navigator.clipboard?.writeText){ navigator.clipboard.writeText(txt); showRedBanner("Unanswered list copied"); }
+};
+
+$("resetBtn").onclick = ()=>{
+  if(!confirm("Clear ALL saved stock, order, and notes?")) return;
+  state = { i:0, map:{}, notes:{} }; save(); show(0);
+};
+
+// Items editor (kept minimal)
+$("editBtn").onclick = ()=> openEditor();
+$("cancelEditBtn").onclick = ()=> closeEditor();
+$("addQuickBtn").onclick = ()=>{ $("newItemInput").value = "NEW ITEM"; addItemFromField(); };
+$("addItemBtn").onclick = addItemFromField;
+$("saveItemsBtn").onclick = saveItemsFromTextarea;
+$("itemsTextarea").addEventListener('input', updateEditorCounts);
+
+function openEditor(){
+  $("itemsTextarea").value = ITEMS.join("\n");
+  updateEditorCounts(); $("editorPanel").classList.add('open');
+}
+function closeEditor(){ $("editorPanel").classList.remove('open'); }
+function updateEditorCounts(){
+  const raw = ($("itemsTextarea").value||"").split("\n").map(s=>s.trim()).filter(Boolean);
+  const uniq = Array.from(new Set(raw)).length; $("editorCount").textContent = "Unique lines: "+uniq;
+}
+function addItemFromField(){
+  const input=$("newItemInput"); let s=(input.value||"").trim(); if(!s){alert("Type a name to add."); return;}
+  const lines = ($("itemsTextarea").value||"").split("\n");
+  if(lines.includes(s)){ alert("That item already exists in the list."); return; }
+  $("itemsTextarea").value = (lines.join("\n") + (lines.length?"\n":"") + s);
+  input.value=""; updateEditorCounts();
+}
+function saveItemsFromTextarea(){
+  const arr = Array.from(new Set(($("itemsTextarea").value||"").split("\n").map(s=>s.trim()).filter(Boolean)));
+  if(!arr.length){ alert("List cannot be empty."); return; }
+  // Remap state to new names
+  const newMap={}; const newNotes={};
+  for(const nm of arr){ if(state.map[nm]) newMap[nm]=state.map[nm]; if(state.notes[nm]) newNotes[nm]=state.notes[nm]; }
+  state.map=newMap; state.notes=newNotes; save();
+  ITEMS=arr.slice(); TOTAL=ITEMS.length; saveItemsList(ITEMS);
+  state.i = Math.min(state.i, Math.max(0,TOTAL-1));
+  closeEditor(); show(state.i); updateProgressUI();
+}
+
+/***** === SUBMIT STOCK (Compact URL) === *****/
+// Encoding: array of 116 values in item order. If status==notneeded -> "n"; else value = stock (blank treated as 0 but shouldn't happen because we block submit).
+function encodeCompact(){
+  const out=[];
+  for(const nm of ITEMS){
+    const r = state.map[nm] || {};
+    if(r.status === 'notneeded') out.push('n');
+    else out.push(String((r.stock==null||r.stock==="")?0:r.stock));
+  }
+  return out.join(',');
+}
+
+function decodeCompactToState(csv){
+  const parts = String(csv||"").split(',');
+  for(let i=0;i<ITEMS.length;i++){
+    const nm = ITEMS[i]; const v = parts[i] ?? '';
+    const r = recOf(nm);
+    if(v === 'n'){ r.status='notneeded'; r.stock = r.stock || '';
+    } else {
+      r.stock = digits(v);
+      if(r.stock!=="") r.status = r.status||'saved';
+    }
+    state.map[nm]=r;
+  }
+  save();
+}
+
+function onSubmitStock(){
+  const missing = countUnansweredStock();
+  if(missing>0){ showRedBanner(`❗ ${missing} items still not checked. Please complete before submitting.`); nextUnansweredStock(); return; }
+  const v = encodeCompact();
+  const url = new URL(location.href);
+  url.searchParams.set('v', v);
+  // Copy URL to clipboard and show alert
+  if(navigator.clipboard?.writeText){ navigator.clipboard.writeText(url.toString()); showRedBanner('Compact URL copied.'); }
+  // Also open as a new tab so the manager can share it quickly if desired
+  window.open(url.toString(), '_blank', 'noopener');
+}
+
+submitStockBtn.addEventListener('click', onSubmitStock);
+
+// Auto-import if ?v= is present
+(function initImportFromQuery(){
+  const qp = new URLSearchParams(location.search);
+  if(qp.has('v')){
+    decodeCompactToState(qp.get('v'));
+    show(0); updateProgressUI();
+    showRedBanner('Imported stock from URL');
+  }
+})();
+
+/***** === INITIALISE === *****/
+show(state.i||0);
+updateProgressUI();
+
+// Wire copy buttons for the running orders areas
+function wireCopy(btnId, areaId){
+  const b=$(btnId), a=$(areaId); if(!b||!a) return;
+  b.onclick=()=>{ const t=a.textContent||""; if(!t) return; if(navigator.clipboard?.writeText){navigator.clipboard.writeText(t); showRedBanner('Copied');} };
+}
+wireCopy('copyPassions','orderListPassions');
+wireCopy('copyMk','orderListMk');
+wireCopy('copyOther','orderListOther');
+
+</script>
+</body>
+</html>
