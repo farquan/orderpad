@@ -1492,11 +1492,14 @@ saveItemsBtn.onclick = function(){
 
 // ========= Steppers =========
 function stepValue(inputEl, delta){
+  // Allow decimals
   var v = parseFloat((inputEl.value||"").replace(/[^0-9.]/g,""));
   if (isNaN(v)) v = 0;
-  v += delta;
+  v = v + delta; // delta = ±1.0 as you want
   if (v < 0) v = 0;
-  inputEl.value = String(v);
+
+  // Keep as-is, do not round away decimals typed manually
+  inputEl.value = v.toString();
 }
 
 function saveStockAndOrder() {
