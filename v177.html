@@ -978,37 +978,8 @@ fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9pTMWZLNo6EJGOu475l8_cU
 );
 
 // ========= Storage Keys =========
-var ITEMS_KEY = "orderpad.items.v1";
-var KEY = "orderpad.full.compat";
-var BACKUP_KEY = "orderpad.full.backup";
-
-// ========= Load/Save Items =========
-function loadItems(){
-  try {
-    var raw = localStorage.getItem(ITEMS_KEY);
-    if (!raw) return DEFAULT_ITEMS.slice();
-    var arr = JSON.parse(raw);
-    if (Object.prototype.toString.call(arr) === "[object Array]" && arr.length > 0){
-      var clean = [];
-      for (var i=0;i<arr.length;i++){
-        var s = (arr[i]==null?"":String(arr[i])).trim();
-        if (s) clean.push(s);
-      }
-      return clean.length? clean : DEFAULT_ITEMS.slice();
-    }
-  } catch(e){}
-  return DEFAULT_ITEMS.slice();
-}
-function saveItems(arr){ try { localStorage.setItem(ITEMS_KEY, JSON.stringify(arr)); localStorage.setItem(ITEMS_KEY + ".backup", JSON.stringify(arr)); } catch(e){} }
-
-// ========= App State =========
-// --- Defaults first, then saved items if present (restore stable init) ---
-var ITEMS = DEFAULT_ITEMS.slice();
-try {
-  var savedItems = loadItems();
-  if (savedItems && savedItems.length) ITEMS = savedItems;
-} catch(e){}
-var TOTAL = ITEMS.length;
+var ITEMS = [];
+var TOTAL = 0;
 
 // Only restore defaults if truly empty (do not overwrite custom list)
 if (!TOTAL) {
