@@ -1333,8 +1333,8 @@ notNeededBtn.onclick = function(){
   markNotNeeded();
 };
 
-prevBtn.onclick = ()=>{ saveCurrent(); safeShow(state.i - 1); }; };
-nextBtn.onclick = ()=>{ saveCurrent(); safeShow(state.i + 1); }; };
+prevBtn.onclick = function(){ if (TOTAL) show(state.i-1); };
+nextBtn.onclick = function(){ if (TOTAL) safeShow(state.i+1); };
 
 stockInput.oninput = function(){ stockInput.value = digits(stockInput.value); };
 
@@ -4833,7 +4833,7 @@ function normalizeName(n){
 
 <script>
 (function(){
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEEKt1_trBHyfDIsL6Q8TFfvnejZ8JFhS5j2IklZaFll0HTONbS1x2KGirmdJgOgCv/exec"";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwyhMt14CPPC6r_8mz4z2OYxZI_r1XtPckbU8M8VUkVSa75bAR1P3je05a63Rodh1pD/exec"";
   function uk(d){return d.toLocaleString("en-GB",{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});}
   function loadStock(){
     fetch(SCRIPT_URL + "?action=save&data=" + encodeURIComponent(JSON.stringify(payload)))
@@ -4846,7 +4846,7 @@ function normalizeName(n){
 
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEEKt1_trBHyfDIsL6Q8TFfvnejZ8JFhS5j2IklZaFll0HTONbS1x2KGirmdJgOgCv/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwyhMt14CPPC6r_8mz4z2OYxZI_r1XtPckbU8M8VUkVSa75bAR1P3je05a63Rodh1pD/exec";
 
 function loadStockFromSheet(){
   fetch(SCRIPT_URL + "?action=load")
@@ -4880,7 +4880,27 @@ function saveCurrent(){
     var item = ITEMS[state.i];
     if(!item) return;
     var qty = (state.map[item] && state.map[item].stock != null) ? state.map[item].stock : "";
-    fetch(SCRIPT_URL + "?action=save&data=" + encodeURIComponent(JSON.stringify({[item]: qty})))
+    const payload = {[item]: qty};
+    const url = SCRIPT_URL + "?action=save&data=" + encodeURIComponent(JSON.stringify(payload));
+
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status} - Deployment or Script Error`);
+        }
+        return response.text();
+      })
+      .then(resultText => {
+        // Optional: console.log("Save Success:", resultText);
+      })
+      .catch(error => {
+        console.warn("❌ Stock save FAILED:", error.message);
+        if (typeof showTopFlash === "function") showTopFlash("⚠️ Save Failed: Check Console", 3000);
+      });
+  }catch(e){
+    console.error("Critical Save Error:", e);
+  }
+})))
       .catch(e=>console.warn(e));
   }catch(e){}
 }
