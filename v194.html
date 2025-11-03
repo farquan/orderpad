@@ -940,7 +940,7 @@ var DEFAULT_ITEMS = [];
 
 
 // ========= AUTO-LOAD ITEMS FROM GOOGLE SHEETS (FIXED) =========
-fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9pTMWZLNo6EJGOu475l8_cUMtiOTd9P0hGS4pR43Z0cNpUiDT9-O4kGPQ6czmigUuhWTD6sAhYLYc/pub?gid=223224205&single=true&output=csv")
+fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9pTMWZLNo6EJGOu475l8_cUMtiOTd9P0hGS4pR43Z0cNpUiDT9-O4kGPQ6czmigUuhWTD6sAhYLYc/pub?gid=223224205&output=csv")
   .then(r => r.text())
   .then(t => {
     var ITEM_NAMES = [];
