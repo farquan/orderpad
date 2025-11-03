@@ -1048,8 +1048,7 @@ function saveItems(arr){ try { localStorage.setItem(ITEMS_KEY, JSON.stringify(ar
 // --- Defaults first, then saved items if present (restore stable init) ---
 var ITEMS = DEFAULT_ITEMS.slice();
 try {
-  var savedItems = loadItems();
-  if (savedItems && savedItems.length) ITEMS = savedItems;
+  /* Removed local override - now always uses Google Sheet */
 } catch(e){}
 var TOTAL = ITEMS.length;
 
