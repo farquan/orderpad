@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Running Order Pad (Compat)</title>
+<meta content="#0f1115" name="theme-color"/>
+<style>
+:root{
+  --bg:#0f1115; --card:#161a22; --ink:#e9eef5; --muted:#9fb0c2; --border:#242b3b;
+  --green:#20c997; --accent:#5c7cfa; --red:#ff4d4d; --orange:#ff9f43;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  touch-action: manipulation; /* stop smart zoom double/triple-tap */
+}
+.wrap{max-width:820px;margin:0 auto;padding:8px 14px 24px}
+
+/* Light blue header bar */
+header{
+  position:sticky;top:0;z-index:20;
+  background:#5c7cfa; color:#fff;
+  backdrop-filter:none;
+  border-bottom:1px solid var(--border)
+}
+.head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+h1{
+  margin:0;
+  font-size:32px; /* ~20% smaller */
+  font-weight:900;
+  letter-spacing:.3px;
+  text-align:center;
+  flex:1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+/* Hide the counter under the header */
+.counter{display:none}
+
+.navbtn{background:#0d1219;color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:12px 6px;font-weight:700;width:20%}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin:14px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;font-size:26px;font-weight:800;text-align:center;padding:14px;border-radius:14px;border:2px solid var(--border);background:#0f141d;color:#e9eef5}
+.inp:focus{outline:none;box-shadow:0 0 0 3px rgba(92,124,250,.35)}
+.btn{appearance:none;border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:16px;cursor:pointer;width:100%}
+.btn.green{background:var(--green);color:#00150f}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:#0d1219;color:#e9eef5;border:1px solid var(--border)}
+.note{width:100%;min-height:72px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f141d;color:#e9eef5;font-size:16px}
+.area{min-height:120px;white-space:pre-wrap;background:#0f141d;border:1px solid var(--border);border-radius:14px;padding:12px;font-size:15px;color:#e9eef5}
+.copyopen{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;justify-content:center;}
+#waPassions,#waMk,#waOther{display:block;text-align:center;}
+.small{font-size:12px;color:#c6d2e0}
+hr.sep{border:0;border-top:1px solid var(--border);margin:12px 0}
+
+/* A–Z bar */
+.azbar{display:flex;gap:6px;overflow:auto;padding:8px 10px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);scrollbar-width:none;-ms-overflow-style:none;background:rgba(22,26,34,.9)}
+.azbar::-webkit-scrollbar{display:none}
+.azbtn{min-width:34px;padding:6px 0;border-radius:9px;border:1px solid var(--border);text-align:center;font-weight:800;background:#0d1219;color:#e9eef5;flex:0 0 auto}
+.azbtn.active{outline:2px solid var(--accent)}
+.azbtn:disabled{opacity:.35}
+
+/* Hide the old status line entirely */
+.status{display:none}
+
+/* Button row */
+.btnrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+
+/* Items Editor panel */
+.editor{display:none}
+.editor.open{display:block}
+.textarea{width:100%;min-height:220px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f141d;color:#e9eef5;font-size:14px}
+.editorbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.editor-tools{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.editor-tools input{flex:1;min-width:160px;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0f141d;color:#e9eef5}
+.counterline{margin-top:6px;color:var(--muted);font-size:12px}
+
+/* Save To button colors */
+.btn-passions { background:#20c997; color:#00150f; } /* green */
+.btn-mk       { background:#5c7cfa; color:#ffffff; } /* blue */
+.btn-other    { background:#ff9f43; color:#00150f; } /* orange */
+
+.stepperwrap{display:flex;align-items:center;gap:10px}
+.stepperwrap .inp{flex:1}
+.stepbtn{appearance:none;border:1px solid var(--border);background:#0d1219;color:var(--ink);border-radius:10px;font-weight:900;font-size:18px;line-height:1;padding:10px 12px;min-width:44px}
+.stepbtn:active{transform:translateY(1px)}
+
+
+/* Progress area */
+#progressWrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#5268f6;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+#progressBar{flex:1;height:8px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
+#progressFill{height:100%;width:0%;background:#20c997;transition:width .25s ease}
+#progressRight{display:flex;align-items:center;gap:10px}
+#progressTally{font-size:12px;opacity:.95}
+#nextUnansweredBtn{width:auto;padding:8px 10px;font-size:12px}
+
+#answeredTick { color:white; font-size:22px; margin-left:6px; display:none; }
+
+/* Overall progress (top) */
+#overallProgress{padding:10px 14px}
+#overallBar{position:relative;height:12px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
+#overallFill{height:100%;width:0%;background:#20c997;transition:width .25s ease}
+#overallLabel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:700;color:#fff;white-space:nowrap;pointer-events:none}
+
+/* Fixed bottom A–Z bar (3 rows of 9) */
+#azBar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  z-index:9999;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:900px;
+  margin:0 auto;
+  padding:8px 10px;
+  background:rgba(15,23,48,.96);
+  backdrop-filter:saturate(120%) blur(4px);
+  box-shadow:0 -6px 16px rgba(0,0,0,.35);
+  border-top:1px solid rgba(255,255,255,.08);
+  border-radius:12px 12px 0 0;
+}
+#azBar .azbtn{
+  flex:0 0 calc(100% / 9 - 8px);
+  margin:4px;
+  text-align:center;
+}
+/* Make room so content isn't covered by fixed A–Z */
+body{ padding-bottom: 132px; }
+
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Bottom-fixed A–Z keyboard: 3 rows x 9 (27 chars) */
+#azBar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  z-index: 1000;
+  display:grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px 6px;
+  padding: 10px 12px 12px;
+  background: rgba(13, 18, 25, 0.96);
+  backdrop-filter: saturate(120%) blur(6px);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
+}
+#azBar .azbtn{
+  text-align:center;
+  min-height: 38px;
+}
+/* Keep it centered within reasonable width on large screens */
+@media (min-width: 760px){
+  #azBar{ max-width: 720px; margin: 0 auto; left:0; right:0; }
+}
+/* Make sure page content isn't hidden behind the fixed keyboard */
+body{ padding-bottom: 160px; }
+
+.copyRow{display:flex;justify-content:center;gap:12px;margin-top:8px}
+.copyRow .btn{flex:1}
+
+.copyopen .btn{width:auto;flex:1}
+
+/* --- Safe area for fixed bottom A–Z keyboard --- */
+:root{ --azSafe: 0px; }
+body{ padding-bottom: var(--azSafe); }
+/* If your content uses a main container instead of body, this keeps it safe too */
+main{ padding-bottom: var(--azSafe); }
+
+/* Vertical A–Z index */
+#azIndex{
+  position: fixed;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10010;
+  background: transparent;
+  padding: 4px 0;
+}
+#azIndex .azIndexBtn{
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.06);
+  color: var(--ink, #cfd8e3);
+  border: 1px solid rgba(255,255,255,0.08);
+  user-select: none;
+}
+#azIndex .azIndexBtn.active{ background: rgba(64,147,255,0.35); }
+#azIndex .azIndexBtn.disabled{ opacity: 0.35; pointer-events: none; }
+
+/* Remove bottom A–Z keyboard entirely */
+#azBar{display:none !important;}
+:root{ --azSafe: 0px !important; }
+/* Remove any spacer effect */
+#azSafeSpacer, #azBottomPad{display:none !important; height:0 !important; margin:0 !important; padding:0 !important;}
+
+/* Bigger vertical A–Z index */
+#azIndex{ right: 8px; gap: 8px; }
+#azIndex .azIndexBtn{
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+/* Make right index not block scrolling, and give it its own background */
+#azIndex{
+  position: fixed;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10010;
+  /* visual container so it doesn't look like it's overlaying content */
+  background: rgba(13,18,25,0.72);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 8px 6px;
+  pointer-events: none; /* do NOT block page scroll drags */
+}
+#azIndex .azIndexBtn{
+  pointer-events: auto; /* only the letters are clickable */
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  color: var(--ink, #cfd8e3);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+#azIndex .azIndexBtn.active{ background: rgba(64,147,255,0.35); }
+#azIndex .azIndexBtn.disabled{ opacity: 0.35; pointer-events: none; }
+
+/* Make right index scrollable so you can reach A and Z */
+#azIndex{
+  pointer-events: auto;           /* allow scrolling inside the index */
+  max-height: 88vh;               /* fit on screen */
+  overflow-y: auto;               /* scroll the letters */
+  -webkit-overflow-scrolling: touch; /* smooth on iOS */
+}
+
+/* Anchor right A–Z index just below the header/progress (top set dynamically) */
+#azIndex{
+  position: fixed;
+  right: 6px;
+  transform: none;
+}
+
+/* Visually disable Not Needed when Order > 0 */
+#notNeededBtn:disabled{
+  opacity: .5;
+  pointer-events: none;
+  filter: grayscale(0.2);
+}
+
+/* Plain text Not Needed list at bottom */
+#notNeededSection{ margin-top:24px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
+#notNeededSection h3{ margin:0 0 8px 0; font-size:14px; opacity:.85; }
+#notNeededList{ white-space:pre-wrap; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:13px; line-height:1.4; margin:0; }
+
+/* Fade answered current item */
+.answeredFade { opacity: 0.5; transition: opacity .2s ease; }
+
+/* Auto-shrinking running order window */
+#orderMinus {
+  min-height: 40px;
+  max-height: 40vh;
+  overflow-y: auto;
+  transition: max-height .3s ease;
+}
+
+/* Smaller top item name */
+
+#itemName {
+  background: #FFD700 !important;
+  color: #000 !important;
+  font-weight: bold !important;
+  font-size: clamp(18px, 4vw, 28px) !important;
+  padding: 10px 12px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Bigger top item name */
+
+#itemName {
+  background: #FFD700 !important;
+  color: #000 !important;
+  font-weight: bold !important;
+  font-size: clamp(18px, 4vw, 28px) !important;
+  padding: 10px 12px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+
+/* Top flash notification (appears under header, fades out) */
+#topFlash{
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(25, 135, 84, 0.95); /* subtle green */
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  z-index: 10050;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+#topFlash.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Plain text Unanswered list at bottom */
+#unansweredSection{ margin-top:24px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
+#unansweredSection h3{ margin:0 0 8px 0; font-size:14px; opacity:.85; }
+#unansweredList{ white-space:pre-wrap; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:13px; line-height:1.4; margin:0; }
+
+.keybtn {
+  font-size:22px;
+  padding:14px;
+  min-width:50px;
+  min-height:50px;
+}
+
+
+/* Hold-to-scroll visual feedback */
+.azbtn.hold, .azIndexBtn.hold, .navbtn.hold, .stepbtn.hold, .prev.hold, .next.hold {
+  
+  filter: brightness(1.15);
+}
+
+
+/* Bigger alphabet buttons */
+.azbtn, .azIndexBtn {
+  font-size: clamp(24px, 5vw, 42px) !important;
+  font-weight: bold !important;
+  padding: 14px 20px !important;
+  margin: 6px !important;
+  border: 2px solid #333 !important;
+  border-radius: 8px !important;
+  background-color: #f9f9f9 !important;
+  color: #222 !important;
+}
+.azbtn:hover, .azIndexBtn:hover {
+  background-color: #333 !important;
+  color: #fff !important;
+}
+
+
+/* === A–Z count badges (green style) === */
+.azbtn, .azIndexBtn { position: relative; }
+.az-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  background: #2ecc71; /* green */
+  color: #fff;
+  pointer-events: none;
+
+  pointer-events: none !important;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+.azbtn.az-empty, .azIndexBtn.az-empty { opacity: 0.5; }
+
+
+/* === A–Z count badges (green) === */
+.azbtn, .azIndexBtn { position: relative; }
+.az-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  background: #2ecc71; /* green */
+  color: #fff;
+  pointer-events: none;
+}
+.azbtn.az-empty, .azIndexBtn.az-empty { opacity: 0.5; }
+
+
+.az-badge {
+  pointer-events: none !important;
+  user-select: none !important;
+  touch-action: none !important;
+}
+
+
+/* Hide-empty support */
+.az-hidden { display: none !important; }
+
+
+/* Answered filtering */
+.answered-flag { outline: 2px dashed #2ecc71; outline-offset: 4px; }
+
+</style>
+
+<style>
+#filterCard .btnrow button {
+  flex: 1 1 auto;
+  font-size: 0.9em;
+  padding: 6px 8px;
+  min-width: auto;
+}
+</style>
+
+
+<style>
+#filterRow .btn.filter-active { outline: 5px solid #ff9800 !important; box-shadow: 0 0 25px 8px #ff9800 !important; border-color: #ff9800 !important; }
+</style>
+
+
+<style>
+/* Force the 'All' button to show a thick orange border + glow */
+#filterAllBtn{
+  outline: 5px solid #ff9800 !important;
+  box-shadow: 0 0 25px 8px #ff9800 !important;
+  border-color: #ff9800 !important;
+}
+</style>
+
+
+<style>
+/* Make the selected/tapped (focus/active) category show an orange glow instead of blue */
+#filterRow .btn:focus,
+#filterRow .btn:focus-visible,
+#filterRow .btn:active {
+  outline: 5px solid #ff9800 !important;
+  box-shadow: 0 0 25px 8px #ff9800 !important;
+  border-color: #ff9800 !important;
+}
+/* Kill the global blue focus ring inside the filter row */
+#filterRow .btn:focus { box-shadow: 0 0 25px 8px #ff9800 !important; }
+</style>
+
+
+<style>
+/* Disable focus/active glow on filter buttons so only the active class controls it */
+#filterRow .btn:focus,
+#filterRow .btn:focus-visible,
+#filterRow .btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+</style>
+
+
+<style>
+/* Only glow when .filter-active; explicitly suppress glow on ALL when not active */
+#filterAllBtn:not(.filter-active){
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--ui-2, #2a2f3a) !important; /* neutral border */
+}
+/* Also neutralize the 'ghost' style when not active */
+#filterRow #filterAllBtn.ghost:not(.filter-active){
+  background: var(--chip-bg, #d9dbe3) !important;
+  color: var(--chip-fg, #1a1f2a) !important;
+}
+</style>
+
+
+<style>
+/* Floating Prev/Next controls */
+#floatingNav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  z-index: 9999;
+  pointer-events: none; /* container ignores taps so clicks only hit buttons */
+}
+#floatingNav .float-btn {
+  pointer-events: auto; /* buttons remain clickable */
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 16px;
+  border: 2px solid var(--accent, #ff9800);
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+#floatingNav .float-btn:active {
+  transform: translateY(1px);
+}
+@media (max-width: 480px){
+  #floatingNav .float-btn { padding: 12px 14px; font-size: 15px; }
+}
+</style>
+
+
+<style>
+/* === Category 'left' badges (green like the alphabet counts) === */
+#filterRow .btn { position: relative; } /* anchor */
+.cat-left-badge{
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #26c281;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+</style>
+
+
+<style>
+/* Snugger A–Z alphabet badges */
+.alpha-badge, .alphabet-badge, .letter-btn {
+  padding: 2px 6px !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  font-size: 12px !important;
+  border-radius: 6px !important;
+}
+</style>
+
+
+<style>
+/* Plain A–Z letters, no background bezel */
+.alpha-badge, .alphabet-badge, .letter-btn {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  min-width: auto !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  color: #000 !important; /* black text */
+}
+</style>
+
+
+<style>
+/* Remove any vertical rail/panel background behind the alphabet */
+#azIndex, #azIndex::before, #azIndex::after,
+.azIndexWrap, .alphabet-rail, .alpha-rail, .az-rail, .azContainer, .alphaContainer {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+</style>
+
+
+<style>
+/* Make alphabet letter buttons fully transparent (no blur/box) */
+.azbtn, .azIndexBtn, .alpha-badge, .alphabet-badge, .letter-btn {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+/* Keep letters visible */
+.azbtn, .azIndexBtn {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+</style>
+
+
+<style>
+/* Nuke ALL backgrounds/blur/shadows on the alphabet rail and its descendants */
+#azIndex, #azIndex *,
+.azIndex, .azIndex *, 
+.azbar, .azbar *, 
+.azIndexWrap, .azIndexWrap *,
+.alpha-rail, .alpha-rail *, 
+.alphabet-rail, .alphabet-rail * {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+}
+</style>
+
+
+<style>
+/* Small yellow oval behind alphabet letters (override previous transparent rule) */
+body #azIndex .azbtn,
+body #azIndex button.azbtn,
+body .azIndex .azbtn {
+  background: #FFD54A !important;   /* warm yellow */
+  color: #000 !important;            /* black text */
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  padding: 2px 6px !important;       /* snug */
+  min-width: auto !important;
+  height: auto !important;
+  line-height: 1.1 !important;
+  border-radius: 999px !important;   /* oval / pill */
+  text-decoration: none !important;  /* no underline for the letter itself */
+  display: inline-block !important;
+}
+/* Keep the surrounding rail fully transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
+
+
+<style>
+/* Yellow round circle behind alphabet letters - apply to all likely classes */
+#azIndex button,
+#azIndex .azbtn,
+#azIndex .azIndexBtn,
+#azIndex .letter-btn,
+.azbtn, .azIndexBtn, .letter-btn {
+  background: #FFD700 !important;    /* bright yellow */
+  color: #000 !important;            /* black text */
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  width: 22px !important;
+  height: 22px !important;
+  line-height: 22px !important;
+  border-radius: 50% !important;
+  text-align: center !important;
+  font-weight: bold !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+  display: inline-block !important;
+}
+/* Ensure the alphabet rail container is transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
+
+
+<style>
+/* FORCE yellow circular style for ALL alphabet letter buttons */
+#azIndex button,
+#azIndex .azbtn,
+#azIndex .azIndexBtn,
+#azIndex .letter-btn,
+.azIndex .azbtn,
+.azIndex .azIndexBtn,
+.azIndex .letter-btn {
+  background: #FFD700 !important;    /* bright yellow */
+  color: #000 !important;            /* black text */
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  width: 22px !important;
+  height: 22px !important;
+  line-height: 22px !important;
+  border-radius: 50% !important;
+  text-align: center !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+  display: inline-block !important;
+}
+
+/* Make sure any inner spans don't override background */
+#azIndex button *,
+#azIndex .azbtn *,
+#azIndex .azIndexBtn *,
+#azIndex .letter-btn * {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Rail stays transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
+
+
+<style>
+/* Floating Back to Top button (safe-area aware; offset from A–Z rail) */
+#backToTop{
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 86px);
+  right: calc(env(safe-area-inset-right, 0px) + 72px); /* leave room for A–Z rail */
+  z-index: 2147483000;
+  pointer-events: none; /* container ignores taps */
+}
+
+#backToTopBtn {
+  pointer-events: auto;
+  background: #ffcc00;    /* bright yellow */
+  color: #000;
+  font-weight: 800;
+  border: 2px solid #000;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  font-size: 16px;
+  padding: 10px 16px;
+}
+
+@media (max-width: 420px){
+  #backToTop{ right: calc(env(safe-area-inset-right, 0px) + 68px); }
+}
+</style>
+
+
+
+
+
+
+<style>
+/* Only fade elements marked notneeded; no strike-through globally */
+.notneeded {
+  opacity: 0.5 !important;
+  text-decoration: none !important;
+}
+</style>
+
+
+<style>
+/* Ensure strike-through is visible on the big title too */
+#itemName.notneeded, #itemName.notneeded * {
+  text-decoration: line-through !important;
+  text-decoration-color: #ff3b30 !important;
+  text-decoration-thickness: 2px;
+  text-decoration-skip-ink: none;
+}
+#itemName { position: relative; }
+/* Red line fallback overlay for stubborn WebKit cases */
+
+#itemName.notneeded::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 1.1em; /* adjusted to align with text */
+  border-top: 2px solid #ff3b30;
+  pointer-events: none;
+}
+
+</style>
+
+
+<style>
+/* Robust strike-through for the title text */
+#itemName .nn-strike {
+  text-decoration: line-through;
+  text-decoration-color: #ff3b30;
+  text-decoration-thickness: 3px;
+  text-decoration-skip-ink: none;
+}
+</style>
+
+
+
+
+
+
+
+
+<style>
+button#resetAllBtn {
+  background: #d32f2f !important; /* strong red */
+  color: #000 !important;         /* black text */
+  font-weight: 900 !important;
+  font-size: 24px !important;     /* larger text */
+  border: 2px solid #000 !important;
+}
+</style>
+
+</head><body>
+
+<span id="last-sync" style="position:fixed; top:6px; right:10px; color:#9ee; font-size:13px; z-index:9999;"></span>
+<div id="last-sync" style="position:absolute; top:8px; right:8px; font-size:12px; color:#ccc;"></div><div id="topFlash"></div>
+<header><div id="progressWrap"><div id="progressBar"><div id="progressFill"></div></div><div id="progressRight"><div id="progressTally">Responded: 0 / 0</div><button class="navbtn" id="nextUnansweredBtn">Next Unanswered ▶</button></div></div>
+<div class="head">
+<button class="navbtn" id="prevBtn">◀ Prev</button>
+<h1 id="itemName">ITEM</h1><span id="answeredTick">✓</span>
+<button class="navbtn" id="nextBtn">Next ▶</button>
+</div>
+<div class="counter" id="counter">0 / 100</div>
+<div class="azbar" id="azBar"></div>
+<div class="status" id="statusLine">Loading…</div></header></div></div>
+<div class="wrap">
+<div class="card" id="filterCard" style="margin-bottom:12px;">
+  <div class="small" style="margin-bottom:6px">FILTER BY LOCATION</div>
+  <div class="btnrow" id="filterRow" style="grid-template-columns: repeat(5, 1fr);">
+    <button class="btn ghost" id="filterAllBtn">All</button>
+    <button class="btn" id="filterColdBtn">Cold Room</button>
+    <button class="btn" id="filterGardenBtn">Garden</button>
+    <button class="btn" id="filterSideBtn">Side Door</button>
+    <button class="btn" id="filterOutsideBtn">Outside</button>
+  </div>
+</div>
+
+<div class="card" id="itemCard">
+<div class="grid">
+<div>
+<div class="label">STOCK</div>
+<div class="stepperwrap"><button class="stepbtn" id="stockMinus" type="button">−</button><input class="inp" id="stockInput" type="number" step="0.01" inputmode="decimal"/><button class="stepbtn" id="stockPlus" type="button">+</button></div>
+</div>
+<div>
+<div class="label">ORDER</div>
+<div class="stepperwrap"><button class="stepbtn" id="orderMinus" type="button">−</button><input class="inp" id="orderInput" type="number" step="0.01" inputmode="decimal"/><button class="stepbtn" id="orderPlus" type="button">+</button></div>
+</div>
+</div>
+<div class="btnrow" id="saveButtonsRow"><button class="btn btn-passions" id="savePassionsBtn">SAVE TO PASSIONS</button><button class="btn btn-mk" id="saveMkBtn">SAVE TO MK</button><button class="btn btn-other" id="saveOtherBtn">SAVE TO OTHER</button></div>
+<div class="btnrow" style="margin-top:10px"><button class="btn red" id="notNeededBtn" style="grid-column:1 / span 3">NOT NEEDED</button>
+<div style="width:100%; display:flex; justify-content:center; margin-top:8px;">
+  <button class="btn ghost" id="undoBtn" style="display:none;">UNDO</button>
+</div></div>
+<hr class="sep"/>
+<div>
+<div class="label">NOTES FOR ITEM</div>
+<textarea class="note" id="noteInput" placeholder="Optional note…"></textarea>
+<button class="btn" id="submitStockBtn" style="margin-top:12px; width:100%; background: #5e3ea1; color:#fff;">SUBMIT STOCK</button>
+
+
+
+
+</div>
+</div>
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — PASSIONS (Needed × Item)</div>
+<div class="area" id="orderListPassions"></div>
+<div class="copyopen">
+<button class="btn" id="copyPassions">COPY</button>
+<a class="btn green" href="#" id="waPassions" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — MK (Needed × Item)</div>
+<div class="area" id="orderListMk"></div>
+<div class="copyopen">
+<button class="btn" id="copyMk">COPY</button>
+<a class="btn green" href="#" id="waMk" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — OTHER (Needed × Item)</div>
+<div class="area" id="orderListOther"></div>
+<div class="copyopen">
+<button class="btn" id="copyOther">COPY</button>
+<a class="btn green" href="#" id="waOther" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+<button class="btn red" id="resetBtn">⚠️ RESET ALL ⚠️</button>
+<button class="btn ghost" id="editBtn">EDIT ITEMS</button>
+</div>
+<div class="card editor" id="editorPanel">
+<div class="small" style="margin-bottom:6px">ITEMS EDITOR (one item per line)</div>
+<textarea class="textarea" id="itemsTextarea" spellcheck="false"></textarea>
+<div class="counterline" id="editorCount">Unique lines: 0</div>
+<div class="editorbar">
+<button class="btn green" id="saveItemsBtn">Save List</button>
+<button class="btn ghost" id="cancelEditBtn">Cancel</button>
+</div>
+<div class="editor-tools">
+<input id="newItemInput" placeholder="Add new item… (auto-UPPERCASE)" type="text"/>
+<button class="btn" id="addItemBtn">Add Item</button>
+<button class="btn" id="addQuickBtn">Add “NEW ITEM”</button>
+</div>
+<div class="small" style="margin-top:6px">
+      No exact duplicates allowed (case-insensitive). Keeping a name the same preserves its saved values.
+    </div>
+</div>
+</div>
+<script>
+// ========= Default Items (original 100) =========
+var DEFAULT_ITEMS = [];
+if(window.afterItemsLoaded) window.afterItemsLoaded();
+
+
+// ========= AUTO-LOAD ITEMS FROM GOOGLE SHEETS (FIXED) =========
+fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9pTMWZLNo6EJGOu475l8_cUMtiOTd9P0hGS4pR43Z0cNpUiDT9-O4kGPQ6czmigUuhWTD6sAhYLYc/pub?gid=223224205&single=true&output=csv")
+  .then(r => r.text())
+  .then(t => {
+    var ITEM_NAMES = [];
+    var ITEM_CATS = {}; // Will hold { "Item Name": "Category" }
+    
+    // 1. Correctly split all rows by line break
+    var rows = t.trim().split(/\r?\n/);
+    
+    // 2. Remove the header row ("Item Name,Category")
+    rows.shift(); 
+    
+    // 3. Process the remaining data rows
+    rows.forEach(r => {
+        // Split the row by the comma separator
+        let parts = r.split(','); 
+        let name = (parts[0] || '').trim();
+        let cat = (parts[1] || '').trim(); // Category (Location) is the second column
+        
+        if (name) {
+            ITEM_NAMES.push(name);
+            ITEM_CATS[name] = cat;
+        }
+    });
+
+    ITEMS = ITEM_NAMES;
+if(window.afterItemsLoaded) window.afterItemsLoaded();
+    TOTAL = ITEMS.length;
+    try{ saveItems(ITEMS); }catch(e){}
+    
+    // CRUCIAL: Merge the fetched locations into the global LOCATIONS object
+    // This allows the filter buttons (Cold Room, Side Door) and navigation to work.
+    if (window.LOCATIONS) {
+        Object.assign(window.LOCATIONS, ITEM_CATS);
+    } else {
+        window.LOCATIONS = ITEM_CATS;
+    }
+    
+    rebuildAZ();
+    show(0);
+    buildRunning();
+    buildNotNeededList();
+    updateProgressUI();
+
+    // === V181: Robust Auto-import from ?d= (ADDED HERE) ===
+    try{
+      var params = new URLSearchParams(location.search);
+      if (params.has("d")){
+        var enc = params.get("d") || "";
+        if (enc) {
+          var decoded;
+          try { decoded = atob(enc); }
+          catch(e){ decoded = decodeURIComponent(escape(atob(enc))); }
+          var parts = decoded.split(",");
+          var applied = 0;
+          for (var i=0;i<Math.min(parts.length, (ITEMS||[]).length); i++){
+            var name = ITEMS[i];
+            var v = (parts[i]||"").trim();
+            if (v === "") continue;
+            if (!state.map) state.map = {};
+            var rec = state.map[name] || {};
+            rec.stock = v;
+            state.map[name] = rec;
+            applied++;
+          }
+          if (applied > 0){
+            try{ save(); }catch(e){}
+            try{
+              if (typeof updateProgressUI === "function") updateProgressUI();
+              if (typeof buildRunning === "function") buildRunning();
+              if (typeof buildNotNeededList === "function") buildNotNeededList();
+              if (typeof show === "function") show(state.i||0);
+            }catch(e){}
+          }
+        }
+      }
+    }catch(e){ try{ console.error(e); }catch(_){ } }
+    // === END V181 ADDITION ===
+
+  });
+
+// ========= Storage Keys =========
+var ITEMS_KEY = "orderpad.items.v1";
+// ... (the rest of the file continues below here without change)
+var KEY = "orderpad.full.compat";
+var BACKUP_KEY = "orderpad.full.backup";
+
+// ========= Load/Save Items =========
+function loadItems(){
+  try {
+    var raw = localStorage.getItem(ITEMS_KEY);
+    if (!raw) return DEFAULT_ITEMS.slice();
+    var arr = JSON.parse(raw);
+    if (Object.prototype.toString.call(arr) === "[object Array]" && arr.length > 0){
+      var clean = [];
+      for (var i=0;i<arr.length;i++){
+        var s = (arr[i]==null?"":String(arr[i])).trim();
+        if (s) clean.push(s);
+      }
+      return clean.length? clean : DEFAULT_ITEMS.slice();
+    }
+  } catch(e){}
+  return DEFAULT_ITEMS.slice();
+}
+function saveItems(arr){ try { localStorage.setItem(ITEMS_KEY, JSON.stringify(arr)); localStorage.setItem(ITEMS_KEY + ".backup", JSON.stringify(arr)); } catch(e){} }
+
+// ========= App State =========
+// --- Defaults first, then saved items if present (restore stable init) ---
+var ITEMS = DEFAULT_ITEMS.slice();
+if(window.afterItemsLoaded) window.afterItemsLoaded();
+try {
+  var savedItems = loadItems();
+  if (savedItems && savedItems.length) ITEMS = savedItems;
+if(window.afterItemsLoaded) window.afterItemsLoaded();
+} catch(e){}
+var TOTAL = ITEMS.length;
+
+// Only restore defaults if truly empty (do not overwrite custom list)
+if (!TOTAL) {
+  ITEMS = DEFAULT_ITEMS.slice();
+if(window.afterItemsLoaded) window.afterItemsLoaded();
+  TOTAL = ITEMS.length;
+  saveItems(ITEMS);
+}
+
+var state = {};
+try {
+  state = JSON.parse(localStorage.getItem(KEY) || "{}");
+  if (!state || (typeof state === "object" && Object.keys(state).length === 0)){
+    var _bk = localStorage.getItem(BACKUP_KEY);
+    if (_bk){ try{ state = JSON.parse(_bk); }catch(e2){} }
+  }
+} catch(e){ state = {}; }
+if (typeof state.i !== "number") state.i = 0;
+if (!state.map) state.map = {};            // per-item: {stock, order, note, status, bucket}
+if (!state.notes) state.notes = {};
+
+// ========= Elements =========
+function $(id){ return document.getElementById(id); }
+var itemName=$("itemName"), counter=$("counter");
+var stockInput=$("stockInput"), orderInput=$("orderInput"), noteInput=$("noteInput");
+
+var savePassionsBtn=$("savePassionsBtn"), saveMkBtn=$("saveMkBtn"), saveOtherBtn=$("saveOtherBtn"), notNeededBtn=$("notNeededBtn");
+var prevBtn=$("prevBtn"), nextBtn=$("nextBtn");
+
+var orderListPassions=$("orderListPassions"), orderListMk=$("orderListMk"), orderListOther=$("orderListOther");
+var copyPassions=$("copyPassions"), copyMk=$("copyMk"), copyOther=$("copyOther");
+var waPassions=$("waPassions"), waMk=$("waMk"), waOther=$("waOther");
+
+var azBar=$("azBar");
+var resetBtn=$("resetBtn"), editBtn=$("editBtn");
+var editorPanel=$("editorPanel"), itemsTextarea=$("itemsTextarea");
+var saveItemsBtn=$("saveItemsBtn"), cancelEditBtn=$("cancelEditBtn");
+var addQuickBtn=$("addQuickBtn"), newItemInput=$("newItemInput"), addItemBtn=$("addItemBtn");
+var editorCount=$("editorCount");
+
+
+// ======== Temporary UNDO (last action only) ========
+var undoBtn = document.getElementById('undoBtn');
+var __lastUndo = null; // { name: string, rec: object|null }
+
+function __cloneRec(obj){ try { return obj ? JSON.parse(JSON.stringify(obj)) : null; } catch(e){ return obj; } }
+function __setUndoSnapshot(name, prevRec){
+  __lastUndo = { name: name, rec: __cloneRec(prevRec) };
+  try { if (undoBtn) undoBtn.style.display = 'block'; } catch(e){}
+}
+
+if (undoBtn){
+  undoBtn.addEventListener('click', function(){
+    try{
+      if (!__lastUndo || !__lastUndo.name){
+        this.style.display = 'none';
+        return;
+      }
+      var nm = __lastUndo.name;
+      var prev = __lastUndo.rec;
+      if (prev === null){
+        if (state.map && state.map[nm]) delete state.map[nm];
+        if (state.notes && state.notes[nm]==='') delete state.notes[nm];
+      } else {
+        if (!state.map) state.map = {};
+        state.map[nm] = prev;
+      }
+      save();
+      try{ updateProgressUI(); }catch(e){}
+      try{ buildRunning(); buildNotNeededList(); }catch(e){}
+      try{ updateAnsweredFade(); }catch(e){}
+      try{ show(state.i); }catch(e){}
+      this.style.display = 'none';
+      __lastUndo = null;
+      try{ showTopFlash('Undid last action', 1200); }catch(e){}
+    }catch(e){}
+  });
+}
+
+// ========= Helpers =========
+function digits(v){ return (v==null?"":String(v)).replace(/[^0-9.]/g,""); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); localStorage.setItem(BACKUP_KEY, JSON.stringify(state)); }catch(e){} }
+
+// ========= A–Z bar =========
+
+function rebuildAZ(){
+  while (azBar.firstChild) azBar.removeChild(azBar.firstChild);
+  var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  var groups = {}, positions = {};
+  // group items
+  for (var i=0;i<ITEMS.length;i++){
+    var nm = ITEMS[i];
+    var L = (nm && nm[0] ? nm[0] : "").toUpperCase();
+    if (/^[0-9]/.test(nm)) L = "#";
+    if (!groups[L]) groups[L] = [];
+    groups[L].push(nm);
+  }
+  // build buttons
+  for (var j=0;j<letters.length;j++){
+    (function(L){
+      var b = document.createElement("button");
+      b.className = "azbtn"; b.textContent = L;
+      if (!groups[L] || !groups[L].length) b.disabled = true;
+      b.onclick = function(){
+        if (!groups[L] || !groups[L].length) return;
+        if (positions[L]==null) positions[L] = 0; else positions[L] = (positions[L]+1)%groups[L].length;
+        currentAZGroup = L; currentAZItems = groups[L];
+        var nextName = groups[L][positions[L]];
+        var idx = ITEMS.indexOf(nextName);
+        if (idx>=0){
+          azInfo = { letter: L, index: (positions[L]||0)+1, total: groups[L].length };
+          clearInputsOnce = true;
+          show(idx);
+          var kids=azBar.children; for(var k=0;k<kids.length;k++){ kids[k].classList.remove("active"); }
+          b.classList.add("active");
+        }
+      };
+      azBar.appendChild(b);
+    })(letters[j]);
+  }
+}
+
+
+
+// ========= Name Formatting Helper =========
+function toTitleCaseName(nm){
+  if (!nm) return "";
+  var disp = (/^[0-9]/.test(nm) ? "#" + nm : nm);
+  disp = (disp + "").toLowerCase();
+  var parts = disp.split(/\s+/);
+  for (var i=0; i<parts.length; i++){
+    var w = parts[i];
+    if (!w) continue;
+    if (w[0] === "#"){
+      parts[i] = "#" + (w.slice(1) || "");
+    } else {
+      parts[i] = w.charAt(0).toUpperCase() + w.slice(1);
+    }
+  }
+  return parts.join(" ");
+}
+// ========= Core UI =========
+function show(i){
+  var max = Math.max(0, TOTAL-1);
+  state.i = Math.max(0, Math.min(max, i));
+  var name = ITEMS[state.i];
+  var rec = state.map[name] || {stock:"",order:"",note:state.notes[name]||"",status:"",bucket:""};
+  itemName.textContent = name;
+  counter.textContent = (state.i+1) + " / " + TOTAL;
+  stockInput.value = (rec.stock!=null? String(rec.stock) : "");
+  orderInput.value = (rec.order!=null? String(rec.order) : "");
+  noteInput.value  = state.notes[name] || "";
+  save();
+
+  try{ updateProgressUI(); playClick(); buildUnansweredList(); }catch(e){}
+
+  try{ updateSaveButtons(); }catch(e){}
+  try{ updateAnsweredFade(); }catch(e){}
+}
+
+function buildRunning(){
+  function joinInFives(lines){ if(!lines||!lines.length) return ""; var out=[],count=0; for(var i=0;i<lines.length;i++){ out.push(lines[i]); count++; if(count===5 && i!==lines.length-1){ out.push(""); count=0; } } return out.join("\n"); }
+  var p=[], m=[], o=[];
+  for (var idx=0; idx<ITEMS.length; idx++){
+    var nm = ITEMS[idx];
+    var rec = state.map[nm]; if (!rec) continue;
+    if (rec.status==="notneeded") continue;
+    var need = parseInt(rec.order||"0",10)||0;
+    if (need<=0) continue;
+    var line = rec.note ? (need+" × "+nm+"\n→ "+rec.note) : (need+" × "+nm);
+    var bucket = (rec.bucket||"other").toLowerCase();
+    if (bucket==="passions") p.push(line);
+    else if (bucket==="mk") m.push(line);
+    else o.push(line);
+  }
+  var tp = joinInFives(p), tm = joinInFives(m), to = joinInFives(o);
+  orderListPassions.textContent = tp;
+  orderListMk.textContent = tm;
+  orderListOther.textContent = to;
+  waPassions.href = "https://wa.me/?text="+encodeURIComponent(tp);
+  waMk.href       = "https://wa.me/?text="+encodeURIComponent(tm);
+  waOther.href    = "https://wa.me/?text="+encodeURIComponent(to);
+}
+
+function commitTo(bucket){
+  // guard: require order>0 for save
+  var orderInputEl = (typeof orderInput!=="undefined")? orderInput : document.getElementById('orderInput');
+  var orderVal = parseInt((orderInputEl && orderInputEl.value) ? orderInputEl.value : "0", 10);
+  if (isNaN(orderVal) || orderVal <= 0){
+    // do nothing; do not change state; do not update progress
+    return;
+  }
+
+  if (!TOTAL) return;
+  var name = ITEMS[state.i];
+  var rec = state.map[name] || {};
+  // Undo snapshot (before mutation)
+  var __prevRec = state.map[name] ? JSON.parse(JSON.stringify(state.map[name])) : null;
+  __setUndoSnapshot(name, __prevRec);
+
+  rec.stock = digits(stockInput.value);
+  rec.order = digits(orderInput.value);
+  rec.note  = (noteInput.value||"").trim();
+  rec.status = "saved";
+  rec.bucket = bucket; // "passions" | "mk" | "other"
+  state.map[name] = rec;
+  if (rec.note) state.notes[name]=rec.note; else delete state.notes[name];
+  save(); try{updateProgressUI(); playClick(); buildUnansweredList();}catch(e){}; buildRunning(); buildNotNeededList(); if (typeof updateProgressUI==="function") updateProgressUI(); playClick(); buildUnansweredList(); if (typeof updateAZDimming==="function") updateAZDimming(); autoAdvanceIfGroupDone(); updateProgressUI(); playClick(); buildUnansweredList(); buildUnansweredList(); 
+
+
+  
+
+safeShow(state.i+1);
+
+  try{ if (typeof window.focusOrderSoon==='function') window.focusOrderSoon(); }catch(e){}
+}
+
+
+function markNotNeeded(){
+  if (!TOTAL) return;
+  var name = ITEMS[state.i];
+  var rec = state.map[name] || {};
+  // Undo snapshot (before mutation)
+  var __prevRec = state.map[name] ? JSON.parse(JSON.stringify(state.map[name])) : null;
+  __setUndoSnapshot(name, __prevRec);
+
+  rec.stock = digits(stockInput.value);
+  rec.order = digits(orderInput.value);
+  rec.note  = (noteInput.value||"").trim();
+  rec.status = "notneeded";
+  rec.bucket = ""; // clear bucket
+  state.map[name] = rec;
+  if (rec.note) state.notes[name]=rec.note; else delete state.notes[name];
+  save(); try{updateProgressUI(); playClick(); buildUnansweredList();}catch(e){}; buildRunning(); buildNotNeededList(); if (typeof updateProgressUI==="function") updateProgressUI(); playClick(); buildUnansweredList(); if (typeof updateAZDimming==="function") updateAZDimming(); autoAdvanceIfGroupDone(); updateProgressUI(); playClick(); buildUnansweredList(); buildUnansweredList(); // --- Append current item name to bottom list visibly ---
+  try {
+    var nameEl = ITEMS[state.i];
+    var listEl = document.getElementById('notNeededList');
+    if (nameEl && listEl) {
+      // avoid duplicates via id
+      var id = 'nn-' + nameEl;
+      if (!document.getElementById(id)) {
+        var li = document.createElement('li');
+        li.id = id;
+        li.textContent = nameEl;
+        listEl.appendChild(li);
+      }
+    }
+  } catch(e) {}
+
+  try {
+    var nameEl = ITEMS[state.i];
+    var row = document.getElementById(nameEl);
+    if (row) row.classList.add("notneeded");
+  } catch(e) {}
+
+  safeShow(state.i+1);
+
+  try{ if (typeof window.focusOrderSoon==='function') window.focusOrderSoon(); }catch(e){}
+}
+
+
+// ========= Events =========
+savePassionsBtn.onclick = function(){ commitTo("passions"); };
+saveMkBtn.onclick       = function(){ commitTo("mk"); };
+saveOtherBtn.onclick    = function(){ commitTo("other"); };
+notNeededBtn.onclick = function(){
+  var orderEl = document.getElementById('orderInput');
+  var val = parseInt(orderEl && orderEl.value ? orderEl.value : "0", 10);
+  if (!isNaN(val) && val > 0) {
+    return; // silently ignore if Order > 0
+  }
+  markNotNeeded();
+};
+
+prevBtn.onclick = ()=>{ saveCurrent(); goPrev(); }; };
+nextBtn.onclick = ()=>{ saveCurrent(); goNext(); }; };
+
+stockInput.oninput = function(){ stockInput.value = digits(stockInput.value); };
+
+// Save stock immediately (decimals allowed)
+try {
+  stockInput.addEventListener("input", function(){
+    if (!ITEMS || !ITEMS.length) return;
+    var name = ITEMS[state.i] || "";
+    if (!name) return;
+    if (!state.map) state.map = {};
+    var rec = state.map[name] || {};
+    rec.stock = (stockInput.value||"").trim();
+    state.map[name] = rec;
+    try { save(); } catch(e){}
+  });
+} catch(e){}
+orderInput.oninput = function(){ orderInput.value = digits(orderInput.value); };
+noteInput.oninput = function(){
+  var v = (noteInput.value||"").trim();
+  var name = ITEMS[state.i];
+  if (v) state.notes[name]=v; else delete state.notes[name];
+  save(); buildRunning(); buildNotNeededList();
+};
+
+// Copy helpers for each box
+function wireCopy(btn, area){
+  btn.onclick = function(){
+    var t = area.textContent||"";
+    if (!t) return;
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){
+        var old = btn.textContent; btn.textContent="COPIED"; setTimeout(function(){ btn.textContent=old; }, 900);
+      });
+    } else {
+      var ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta);
+      ta.select(); document.execCommand("copy"); ta.parentNode.removeChild(ta);
+    }
+  };
+}
+wireCopy(copyPassions, orderListPassions);
+wireCopy(copyMk,       orderListMk);
+wireCopy(copyOther,    orderListOther);
+
+// Reset-all
+resetBtn.onclick = function(){
+  if (!confirm("Clear ALL saved stock, order, and notes?")) return;
+  state = { i: 0, map: {}, notes: {} };
+  save();
+
+  location.reload(true);    
+};
+
+// ========= Items Editor =========
+function openEditor(){
+  itemsTextarea.value = ITEMS.slice().join("\n");
+  updateEditorCounts();
+  editorPanel.classList.add("open");
+  itemsTextarea.focus();
+}
+function closeEditor(){ editorPanel.classList.remove("open"); }
+editBtn.onclick = openEditor;
+cancelEditBtn.onclick = closeEditor;
+addQuickBtn.onclick = function(){
+  newItemInput.value = "NEW ITEM";
+  addItemFromField();
+};
+itemsTextarea.addEventListener("input", updateEditorCounts);
+
+function updateEditorCounts(){
+  var raw = (itemsTextarea.value||"").split("\n");
+  var seen = {}, uniq = 0;
+  for (var i=0;i<raw.length;i++){
+    var s = (raw[i]==null?"":String(raw[i])).trim();
+    if (!s) continue;
+    if (!seen[s]){ seen[s]=1; uniq++; }
+  }
+  editorCount.textContent = "Unique lines: " + uniq;
+}
+
+// Add Item via input field (validates duplicates)
+function addItemFromField(){
+  var s = (newItemInput.value||"").trim();
+  if (!s){ showNotChecked(notChecked); return; }
+  // s = s.toUpperCase(); // removed forced uppercase
+
+  // Check against current textarea (case-insensitive)
+  var raw = (itemsTextarea.value||"").split("\n");
+  var seen = {};
+  for (var i=0;i<raw.length;i++){
+    var t = (raw[i]==null?"":String(raw[i])).trim();
+    if (!t) continue;
+    seen[t]=1;
+  }
+  if (seen[s]){ showNotChecked(notChecked); return; }
+
+  // Append
+  var txt = itemsTextarea.value;
+  if (txt && txt.slice(-1)!=="\n") txt += "\n";
+  itemsTextarea.value = txt + s;
+  newItemInput.value = "";
+  updateEditorCounts();
+  itemsTextarea.focus();
+  itemsTextarea.scrollTop = itemsTextarea.scrollHeight;
+}
+addItemBtn.onclick = addItemFromField;
+
+saveItemsBtn.onclick = function(){
+  // Parse, normalise, and reject exact duplicates (case-insensitive)
+  var raw = (itemsTextarea.value||"").split("\n");
+  var arr = [], seen = {}, dupes = [];
+  for (var i=0;i<raw.length;i++){
+    var s = (raw[i]==null?"":String(raw[i])).trim();
+    if (!s) continue;
+    if (seen[s]) { dupes.push(s); continue; }
+    seen[s] = true; arr.push(s);
+  }
+  if (!arr.length){ showNotChecked(notChecked); return; }
+
+  // Previous set to spot truly new items
+  var prevSet = {}; for (var p=0;p<ITEMS.length;p++){ prevSet[ITEMS[p]] = true; }
+
+  // Save to storage
+  saveItems(arr);
+
+  // Keep state only for names still present
+  var newMap = {}, newNotes = {};
+  for (var j=0;j<arr.length;j++){
+    var nm = arr[j];
+    if (state.map[nm]) newMap[nm] = state.map[nm];
+    if (state.notes[nm]) newNotes[nm] = state.notes[nm];
+  }
+  state.map = newMap; state.notes = newNotes;
+
+  // Use the just-saved list directly
+  ITEMS = arr.slice();
+if(window.afterItemsLoaded) window.afterItemsLoaded();
+  TOTAL = ITEMS.length;
+
+  rebuildAZ(); save();
+
+  // Find which are new
+  var newlyAdded = [];
+  for (var k=0;k<ITEMS.length;k++){
+    var nm2 = ITEMS[k];
+    if (!prevSet[nm2]) newlyAdded.push(nm2);
+  }
+  // Jump to first new if any
+  state.i = newlyAdded.length>0 ? ITEMS.indexOf(newlyAdded[0]) : 0;
+
+  show(state.i);
+  buildRunning(); buildNotNeededList();
+  closeEditor();
+
+  // Feedback message
+  var msg = "Items list saved ("+TOTAL+" total).";
+  if (newlyAdded.length>0) msg += " Added: " + newlyAdded[0] + (newlyAdded.length>1? " +" + (newlyAdded.length-1) : "");
+  if (dupes.length>0){
+    var uniqDupes = [], seenD={};
+    for (var d=0; d<dupes.length; d++){ var dd=dupes[d]; if(!seenD[dd]){ uniqDupes.push(dd); seenD[dd]=1; } }
+    msg += " | Duplicates removed: " + uniqDupes.join(", ");
+  }
+  if (newlyAdded.length===0 && dupes.length===0){ msg = "No new items. ("+TOTAL+" total)."; }
+  alert(msg);
+};
+
+
+// ========= Steppers =========
+function stepValue(inputEl, delta){
+  // Allow decimals
+  var v = parseFloat((inputEl.value||"").replace(/[^0-9.]/g,""));
+  if (isNaN(v)) v = 0;
+  v = v + delta; // delta = ±1.0 as you want
+  if (v < 0) v = 0;
+
+  // Keep as-is, do not round away decimals typed manually
+  inputEl.value = v.toString();
+}
+
+function saveStockAndOrder() {
+  var name = ITEMS[state.i];
+  if (!name) return;
+  if (!state.map) state.map = {};
+  var rec = state.map[name] || {};
+  rec.stock = (stockInput.value || "").trim();
+  rec.order = (orderInput.value || "").trim();
+  rec.note = (noteInput.value || "").trim();
+  state.map[name] = rec;
+  if (rec.note) state.notes[name] = rec.note; else delete state.notes[name];
+  save();
+  if (typeof updateProgressUI === "function") updateProgressUI();
+  if (typeof updateAnsweredFade === "function") updateAnsweredFade();
+}
+
+(function(){
+  var sm = document.getElementById("stockMinus");
+  var sp = document.getElementById("stockPlus");
+  var om = document.getElementById("orderMinus");
+  var op = document.getElementById("orderPlus");
+  if (sm) sm.onclick = function(){ stepValue(stockInput, -1); updateSaveButtons(); saveStockAndOrder(); };
+if (sp) sp.onclick = function(){ stepValue(stockInput, +1); updateSaveButtons(); saveStockAndOrder(); };
+  if (om) om.onclick = function(){ stepValue(orderInput, -1); updateSaveButtons(); saveStockAndOrder(); };
+  if (op) op.onclick = function(){ stepValue(orderInput, +1); updateSaveButtons(); saveStockAndOrder(); };
+})();
+
+// ========= Progress Helpers =========
+function isResponded(rec){
+  if (!rec) return false;
+  if (rec.status === "notneeded") return true;
+  if (rec.status === "saved") {
+    var qty = parseInt(rec.order || "0", 10);
+    return qty > 0;
+  }
+  return false;
+}
+function computeProgress(){ var responded=0; for (var idx=0; idx<ITEMS.length; idx++){ var nm=ITEMS[idx]; var rec=state.map[nm]; if (isResponded(rec)) responded++; } return {responded:responded, total:TOTAL}; }
+function updateProgressUI(){ var p=computeProgress(); var pct=p.total>0? Math.round((p.responded/p.total)*100):0; var bar=document.getElementById("progressFill"); var tally=document.getElementById("progressTally"); if (bar) bar.style.width=pct+"%"; if (tally) tally.textContent="Responded: "+p.responded+" / "+p.total; var btn=document.getElementById("nextUnansweredBtn"); if (btn){ btn.disabled=(p.responded>=p.total); btn.style.opacity=btn.disabled?.5:1;  var of=document.getElementById('overallFill'); if(of) of.style.width=pct+'%';  var ol=document.getElementById('overallLabel'); if(ol){ var left=Math.max(0,(p.total||0)-(p.responded||0)); ol.textContent = left+' / '+(p.total||0)+' left'; } } }
+function nextUnanswered(){ if (!TOTAL) return; var start=(state.i+1)%TOTAL; var i=start; do{ var nm=ITEMS[i]; var rec=state.map[nm]; if (!isResponded(rec)){ azInfo=null; currentAZGroup=""; currentAZItems=[]; show(i); return; } i=(i+1)%TOTAL; } while (i!==start); alert("All items have been responded to. ✅"); }
+setTimeout(function(){ var btn=document.getElementById("nextUnansweredBtn"); if (btn) btn.onclick=nextUnanswered; updateProgressUI(); playClick(); buildUnansweredList(); },0);
+
+
+// ========= Auto-advance to next letter when current letter is finished =========
+function firstLetterOf(name){
+  var L = (name && name[0] ? name[0] : "").toUpperCase();
+  if (/^[0-9]/.test(name)) L = "#";
+  return L;
+}
+function _letterGroupsLocal(){
+  var groups = {};
+  for (var i=0;i<ITEMS.length;i++){
+    var nm = ITEMS[i];
+    var L = firstLetterOf(nm);
+    if (!groups[L]) groups[L] = [];
+    groups[L].push(nm);
+  }
+  return groups;
+}
+function autoAdvanceIfGroupDone(){
+  try{
+    if (!ITEMS || !ITEMS.length) return;
+    var name = ITEMS[state.i] || "";
+    var L = firstLetterOf(name);
+    var groups = (typeof letterGroups === "function") ? letterGroups() : _letterGroupsLocal();
+    var arr = groups[L] || [];
+    if (!arr.length) return;
+    // helper for responded
+    function _isResp(nm){
+      var rec = state.map[nm];
+      return rec && (rec.status === "saved" || rec.status === "notneeded");
+    }
+    var allDone = true;
+    for (var i=0;i<arr.length;i++){ if (!_isResp(arr[i])){ allDone=false; break; } }
+    if (!allDone) return;
+    // find next letter with items
+    var letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    var idx = letters.indexOf(L);
+    for (var hops=0; hops<letters.length-1; hops++){
+      idx = (idx + 1) % letters.length;
+      var L2 = letters[idx];
+      var arr2 = groups[L2] || [];
+      if (arr2.length){
+        // pick first unresponded item in next letter, else first
+        var targetIdx = -1;
+        for (var t=0;t<arr2.length;t++){
+          var nm = arr2[t];
+          if (!_isResp(nm)){ targetIdx = ITEMS.indexOf(nm); break; }
+        }
+        if (targetIdx < 0) targetIdx = ITEMS.indexOf(arr2[0]);
+        if (targetIdx >= 0){
+          // update azInfo and highlight
+          azInfo = { letter: L2, index: 1, total: arr2.length };
+          if (typeof azBar !== "undefined" && azBar){
+            var kids = azBar.children;
+            for (var k=0;k<kids.length;k++){
+              if (kids[k]) kids[k].classList.remove("active");
+            }
+            for (var k=0;k<kids.length;k++){
+              if (kids[k] && kids[k].textContent === L2){ kids[k].classList.add("active"); break; }
+            }
+          }
+          show(targetIdx);
+        }
+        break;
+      }
+    }
+  }catch(e){/* no-op */}
+}
+
+// ========= Prevent double/triple-tap zoom (but keep taps working) =========
+(function(){
+  var lastTouch = 0;
+  document.addEventListener('touchend', function(e){
+    var now = Date.now();
+    if (now - lastTouch <= 350) {
+      e.preventDefault();
+      var t = e.target;
+      if (t && typeof t.click === 'function') t.click();
+    }
+    lastTouch = now;
+  }, {passive:false});
+
+  document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+})();
+  
+// ========= Initial Mount =========
+rebuildAZ();
+if (TOTAL>0){ show(state.i||0); buildRunning(); buildNotNeededList(); try{updateProgressUI(); playClick(); buildUnansweredList();}catch(e){}; } else { counter.textContent="0 / 0"; itemName.textContent="(No items found)"; }
+
+
+// Safety mount in case earlier init was skipped
+
+function updateSaveButtons(){
+  var el = (typeof orderInput!=="undefined")? orderInput : document.getElementById('orderInput');
+  var val = parseInt((el && el.value) ? el.value : "0", 10);
+  var dis = isNaN(val) || val <= 0;
+  var b1=document.getElementById('savePassionsBtn');
+  var b2=document.getElementById('saveMkBtn');
+  var b3=document.getElementById('saveOtherBtn');
+  if (b1) b1.disabled = dis;
+  if (b2) b2.disabled = dis;
+  if (b3) b3.disabled = dis;
+}
+
+// wire order input to toggle save buttons
+(function(){
+  var el = (typeof orderInput!=="undefined")? orderInput : document.getElementById('orderInput');
+  if (el){
+    el.addEventListener('input', function(){ try{ updateSaveButtons(); }catch(e){}
+  try{ updateAnsweredFade(); }catch(e){}; /* no progress update here */ });
+  }
+})();
+
+// --- Bottom safe-area to avoid the fixed A–Z keyboard overlapping actions ---
+(function(){
+  function setBottomSafeArea(){
+    try{
+      var bar = null;
+      var h = bar ? bar.offsetHeight : 0;
+      var extra = 12; // tiny breathing room
+      var val = (h + extra) + 'px';
+      document.documentElement.style.setProperty('--azSafe', val);
+      var m = document.querySelector('main');
+      if (m) m.style.paddingBottom = 'var(--azSafe)';
+      else document.body.style.paddingBottom = 'var(--azSafe)';
+    }catch(e){}
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setBottomSafeArea);
+  } else {
+    setBottomSafeArea();
+  }
+  window.addEventListener('resize', setBottomSafeArea);
+  // in case fonts/UI shift height after load
+  setTimeout(setBottomSafeArea, 300);
+  setTimeout(setBottomSafeArea, 1200);
+})();
+
+
+// --- Build vertical A–Z index from existing az buttons ---
+(function(){
+  function buildAZIndex(){
+    var host = document.getElementById('azIndex');
+    if (!host) return;
+    host.innerHTML = '';
+    var azBtns = document.querySelectorAll('#azBar .azbtn');
+    var letters = [];
+    if (azBtns.length){
+      azBtns.forEach(function(b){
+        var L = b.dataset.letter || (b.textContent||'').trim();
+        if (!L) return;
+        letters.push({L:L, btn:b});
+      });
+    } else {
+      // fallback: default sequence
+      var seq = ['#','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+      seq.forEach(function(L){ letters.push({L:L, btn:null}); });
+    }
+    letters.forEach(function(it){
+      var el = document.createElement('div');
+      el.className = 'azIndexBtn';
+      el.textContent = it.L;
+      el.dataset.letter = it.L;
+      el.addEventListener('click', function(){
+        // Prefer to delegate to existing bottom-az button logic, if present
+        var target = it.btn || document.querySelector('#azBar .azbtn[data-letter="'+it.L+'"]');
+        if (target) { target.click(); }
+        // Otherwise, try to call a global handler if available
+        else if (window.handleAZClick) { window.handleAZClick(it.L); }
+        else if (window.selectLetter) { window.selectLetter(it.L); }
+      });
+      host.appendChild(el);
+    });
+    syncAZIndex();
+  }
+  function syncAZIndex(){
+    var activeBtn = document.querySelector('#azBar .azbtn.active');
+    var active = activeBtn ? (activeBtn.dataset.letter || activeBtn.textContent.trim()) : null;
+    var dimMap = {};
+    document.querySelectorAll('#azBar .azbtn').forEach(function(b){
+      var L = b.dataset.letter || b.textContent.trim();
+      dimMap[L] = !!b.disabled;
+    });
+    document.querySelectorAll('#azIndex .azIndexBtn').forEach(function(el){
+      var L = el.dataset.letter;
+      el.classList.toggle('active', active && L===active);
+      if (dimMap.hasOwnProperty(L)){
+        el.classList.toggle('disabled', dimMap[L]);
+      }
+    });
+  }
+  document.addEventListener('click', function(ev){
+    if (ev.target && ev.target.classList && ev.target.classList.contains('azbtn')){
+      setTimeout(syncAZIndex, 0);
+    }
+  });
+  // Try to hook into existing rebuild
+  var _reb = window.rebuildAZ;
+  window.rebuildAZ = function(){
+    if (typeof _reb === 'function') _reb();
+    try { buildAZIndex(); } catch(e){}
+  };
+  // Initial build after DOM loaded
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', buildAZIndex);
+  } else {
+    buildAZIndex();
+  }
+  window.syncAZIndex = syncAZIndex;
+})();
+
+
+// Dynamically anchor the vertical A–Z index below the Responded/progress line
+(function(){
+  function setAzIndexTop(){
+    try{
+      var idx = document.getElementById('azIndex');
+      if (!idx) return;
+      var hdr = document.querySelector('header');
+      var prog = document.getElementById('overallProgress');
+      var anchor = prog || hdr;
+      if (!anchor) return;
+      var rect = anchor.getBoundingClientRect();
+      var top = Math.ceil(rect.bottom + 8); // 8px breathing room
+      // Constrain within viewport
+      if (top < 0) top = 0;
+      if (top > window.innerHeight - 40) top = window.innerHeight - 40;
+      idx.style.top = top + 'px';
+    }catch(e){}
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', setAzIndexTop);
+  } else {
+    setAzIndexTop();
+  }
+  window.addEventListener('resize', setAzIndexTop);
+  window.addEventListener('orientationchange', setAzIndexTop);
+  // Some UIs adjust height after fonts/layout settle
+  setTimeout(setAzIndexTop, 300);
+  setTimeout(setAzIndexTop, 1000);
+})();
+
+// --- Persist stock/order per item and restore on navigation ---
+(function(){
+  var stockEl = (typeof stockInput!=="undefined")? stockInput : document.getElementById('stockInput');
+  var orderEl = (typeof orderInput!=="undefined")? orderInput : document.getElementById('orderInput');
+  var nameEl  = (typeof itemName!=="undefined")? itemName : document.getElementById('itemName');
+  if (!stockEl || !orderEl || !nameEl) return;
+
+  function currName(){ return (nameEl && nameEl.textContent) ? nameEl.textContent.trim() : null; }
+  function persist(){
+    try{
+      var nm = currName(); if (!nm) return;
+      if (!state.map) state.map = {};
+      var rec = state.map[nm] || {stock:"",order:"",note:state.notes&&state.notes[nm]||"",status:"",bucket:""};
+      rec.stock = stockEl.value || "";
+      rec.order = orderEl.value || "";
+      state.map[nm] = rec;
+      save();
+    }catch(e){}
+  }
+
+  // Save on input changes
+  stockEl.addEventListener('input', persist);
+  orderEl.addEventListener('input', persist);
+
+  // Also intercept stepper clicks to persist
+  ['stockMinus','stockPlus','orderMinus','orderPlus'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ setTimeout(persist, 0); });
+  });
+
+  // When switching items (prev/next/nextUnanswered or AZ clicks), persist first
+  ['prevBtn','nextBtn','nextUnansweredBtn'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ try{ persist(); }catch(e){} });
+  });
+  document.addEventListener('click', function(ev){
+    if (ev.target && ev.target.classList && ev.target.classList.contains('azbtn')){
+      try{ persist(); }catch(e){}
+    }
+  });
+
+})();
+
+// --- Enable/disable Not Needed based on ORDER field ---
+(function(){
+  var orderEl = document.getElementById('orderInput');
+  var nnBtn   = document.getElementById('notNeededBtn');
+  if (!orderEl || !nnBtn) return;
+
+  function updateNotNeededState(){
+    var v = parseInt(orderEl.value ? orderEl.value : "0", 10);
+    if (isNaN(v)) v = 0;
+    nnBtn.disabled = v > 0;
+  }
+
+  // Update on load & whenever ORDER changes
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', updateNotNeededState);
+  } else {
+    updateNotNeededState();
+  }
+  orderEl.addEventListener('input', updateNotNeededState);
+  orderEl.addEventListener('change', updateNotNeededState);
+
+  // Also update after stepper clicks
+  ['orderMinus','orderPlus'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ setTimeout(updateNotNeededState, 0); });
+  });
+
+  // If your show(i) function exists, hook into it to refresh state on navigation
+  try {
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        try{ updateNotNeededState(); }catch(e){}
+        return r;
+      };
+    }
+  } catch(e){}
+})();
+
+// --- Enable/disable Not Needed based on ORDER field ---
+(function(){
+  var orderEl = document.getElementById('orderInput');
+  var nnBtn   = document.getElementById('notNeededBtn');
+  if (!orderEl || !nnBtn) return;
+
+  function updateNotNeededState(){
+    var v = parseInt(orderEl.value ? orderEl.value : "0", 10);
+    if (!isFinite(v)) v = 0;
+    nnBtn.disabled = v > 0;
+  }
+
+  // Run now and on changes
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', updateNotNeededState);
+  } else {
+    updateNotNeededState();
+  }
+  orderEl.addEventListener('input', updateNotNeededState);
+  orderEl.addEventListener('change', updateNotNeededState);
+
+  // Also after stepper clicks
+  ['orderMinus','orderPlus'].forEach(function(id){
+    var b = document.getElementById(id);
+    if (b) b.addEventListener('click', function(){ setTimeout(updateNotNeededState, 0); });
+  });
+
+  // Refresh after navigation (if show() exists)
+  try {
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        try{ updateNotNeededState(); }catch(e){}
+        return r;
+      };
+    }
+  } catch(e){}
+})();
+function buildNotNeededList(){
+  try{
+    var box = document.getElementById('notNeededList');
+    if (!box) return;
+    var list = [];
+    for (var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm];
+      if (rec && rec.status === "notneeded") list.push(nm);
+    }
+    list.sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
+    box.textContent = list.join("\n");
+  }catch(e){}
+}
+
+function updateAnsweredFade(){
+  try {
+    var name = ITEMS[state.i];
+    var rec = state.map[name];
+    var answered = isResponded(rec);
+    var nm = document.getElementById('itemName');
+    var card = document.getElementById('itemCard');
+    if (nm) nm.classList.toggle('answeredFade', !!answered);
+    if (card) card.classList.toggle('answeredFade', !!answered);
+  } catch(e){}
+}
+</script>
+<div id="azIndex"></div><script>
+// --- Auto-jump from STOCK to ORDER ---
+document.addEventListener('DOMContentLoaded', function(){
+  var stock = document.getElementById('stockInput');
+  var order = document.getElementById('orderInput');
+  if (!stock || !order) return;
+
+  function focusOrderAggressive(){
+    try {
+      order.setAttribute('type','tel');
+      order.setAttribute('inputmode','numeric');
+      order.setAttribute('pattern','[0-9]*');
+      order.setAttribute('autocomplete','one-time-code');
+    } catch(e){}
+    try { order.focus(); order.select && order.select(); } catch(e){}
+    try { order.click && order.click(); } catch(e){}
+    setTimeout(function(){
+      try { order.focus(); order.select && order.select(); } catch(e){}
+    }, 0);
+  }
+
+  stock.addEventListener('keydown', function(ev){
+    if (ev.key === 'Enter') {
+      ev.preventDefault();
+      focusOrderAggressive();
+    }
+  });
+
+  stock.addEventListener('blur', function(){
+    if (!order.value) {
+      focusOrderAggressive();
+    }
+  });
+});
+
+
+// --- Top flash helper ---
+function showTopFlash(msg, ms){
+  try{
+    // Suppress the green top banner specifically for "Not Needed" notices
+    if (msg && /not\s+needed/i.test(msg)) { return; }
+    var node = document.getElementById('topFlash');
+    if (!node) return;
+    node.textContent = msg || 'Done';
+    node.classList.add('show');
+    clearTimeout(window.__topFlashTimer);
+    window.__topFlashTimer = setTimeout(function(){
+      node.classList.remove('show');
+    }, ms || 1400);
+  }catch(e){}
+}
+
+
+
+function buildUnansweredList(){
+  try{
+    var box = document.getElementById('unansweredList');
+    if (!box) return;
+    var list = [];
+    for (var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm];
+      var answered = false;
+      try{
+        if (typeof isResponded === 'function'){
+          answered = isResponded(rec);
+        } else {
+          answered = !!(rec && (rec.status === 'notneeded' || rec.bucket));
+        }
+      }catch(e){ answered = false; }
+      if (!answered) list.push(nm);
+    }
+    list.sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
+    box.textContent = list.join("\n");
+  }catch(e){}
+}
+</script><section id="unansweredSection"><h3>Unanswered (A–Z)</h3><pre id="unansweredList"></pre></section>
+<section id="notNeededSection"><h3>Not Needed (A–Z)</h3><pre id="notNeededList"></pre></section><script>try{buildUnansweredList();}catch(e){}
+
+// --- Soft click sound (always on) ---
+(function(){
+  var AC = window.AudioContext || window.webkitAudioContext;
+  var ctx = null;
+  window.playClick = function(){
+    try{
+      if (!AC) return;
+      ctx = ctx || new AC();
+      var t = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, t);
+      gain.gain.setValueAtTime(0.0001, t);
+      // Softer peak and shorter duration
+      gain.gain.exponentialRampToValueAtTime(0.03, t + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.05);
+    }catch(e){ /* no-op */ }
+  };
+})();</script>
+<script>
+// Simple hold-to-repeat utility that just triggers .click() on the target
+(function(){
+  function addHoldRepeat(el, opts){
+    opts = opts || {};
+    var initDelay = opts.initialDelay || 500;
+    var repeat = opts.repeat || 160;
+    var accelerate = !!opts.accelerate;
+    var timer = null, repeater = null, interval = repeat, accelStep = 0;
+    var down = false;
+
+    function clearTimers(){
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (repeater) { clearInterval(repeater); repeater = null; }
+      if (down) { el.classList.remove('hold'); down = false; }
+      interval = repeat; accelStep = 0;
+    }
+
+    function step(){
+      try {
+        // Prefer lightweight direct calls over .click()
+        var L = (el.dataset && el.dataset.letter) || (el.textContent||'').trim();
+        if ((el.classList && (el.classList.contains('azbtn') || el.classList.contains('azIndexBtn'))) && (typeof window.azCycleContinuous === 'function' || typeof window.azCycle === 'function')){
+          if (typeof window.azCycleContinuous==='function') window.azCycleContinuous(L, +1); else window.azCycle(L, +1);
+        } else if ((el.id === 'nextBtn' || el.classList.contains('next') || el.getAttribute('data-role') === 'next') && typeof window.show === 'function'){
+          if (!window.__inFlight){ window.__inFlight = true; window.show((window.state && window.state.i || 0) + 1); requestAnimationFrame(function(){ window.__inFlight = false; }); }
+        } else if ((el.id === 'prevBtn' || el.classList.contains('prev') || el.getAttribute('data-role') === 'prev') && typeof window.show === 'function'){
+          if (!window.__inFlight){ window.__inFlight = true; window.show((window.state && window.state.i || 0) - 1); requestAnimationFrame(function(){ window.__inFlight = false; }); }
+        } else {
+          el.click();
+        }
+      } catch(e) {}
+    }
+
+    function start(){
+      down = true;
+      el.classList.add('hold');
+      step(); // immediate for snappy feel
+      timer = setTimeout(function(){
+        repeater = setInterval(function(){
+          step();
+          if (accelerate && interval > 25){
+            accelStep++;
+            if (accelStep % 6 === 0){ interval = Math.max(120, interval - 4);
+              clearInterval(repeater);
+              repeater = setInterval(step, interval);
+            }
+          }
+        }, interval);
+      }, initDelay);
+    }
+
+    // Mouse
+    el.addEventListener('mousedown', function(ev){ if (ev.button===0) start(); });
+    document.addEventListener('mouseup', clearTimers);
+    el.addEventListener('mouseleave', clearTimers);
+
+    // Touch
+    el.addEventListener('touchstart', function(){ start(); }, {passive:true});
+    el.addEventListener('touchend', clearTimers, {passive:true});
+    el.addEventListener('touchcancel', clearTimers, {passive:true});
+  }
+
+  function wire(){
+    // A–Z bars (bottom and side)
+    document.querySelectorAll('.azbtn, .azIndexBtn').forEach(function(btn){
+      addHoldRepeat(btn, {initialDelay: 300, repeat: 100, accelerate: true});
+    });
+
+    // Prev/Next style controls if present
+    var prev = document.getElementById('prevBtn') || document.querySelector('.prev, [data-role="prev"]');
+    var next = document.getElementById('nextBtn') || document.querySelector('.next, [data-role="next"]');
+    if (prev) addHoldRepeat(prev, {initialDelay: 300, repeat: 90, accelerate: true});
+    if (next) addHoldRepeat(next, {initialDelay: 300, repeat: 90, accelerate: true});
+
+    // Keyboard shortcuts: arrows trigger existing clicks
+    document.addEventListener('keydown', function(ev){
+      if (ev.altKey || ev.metaKey || ev.ctrlKey) return;
+      var tag = (ev.target && ev.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (ev.key === 'ArrowRight'){ saveCurrent(); if (typeof window.show((window.state&&window.state.i||0)+1); requestAnimationFrame(function(){ window.__inFlight=false; }); ev.preventDefault(); } } }
+      else if (ev.key === 'ArrowLeft'){ saveCurrent(); if (typeof window.show((window.state&&window.state.i||0)-1); requestAnimationFrame(function(){ window.__inFlight=false; }); ev.preventDefault(); } } }
+      else if (ev.key === 'ArrowDown'){
+        var activeAZ = document.querySelector('.azbtn.active') || document.querySelector('.azIndexBtn.active') || document.querySelector('.azbtn') || document.querySelector('.azIndexBtn');
+        if (activeAZ){ activeAZ.click(); ev.preventDefault(); }
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+})();
+</script>
+
+
+
+
+
+
+
+<div id="notCheckedModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#222; position:relative; color:#fff; padding:20px; border-radius:12px; max-height:80%; overflow-y:auto; width:80%; max-width:400px;">
+    <div style="position:absolute; top:10px; right:12px; cursor:pointer; font-size:24px; color:#fff;" onclick="hideMissingAndJump();">&times;</div>
+    <div style="font-weight:bold; font-size:18px; margin-bottom:12px;">You have NOT checked stock for:</div>
+    <div id="notCheckedList" style="white-space:pre-line; font-size:16px; line-height:1.4;"></div>
+    <div style="text-align:right; margin-top:15px;">
+      <button onclick="hideMissingAndJump();" style="background:#444; color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:16px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showNotChecked(list){
+  window._missingList = list;
+  var modal = document.getElementById("notCheckedModal");
+  var box = document.getElementById("notCheckedList");
+  box.textContent = list.join("\n");
+  modal.style.display = "flex";
+}
+</script>
+
+<script>
+document.addEventListener('click', function(e){
+  if(e.target && (e.target.classList.contains('modal-close') || e.target.innerText === '×')){
+    if(typeof window.__firstMissingIdx === 'number' && window.__firstMissingIdx >= 0){
+      show(window.__firstMissingIdx);
+    }
+  }
+});
+</script>
+
+<script>
+function hideMissingAndJump(){
+  var modal = document.getElementById('notCheckedModal');
+  modal.style.display='none';
+  if(window._missingList && window._missingList.length > 0){
+    var first = window._missingList[0];
+    var idx = ITEMS.indexOf(first);
+    if(idx >= 0){
+      state.map[first] = state.map[first] || {};
+      state.map[first].stock = "";
+      show(idx);
+    }
+  }
+}
+</script>
+
+<script>
+(function(){
+  var btn = document.getElementById('submitStockBtn');
+  if(!btn) return;
+  btn.onclick = function(){
+    var missing = [];
+    window.__firstMissingIdx = -1;
+
+    for(var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm] || {};
+      var st = (rec.stock||"").trim();
+      if(rec.status !== "notneeded" && st === ""){
+        missing.push(nm);
+        if(window.__firstMissingIdx === -1) window.__firstMissingIdx = i;
+      }
+    }
+
+    if(missing.length){
+      showNotChecked(missing);
+      return;
+    }
+
+    var values = [];
+    for(var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm] || {};
+      if(rec.status === "notneeded"){
+        values.push("-1");
+      } else {
+        var v = (rec.stock||"").trim();
+        if(v === "") v = "0";
+        values.push(v);
+      }
+    }
+
+    var encoded = encodeURIComponent(values.join(","));
+    var thisFile = (function(){
+      var s = location.pathname.split("/");
+      return s[s.length-1]||"v174.html";
+    })();
+
+    var url = "https://farquan.github.io/orderpad/" + thisFile + "?x=" + encoded;
+
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).catch(function(){});
+    }
+
+    window.open(url, "_blank");
+    var wa = "https://wa.me/?text=" + encodeURIComponent("Stock Completed ✅\n" + url);
+    window.open(wa, "_blank");
+  };
+})();
+</script>
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyMqy6ho3iFTwCGotNg6gYyYSkEbYhBSCaYA2BzQPiofu3E2jTBytvA5LSrtmpQE5SR/exec";
+
+function saveCurrent(){
+  try{
+    var item = ITEMS[state.i];
+    if(!item) return;
+    var qty = (state.map[item] && state.map[item].stock != null) ? state.map[item].stock : "";
+    const payload = { [item]: qty };
+    const url = SCRIPT_URL + "?action=save&data=" + encodeURIComponent(JSON.stringify(payload));
+    fetch(url).then(r=>{
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      return r.text();
+    }).catch(e=>{
+      console.warn("Save failed:", e);
+    });
+  }catch(e){ console.error("Critical Save Error:", e); }
+}
+
+
+function loadStockFromSheet(){
+  fetch(SCRIPT_URL + "?action=load")
+    .then(r=>r.json())
+    .then(obj=>{
+      if(!obj || !obj.data) return;
+      const data = obj.data;
+      for(const name in data){
+        const qty = data[name];
+        if(window.state && state.map && state.map[name]){
+          state.map[name].stock = String(qty);
+        }
+      }
+      if(window.state && typeof show === "function"){
+        show(state.i);
+      }
+    })
+    .catch(e=>console.warn(e));
+}
+
+window.afterItemsLoaded = function(){
+  loadStockFromSheet();
+  setTimeout(()=>{ show(state.i); }, 50);
+};
+</script>
+</body>
+</html>
