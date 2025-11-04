@@ -839,8 +839,7 @@ button#resetAllBtn {
 </style>
 
 </head>
-<body>
-<div id="last-sync" style="position:absolute; top:8px; right:8px; font-size:12px; color:#888;"></div><div id="topFlash"></div>
+<body><div id="topFlash"></div>
 <header><div id="progressWrap"><div id="progressBar"><div id="progressFill"></div></div><div id="progressRight"><div id="progressTally">Responded: 0 / 0</div><button class="navbtn" id="nextUnansweredBtn">Next Unanswered ▶</button></div></div>
 <div class="head">
 <button class="navbtn" id="prevBtn">◀ Prev</button>
@@ -866,11 +865,11 @@ button#resetAllBtn {
 <div class="grid">
 <div>
 <div class="label">STOCK</div>
-<div class="stepperwrap"><button class="stepbtn" id="stockMinus" type="button">−</button><input class="inp" id="stockInput" type="number" step="0.01" inputmode="decimal"/><button class="stepbtn" id="stockPlus" type="button">+</button></div>
+<div class="stepperwrap"><button class="stepbtn" id="stockMinus" type="button">−</button><input class="inp" id="stockInput" type="text" step="0.01" inputmode="decimal"/><button class="stepbtn" id="stockPlus" type="button">+</button></div>
 </div>
 <div>
 <div class="label">ORDER</div>
-<div class="stepperwrap"><button class="stepbtn" id="orderMinus" type="button">−</button><input class="inp" id="orderInput" type="number" step="0.01" inputmode="decimal"/><button class="stepbtn" id="orderPlus" type="button">+</button></div>
+<div class="stepperwrap"><button class="stepbtn" id="orderMinus" type="button">−</button><input class="inp" id="orderInput" type="text" step="0.01" inputmode="decimal"/><button class="stepbtn" id="orderPlus" type="button">+</button></div><\div>
 </div>
 </div>
 <div class="btnrow" id="saveButtonsRow"><button class="btn btn-passions" id="savePassionsBtn">SAVE TO PASSIONS</button><button class="btn btn-mk" id="saveMkBtn">SAVE TO MK</button><button class="btn btn-other" id="saveOtherBtn">SAVE TO OTHER</button></div>
@@ -1935,35 +1934,6 @@ function updateAnsweredFade(){
     if (card) card.classList.toggle('answeredFade', !!answered);
   } catch(e){}
 }
-
-<script>
-// Auto import from Telegram on load
-window.addEventListener('load', function(){
-  fetch("https://api.telegram.org/bot8478412877:AAHxot18T5GnPrBjPmiD6vHETpJenMoy5_0/getUpdates")
-    .then(r=>r.json()).then(d=>{
-      if(!d.result || !d.result.length) return;
-      var msg = d.result[d.result.length-1].message;
-      if(!msg || !msg.text) return;
-      var lines = msg.text.split(/\r?\n/);
-      for(var line of lines){
-        var parts = line.split(":");
-        if(parts.length<2) continue;
-        var nm = parts[0].trim();
-        var v = parts[1].trim();
-        if(state.map[nm]) {
-          state.map[nm].stock = v;
-        } else {
-          state.map[nm] = {stock:v};
-        }
-      }
-      save(); show(state.i||0);
-      // timestamp
-      var dt = new Date(msg.date*1000);
-      var opts = {hour:"2-digit", minute:"2-digit", day:"2-digit", month:"2-digit", year:"numeric"};
-      document.getElementById("last-sync").textContent = "Last synced: "+dt.toLocaleString("en-GB", opts);
-    }).catch(()=>{});
-});
-</script>
 </script>
 <div id="azIndex"></div><script>
 // --- Auto-jump from STOCK to ORDER ---
