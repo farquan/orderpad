@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Running Order Pad (Compat)</title>
+<meta content="#0f1115" name="theme-color"/>
+<style>
+:root{
+  --bg:#0f1115; --card:#161a22; --ink:#e9eef5; --muted:#9fb0c2; --border:#242b3b;
+  --green:#20c997; --accent:#5c7cfa; --red:#ff4d4d; --orange:#ff9f43;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  touch-action: manipulation;
+}
+.wrap{max-width:820px;margin:0 auto;padding:8px 14px 24px}
+
+header{
+  position:sticky;top:0;z-index:20;
+  background:#5c7cfa; color:#fff;
+  backdrop-filter:none;
+  border-bottom:1px solid var(--border)
+}
+.head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+h1{
+  margin:0;
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:.3px;
+  text-align:center;
+  flex:1;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+
+.counter{display:none}
+
+.navbtn{background:#0d1219;color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:12px 6px;font-weight:700;width:20%}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin:14px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;font-size:26px;font-weight:800;text-align:center;padding:14px;border-radius:14px;border:2px solid var(--border);background:#0f141d;color:#e9eef5}
+.inp:focus{outline:none;box-shadow:0 0 0 3px rgba(92,124,250,.35)}
+.btn{appearance:none;border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:16px;cursor:pointer;width:100%}
+.btn.green{background:var(--green);color:#00150f}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:#0d1219;color:#e9eef5;border:1px solid var(--border)}
+.note{width:100%;min-height:72px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f141d;color:#e9eef5;font-size:16px}
+.area{min-height:120px;white-space:pre-wrap;background:#0f141d;border:1px solid var(--border);border-radius:14px;padding:12px;font-size:15px;color:#e9eef5}
+.copyopen{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;justify-content:center;}
+#waPassions,#waMk,#waOther{display:block;text-align:center;}
+.small{font-size:12px;color:#c6d2e0}
+hr.sep{border:0;border-top:1px solid var(--border);margin:12px 0}
+
+.status{display:none}
+
+.btnrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+
+.editor{display:none}
+.editor.open{display:block}
+.textarea{width:100%;min-height:220px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f141d;color:#e9eef5;font-size:14px}
+.editorbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.editor-tools{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.editor-tools input{flex:1;min-width:160px;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0f141d;color:#e9eef5}
+.counterline{margin-top:6px;color:var(--muted);font-size:12px}
+
+.btn-passions { background:#20c997; color:#00150f; }
+.btn-mk       { background:#5c7cfa; color:#ffffff; }
+.btn-other    { background:#ff9f43; color:#00150f; }
+
+.stepperwrap{display:flex;align-items:center;gap:10px}
+.stepperwrap .inp{flex:1}
+.stepbtn{appearance:none;border:1px solid var(--border);background:#0d1219;color:var(--ink);border-radius:10px;font-weight:900;font-size:18px;line-height:1;padding:10px 12px;min-width:44px}
+.stepbtn:active{transform:translateY(1px)}
+
+#progressWrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#5268f6;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+#progressBar{flex:1;height:8px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
+#progressFill{height:100%;width:0%;background:#20c997;transition:width .25s ease}
+#progressRight{display:flex;align-items:center;gap:10px}
+#progressTally{font-size:12px;opacity:.95}
+#nextUnansweredBtn{width:auto;padding:8px 10px;font-size:12px}
+
+#answeredTick { color:white; font-size:22px; margin-left:6px; display:none; }
+
+#azBar{display:none !important;}
+body{ padding-bottom: 0; }
+
+#azIndex{
+  position: fixed;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10010;
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  padding: 8px 6px;
+  pointer-events: auto;
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#azIndex .azIndexBtn{
+  pointer-events: auto;
+  background: #FFD700 !important;
+  color: #000 !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+  width: 22px !important;
+  height: 22px !important;
+  line-height: 22px !important;
+  border-radius: 50% !important;
+  text-align: center !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+  display: inline-block !important;
+}
+
+#notNeededBtn:disabled{
+  opacity: .5;
+  pointer-events: none;
+  filter: grayscale(0.2);
+}
+
+#notNeededSection{ margin-top:24px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
+#notNeededSection h3{ margin:0 0 8px 0; font-size:14px; opacity:.85; }
+#notNeededList{ white-space:pre-wrap; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:13px; line-height:1.4; margin:0; }
+
+.answeredFade { opacity: 0.5; transition: opacity .2s ease; }
+
+#itemName {
+  background: #FFD700 !important;
+  color: #000 !important;
+  font-weight: bold !important;
+  font-size: clamp(18px, 4vw, 28px) !important;
+  padding: 10px 12px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#topFlash{
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(25, 135, 84, 0.95);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  z-index: 10050;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease;
+}
+#topFlash.show{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+#unansweredSection{ margin-top:24px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
+#unansweredSection h3{ margin:0 0 8px 0; font-size:14px; opacity:.85; }
+#unansweredList{ white-space:pre-wrap; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:13px; line-height:1.4; margin:0; }
+
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+#filterCard .btnrow button {
+  flex: 1 1 auto;
+  font-size: 0.9em;
+  padding: 6px 8px;
+  min-width: auto;
+}
+
+#filterRow .btn.filter-active { 
+  outline: 5px solid #ff9800 !important; 
+  box-shadow: 0 0 25px 8px #ff9800 !important; 
+  border-color: #ff9800 !important; 
+}
+
+#filterRow .btn:focus,
+#filterRow .btn:focus-visible,
+#filterRow .btn:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#filterAllBtn:not(.filter-active){
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: var(--border) !important;
+}
+
+.notneeded {
+  opacity: 0.5 !important;
+  text-decoration: none !important;
+}
+
+#itemName.notneeded, #itemName.notneeded * {
+  text-decoration: line-through !important;
+  text-decoration-color: #ff3b30 !important;
+  text-decoration-thickness: 2px;
+  text-decoration-skip-ink: none;
+}
+
+button#resetBtn {
+  background: #d32f2f !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+}
+</style>
+</head>
+<body>
+<span id="last-sync" style="position:fixed; top:6px; right:10px; color:#9ee; font-size:13px; z-index:9999;"></span>
+<div id="topFlash"></div>
+<header>
+  <div id="progressWrap">
+    <div id="progressBar"><div id="progressFill"></div></div>
+    <div id="progressRight">
+      <div id="progressTally">Responded: 0 / 0</div>
+      <button class="navbtn" id="nextUnansweredBtn">Next Unanswered ▶</button>
+    </div>
+  </div>
+  <div class="head">
+    <button class="navbtn" id="prevBtn">◀ Prev</button>
+    <h1 id="itemName">ITEM</h1>
+    <span id="answeredTick">✓</span>
+    <button class="navbtn" id="nextBtn">Next ▶</button>
+  </div>
+  <div class="counter" id="counter">0 / 100</div>
+</header>
+
+<div class="wrap">
+<div class="card" id="filterCard" style="margin-bottom:12px;">
+  <div class="small" style="margin-bottom:6px">FILTER BY LOCATION</div>
+  <div class="btnrow" id="filterRow" style="grid-template-columns: repeat(5, 1fr);">
+    <button class="btn ghost filter-active" id="filterAllBtn">All</button>
+    <button class="btn" id="filterColdBtn">Cold Room</button>
+    <button class="btn" id="filterGardenBtn">Garden</button>
+    <button class="btn" id="filterSideBtn">Side Door</button>
+    <button class="btn" id="filterOutsideBtn">Outside</button>
+  </div>
+</div>
+
+<div class="card" id="itemCard">
+<div class="grid">
+<div>
+<div class="label">STOCK</div>
+<div class="stepperwrap">
+  <button class="stepbtn" id="stockMinus" type="button">−</button>
+  <input class="inp" id="stockInput" type="number" step="0.01" inputmode="decimal"/>
+  <button class="stepbtn" id="stockPlus" type="button">+</button>
+</div>
+</div>
+<div>
+<div class="label">ORDER</div>
+<div class="stepperwrap">
+  <button class="stepbtn" id="orderMinus" type="button">−</button>
+  <input class="inp" id="orderInput" type="number" step="0.01" inputmode="decimal"/>
+  <button class="stepbtn" id="orderPlus" type="button">+</button>
+</div>
+</div>
+</div>
+<div class="btnrow" id="saveButtonsRow">
+  <button class="btn btn-passions" id="savePassionsBtn">SAVE TO PASSIONS</button>
+  <button class="btn btn-mk" id="saveMkBtn">SAVE TO MK</button>
+  <button class="btn btn-other" id="saveOtherBtn">SAVE TO OTHER</button>
+</div>
+<div class="btnrow" style="margin-top:10px">
+  <button class="btn red" id="notNeededBtn" style="grid-column:1 / span 3">NOT NEEDED</button>
+</div>
+<div style="width:100%; display:flex; justify-content:center; margin-top:8px;">
+  <button class="btn ghost" id="undoBtn" style="display:none;">UNDO</button>
+</div>
+<hr class="sep"/>
+<div>
+<div class="label">NOTES FOR ITEM</div>
+<textarea class="note" id="noteInput" placeholder="Optional note…"></textarea>
+<button class="btn" id="submitStockBtn" style="margin-top:12px; width:100%; background: #5e3ea1; color:#fff;">SUBMIT STOCK</button>
+</div>
+</div>
+
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — PASSIONS (Needed × Item)</div>
+<div class="area" id="orderListPassions"></div>
+<div class="copyopen">
+<button class="btn" id="copyPassions">COPY</button>
+<a class="btn green" href="#" id="waPassions" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — MK (Needed × Item)</div>
+<div class="area" id="orderListMk"></div>
+<div class="copyopen">
+<button class="btn" id="copyMk">COPY</button>
+<a class="btn green" href="#" id="waMk" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+
+<div class="card">
+<div class="small" style="margin-bottom:6px">RUNNING ORDER — OTHER (Needed × Item)</div>
+<div class="area" id="orderListOther"></div>
+<div class="copyopen">
+<button class="btn" id="copyOther">COPY</button>
+<a class="btn green" href="#" id="waOther" rel="noopener" target="_blank">WHATSAPP</a>
+</div>
+</div>
+
+<div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+<button class="btn red" id="resetBtn">⚠️ RESET ALL ⚠️</button>
+<button class="btn ghost" id="editBtn">EDIT ITEMS</button>
+</div>
+
+<div class="card editor" id="editorPanel">
+<div class="small" style="margin-bottom:6px">ITEMS EDITOR (one item per line)</div>
+<textarea class="textarea" id="itemsTextarea" spellcheck="false"></textarea>
+<div class="counterline" id="editorCount">Unique lines: 0</div>
+<div class="editorbar">
+<button class="btn green" id="saveItemsBtn">Save List</button>
+<button class="btn ghost" id="cancelEditBtn">Cancel</button>
+</div>
+<div class="editor-tools">
+<input id="newItemInput" placeholder="Add new item… (auto-UPPERCASE)" type="text"/>
+<button class="btn" id="addItemBtn">Add Item</button>
+<button class="btn" id="addQuickBtn">Add "NEW ITEM"</button>
+</div>
+<div class="small" style="margin-top:6px">
+  No exact duplicates allowed (case-insensitive). Keeping a name the same preserves its saved values.
+</div>
+</div>
+
+<section id="unansweredSection"><h3>Unanswered (A–Z)</h3><pre id="unansweredList"></pre></section>
+<section id="notNeededSection"><h3>Not Needed (A–Z)</h3><pre id="notNeededList"></pre></section>
+
+</div>
+
+<div id="azIndex"></div>
+
+<div id="notCheckedModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#222; position:relative; color:#fff; padding:20px; border-radius:12px; max-height:80%; overflow-y:auto; width:80%; max-width:400px;">
+    <div style="position:absolute; top:10px; right:12px; cursor:pointer; font-size:24px; color:#fff;" onclick="hideMissingAndJump();">×</div>
+    <div style="font-weight:bold; font-size:18px; margin-bottom:12px;">You have NOT checked stock for:</div>
+    <div id="notCheckedList" style="white-space:pre-line; font-size:16px; line-height:1.4;"></div>
+    <div style="text-align:right; margin-top:15px;">
+      <button onclick="hideMissingAndJump();" style="background:#444; color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:16px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// === CORE STATE INITIALIZATION ===
+var ITEMS = [];
+var TOTAL = 0;
+
+var state = {
+  i: 0,
+  map: {}
+};
+
+function initializeStateMap() {
+  ITEMS.forEach(name => {
+    if (!state.map[name]) {
+      state.map[name] = {
+        stock: "",
+        order: "",
+        bucket: null,
+        status: null,
+        note: ""
+      };
+    }
+  });
+}
+
+function saveItems(list){
+  try { localStorage.setItem("items_list", JSON.stringify(list)); }
+  catch(e){}
+}
+
+function show(idx){
+  if (idx < 0) idx = 0;
+  if (idx >= ITEMS.length) idx = ITEMS.length - 1;
+  state.i = idx;
+
+  var item = ITEMS[idx];
+  var nameEl = document.getElementById('itemName');
+  if (nameEl) nameEl.textContent = item;
+
+  var rec = state.map[item] || {
+  attachInputHandlers();
+};
+  var s = document.getElementById('stockInput');
+  var o = document.getElementById('orderInput');
+  var n = document.getElementById('noteInput');
+  if (s) s.value = rec.stock || "";
+  if (o) o.value = rec.order || "";
+  if (n) n.value = rec.note || "";
+}
+
+// === GOOGLE SHEETS INTEGRATION ===
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyMqy6ho3iFTwCGotNg6gYyYSkEbYhBSCaYA2BzQPiofu3E2jTBytvA5LSrtmpQE5SR/exec";
+
+function saveCurrent(){
+  try{
+    var item = ITEMS[state.i];
+    if(!item) return;
+    var qty = (state.map[item] && state.map[item].stock != null) ? state.map[item].stock : "";
+    const payload = { [item]: qty };
+    const url = SCRIPT_URL + "?action=save&data=" + encodeURIComponent(JSON.stringify(payload));
+    fetch(url).then(r=>{
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      return r.text();
+    }).catch(e=>{
+      console.warn("Save failed:", e);
+    });
+  }catch(e){ console.error("Critical Save Error:", e); }
+}
+
+function loadStockFromSheet(){
+  fetch(SCRIPT_URL + "?action=load")
+    .then(r=>r.json())
+    .then(obj=>{
+      if(!obj || !obj.data) return;
+      const data = obj.data;
+      for(const name in data){
+        const qty = data[name];
+        if(window.state && state.map && state.map[name]){
+          state.map[name].stock = String(qty);
+        }
+      }
+      if(window.state && typeof show === "function"){
+        show(state.i);
+      }
+    })
+    .catch(e=>console.warn(e));
+}
+
+// === LOAD ITEM LIST FROM GOOGLE SHEET ===
+fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9pTMWZLNo6EJGOu475l8_cUMtiOTd9P0hGS4pR43Z0cNpUiDT9-O4kGPQ6czmigUuhWTD6sAhYLYc/pub?gid=223224205&single=true&output=csv")
+  .then(r => r.text())
+  .then(t => {
+    let rows = t.trim().split(/\r?\n/);
+    rows.shift();
+
+    let itemList = [];
+    let itemLocations = {};
+
+    rows.forEach(line => {
+      const parts = line.split(",");
+      const name = (parts[0] || "").trim();
+      const category = (parts[1] || "").trim();
+      if (name) {
+        itemList.push(name);
+        itemLocations[name] = category;
+      }
+    });
+
+    ITEMS = itemList;
+    TOTAL = ITEMS.length;
+
+    try { saveItems(ITEMS); } catch(e){}
+
+    window.LOCATIONS = itemLocations;
+
+    if (window.afterItemsLoaded) window.afterItemsLoaded();
+  })
+  .catch(err => console.error("Item Load Failed:", err));
+
+window.afterItemsLoaded = function(){
+  initializeStateMap();
+  loadStockFromSheet();
+  setTimeout(()=>{ show(state.i); }, 50);
+};
+
+// === HELPER FUNCTIONS ===
+function showTopFlash(msg, ms){
+  try{
+    if (msg && /not\s+needed/i.test(msg)) { return; }
+    var node = document.getElementById('topFlash');
+    if (!node) return;
+    node.textContent = msg || 'Done';
+    node.classList.add('show');
+    clearTimeout(window.__topFlashTimer);
+    window.__topFlashTimer = setTimeout(function(){
+      node.classList.remove('show');
+    }, ms || 1400);
+  }catch(e){}
+}
+
+function buildUnansweredList(){
+  try{
+    var box = document.getElementById('unansweredList');
+    if (!box) return;
+    var list = [];
+    for (var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm];
+      var answered = false;
+      try{
+        answered = !!(rec && (rec.status === 'notneeded' || rec.bucket));
+      }catch(e){ answered = false; }
+      if (!answered) list.push(nm);
+    }
+    list.sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
+    box.textContent = list.join("\n");
+  }catch(e){}
+}
+
+function showNotChecked(list){
+  window._missingList = list;
+  var modal = document.getElementById("notCheckedModal");
+  var box = document.getElementById("notCheckedList");
+  box.textContent = list.join("\n");
+  modal.style.display = "flex";
+}
+
+function hideMissingAndJump(){
+  var modal = document.getElementById('notCheckedModal');
+  modal.style.display='none';
+  if(window._missingList && window._missingList.length > 0){
+    var first = window._missingList[0];
+    var idx = ITEMS.indexOf(first);
+    if(idx >= 0){
+      state.map[first] = state.map[first] || {};
+      state.map[first].stock = "";
+      show(idx);
+    }
+  }
+}
+
+// === SUBMIT STOCK BUTTON ===
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('submitStockBtn');
+  if(!btn) return;
+  btn.onclick = function(){
+    var missing = [];
+    window.__firstMissingIdx = -1;
+
+    for(var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm] || {};
+      var st = (rec.stock||"").trim();
+      if(rec.status !== "notneeded" && st === ""){
+        missing.push(nm);
+        if(window.__firstMissingIdx === -1) window.__firstMissingIdx = i;
+      }
+    }
+
+    if(missing.length){
+      showNotChecked(missing);
+      return;
+    }
+
+    var values = [];
+    for(var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm] || {};
+      if(rec.status === "notneeded"){
+        values.push("-1");
+      } else {
+        var v = (rec.stock||"").trim();
+        if(v === "") v = "0";
+        values.push(v);
+      }
+    }
+
+    var encoded = encodeURIComponent(values.join(","));
+    var thisFile = (function(){
+      var s = location.pathname.split("/");
+      return s[s.length-1]||"v220.html";
+    })();
+
+    var url = "https://farquan.github.io/orderpad/" + thisFile + "?x=" + encoded;
+
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).catch(function(){});
+    }
+
+    window.open(url, "_blank");
+    var wa = "https://wa.me/?text=" + encodeURIComponent("Stock Completed ✅\n" + url);
+    window.open(wa, "_blank");
+  };
+});
+
+try{buildUnansweredList();}catch(e){}
+</script>
+
+<script>
+// Keep UI in sync with state
+function attachInputHandlers(){
+  var s = document.getElementById('stockInput');
+  var o = document.getElementById('orderInput');
+  var n = document.getElementById('noteInput');
+
+  if(s){
+    s.addEventListener("input", ()=> {
+      var item = ITEMS[state.i];
+      if(state.map[item]) state.map[item].stock = s.value.trim();
+      if(typeof updateProgressUI === 'function') updateProgressUI();
+    });
+  }
+  if(o){
+    o.addEventListener("input", ()=> {
+      var item = ITEMS[state.i];
+      if(state.map[item]) state.map[item].order = o.value.trim();
+      if(typeof buildRunning === 'function') buildRunning();
+      if(typeof updateProgressUI === 'function') updateProgressUI();
+    });
+  }
+  if(n){
+    n.addEventListener("input", ()=> {
+      var item = ITEMS[state.i];
+      if(state.map[item]) state.map[item].note = n.value;
+    });
+  }
+}
+</script>
+
+</body>
+</html>
