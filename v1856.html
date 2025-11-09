@@ -1976,9 +1976,14 @@ function showTopFlash(msg, ms){
   try{
     // Suppress the green top banner specifically for "Not Needed" notices
     if (msg && /not\s+needed/i.test(msg)) { return; }
-    var node = document.getElementById('topFlash');
+    var node = document.getElementById('topFlash')
     if (!node) return;
+    
+    node.style.background = ''; // <-- ADD THIS LINE
+    node.style.color = '';      // <-- ADD THIS LINE
+
     node.textContent = msg || 'Done';
+    
     node.classList.add('show');
     clearTimeout(window.__topFlashTimer);
     window.__topFlashTimer = setTimeout(function(){
@@ -4733,15 +4738,15 @@ function hideMissingAndJump(){
 </script>
 
 <script>
-  // Show timestamp banner on load
-  (function(){
+  // Show timestamp banner on load (waits for page to be ready)
+  document.addEventListener("DOMContentLoaded", function() {
     try {
       var params = new URLSearchParams(location.search);
       if (params.has("t")) {
         var tsParam = params.get("t");
         var d = new Date(tsParam);
         
-        // Format the date nicely, e.g., "09 Nov 2025, 21:07"
+        // Format the date nicely, e.g., "09 Nov 2025, 21:23"
         var options = { 
           day: '2-digit', 
           month: 'short', 
@@ -4751,16 +4756,24 @@ function hideMissingAndJump(){
         };
         var formattedDate = d.toLocaleString('en-GB', options);
 
-        // Use the existing 'showTopFlash' function to display the banner
+        // --- THIS PART SETS THE ORANGE COLOR ---
+        var node = document.getElementById('topFlash');
+        if (node) {
+          // Use the orange color variable from your file's CSS
+          node.style.background = 'var(--orange, #ff9f43)'; 
+          node.style.color = '#00150f'; // Dark text for readability
+        }
+        // --- END ---
+
+        // Show the banner for 5 seconds
         if (typeof showTopFlash === 'function') {
-          // Show for 5 seconds (5000ms)
           showTopFlash("Stock submitted on: " + formattedDate, 5000);
         }
       }
     } catch(e) {
       console.error("Error reading timestamp:", e);
     }
-  })();
+  });
 </script>
 
 </body>
