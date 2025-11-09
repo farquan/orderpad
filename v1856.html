@@ -4732,5 +4732,36 @@ function hideMissingAndJump(){
 }
 </script>
 
+<script>
+  // Show timestamp banner on load
+  (function(){
+    try {
+      var params = new URLSearchParams(location.search);
+      if (params.has("t")) {
+        var tsParam = params.get("t");
+        var d = new Date(tsParam);
+        
+        // Format the date nicely, e.g., "09 Nov 2025, 21:07"
+        var options = { 
+          day: '2-digit', 
+          month: 'short', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        };
+        var formattedDate = d.toLocaleString('en-GB', options);
+
+        // Use the existing 'showTopFlash' function to display the banner
+        if (typeof showTopFlash === 'function') {
+          // Show for 5 seconds (5000ms)
+          showTopFlash("Stock submitted on: " + formattedDate, 5000);
+        }
+      }
+    } catch(e) {
+      console.error("Error reading timestamp:", e);
+    }
+  })();
+</script>
+
 </body>
 </html>
