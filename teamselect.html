@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Football Team Sorter</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Style for the player items */
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 0.6rem;
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+            margin-bottom: 0.5rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .player-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+        }
+        /* Style for team list containers */
+        .team-list {
+            min-height: 250px;
+            padding: 1rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            border: 2px dashed;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900 p-4 md:p-8 min-h-screen">
+
+    <div class="max-w-6xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-700">Football Team Sorter</h1>
+            <p class="text-lg text-gray-600 mt-2">Paste your players, sort them into teams, and share!</p>
+        </div>
+
+        <!-- Step 1: Input Players -->
+        <div class="mb-8">
+            <label for="playerInput" class="block text-xl font-semibold mb-2 text-gray-800">Step 1: Paste Player Names</label>
+            <p class="text-sm text-gray-500 mb-3">Enter one player name per line. You can also separate with commas or semicolons.</p>
+            <textarea id="playerInput" rows="6" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Woodside
+8.30pm
+Let me know if you're interesting in playing
+1) Farquan
+2) Jermaine
+..."></textarea>
+            <button onclick="createList()" class="mt-4 w-full md:w-auto bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out transform hover:-translate-y-0.5">
+                Generate Player List
+            </button>
+        </div>
+
+        <!-- Step 2: Sort Teams -->
+        <div class="mb-8">
+            <h2 class="block text-xl font-semibold mb-4 text-gray-800">Step 2: Assign Players to Teams</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- Column 1: Unassigned Players -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-center text-gray-700">Available Players</h3>
+                    <div id="unassignedList" class="team-list bg-gray-100 border-gray-300">
+                        <!-- Players will be dynamically added here -->
+                        <p class="text-gray-500 text-center pt-10">Your player list will appear here.</p>
+                    </div>
+                </div>
+
+                <!-- Column 2: Bibs Team -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-center text-yellow-700">👕 Bibs</h3>
+                    <div id="bibsList" class="team-list bg-yellow-100 border-yellow-400">
+                        <!-- Bibs players will be added here -->
+                    </div>
+                </div>
+
+                <!-- Column 3: Non-Bibs Team -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-3 text-center text-blue-700">🚫 Non-Bibs</h3>
+                    <div id="nonBibsList" class="team-list bg-blue-100 border-blue-400">
+                        <!-- Non-Bibs players will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 3: Actions -->
+        <div>
+            <h2 class="block text-xl font-semibold mb-4 text-gray-800">Step 3: Share Your Teams</h2>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <!-- Copy Button -->
+                <button onclick="copyTeams()" class="flex-1 bg-green-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                        <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                    </svg>
+                    Copy Teams
+                </button>
+                <span id="copyMessage" class="text-green-600 font-medium text-center sm:text-left"></span>
+                
+                <!-- WhatsApp Button -->
+                <button onclick="shareToWhatsApp()" class="flex-1 bg-green-500 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-green-600 transition duration-300 ease-in-out transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.89-5.451 0-9.887 4.434-9.889 9.884-.001 2.225.651 4.315 1.847 6.039l-1.25 4.535 4.64-1.225zM12.007 11.16c-.277-.138-1.636-.807-1.89-.9-.255-.092-.44-.138-.624.138-.185.276-.717.807-.881.97-.165.165-.33.183-.613.047-.282-.137-1.192-.438-2.271-1.408-.841-.75-1.418-1.683-1.59-1.966-.173-.284-.018-.44.12-.587.124-.133.277-.347.414-.52.137-.172.183-.276.277-.458.093-.183.047-.347-.047-.484-.094-.138-.624-1.5-.852-2.053-.225-.54-.449-.467-.613-.467-.161 0-.347-.047-.52.047-.172.093-.438.209-.613.438-.172.228-.663.78-.852 1.291-.188.51.173 1.026.198 1.101.025.074.52 1.636 1.271 2.268.751.631 1.32.969 1.776 1.225.454.256.855.414 1.18.52.413.138.783.12 1.047-.047.282-.183 1.192-1.226 1.448-1.654.255-.428.51-.393.704-.256.194.137.807.393.97.484.164.093.277.138.393.047.116-.093.093-.751-.047-1.408-.138-.656-.277-1.225-.414-1.363z"/>
+                    </svg>
+                    Share on WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state for player lists
+        let unassignedPlayers = [];
+        let bibsPlayers = [];
+        let nonBibsPlayers = [];
+
+        // DOM elements
+        const unassignedListEl = document.getElementById('unassignedList');
+        const bibsListEl = document.getElementById('bibsList');
+        const nonBibsListEl = document.getElementById('nonBibsList');
+        const playerInputEl = document.getElementById('playerInput');
+
+        /**
+         * Parses the input text and generates the initial player list
+         */
+        function createList() {
+            const inputText = playerInputEl.value;
+            if (!inputText.trim()) {
+                // Do nothing if input is empty
+                return;
+            }
+
+            const lines = inputText.split('\n');
+            let potentialPlayers = [];
+            // Regex for valid name characters (letters, space, hyphen, apostrophe)
+            // Allows unicode letters to support international names
+            const validNameRegex = /^[A-Za-z\p{L}\s\-']+$/u; 
+            // Regex to find lines that START with a number (e.g., "1.", "1)", "1-")
+            const prefixRegex = /^\s*\d+[\.\)\-]\s*/;
+
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                
+                // 1. Check if the line starts with a number prefix.
+                // If not, skip this line entirely (e.g., "Standby", "Woodside")
+                if (!prefixRegex.test(trimmedLine)) {
+                    continue; 
+                }
+
+                // 2. Strip the number prefix we just found
+                let cleanedLine = trimmedLine.replace(prefixRegex, '');
+                
+                // 3. Split by comma or semicolon, in case multiple names are on one line
+                const namesOnLine = cleanedLine.split(/[,;]+/);
+
+                for (let name of namesOnLine) {
+                    name = name.trim();
+                    if (name.length === 0) {
+                        continue;
+                    }
+
+                    // 3. Check if it looks like a name
+                    // - Is 3 words or less (filters out sentences)
+                    // - Passes regex (no numbers/symbols, allows letters, spaces, hyphens, apostrophes)
+                    const wordCount = name.split(' ').filter(word => word.length > 0).length;
+                    
+                    if (validNameRegex.test(name) && wordCount > 0 && wordCount <= 3) {
+                        potentialPlayers.push(name);
+                    }
+                }
+            }
+            
+            unassignedPlayers = potentialPlayers;
+            
+            // Reset team lists
+            bibsPlayers = [];
+            nonBibsPlayers = [];
+            
+            // Clear input
+            playerInputEl.value = '';
+
+            // Render all lists
+            renderLists();
+        }
+
+        /**
+         * Renders all three lists (Unassigned, Bibs, Non-Bibs)
+         */
+        function renderLists() {
+            // Clear existing lists
+            unassignedListEl.innerHTML = '';
+            bibsListEl.innerHTML = '';
+            nonBibsListEl.innerHTML = '';
+
+            // Render Unassigned Players
+            if (unassignedPlayers.length === 0 && bibsPlayers.length === 0 && nonBibsPlayers.length === 0) {
+                 unassignedListEl.innerHTML = '<p class="text-gray-500 text-center pt-10">Your player list will appear here.</p>';
+                 return; // Initial state
+            }
+            
+            if (unassignedPlayers.length === 0) {
+                 unassignedListEl.innerHTML = '<p class="text-gray-500 text-center pt-10">All players assigned!</p>';
+            }
+
+            unassignedPlayers.forEach((player, index) => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player-item';
+                playerEl.innerHTML = `
+                    <span class="font-medium">${player}</span>
+                    <div class="flex gap-2">
+                        <button onclick="moveToBibs(${index})" title="Add to Bibs" class="px-2 py-1 text-xs bg-yellow-300 text-yellow-900 rounded-md hover:bg-yellow-400 transition-all">👕</button>
+                        <button onclick="moveToNonBibs(${index})" title="Add to Non-Bibs" class="px-2 py-1 text-xs bg-blue-300 text-blue-900 rounded-md hover:bg-blue-400 transition-all">🚫</button>
+                    </div>
+                `;
+                unassignedListEl.appendChild(playerEl);
+            });
+
+            // Render Bibs Players
+            bibsPlayers.forEach((player, index) => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player-item';
+                playerEl.innerHTML = `
+                    <span class="font-medium">${player}</span>
+                    <button onclick="moveToUnassigned('bibs', ${index})" title="Remove from team" class="px-2 py-1 text-xs bg-red-300 text-red-900 rounded-md hover:bg-red-400 transition-all">✖</button>
+                `;
+                bibsListEl.appendChild(playerEl);
+            });
+
+            // Render Non-Bibs Players
+            nonBibsPlayers.forEach((player, index) => {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player-item';
+                playerEl.innerHTML = `
+                    <span class="font-medium">${player}</span>
+                    <button onclick="moveToUnassigned('non-bibs', ${index})" title="Remove from team" class="px-2 py-1 text-xs bg-red-300 text-red-900 rounded-md hover:bg-red-400 transition-all">✖</button>
+                `;
+                nonBibsListEl.appendChild(playerEl);
+            });
+        }
+
+        /**
+         * Moves a player from Unassigned to Bibs
+         */
+        function moveToBibs(index) {
+            // Remove from unassigned and get the player
+            const [player] = unassignedPlayers.splice(index, 1);
+            // Add to bibs
+            bibsPlayers.push(player);
+            // Re-render
+            renderLists();
+        }
+
+
+
+        /**
+         * Moves a player from Unassigned to Non-Bibs
+         */
+        function moveToNonBibs(index) {
+            // Remove from unassigned and get the player
+            const [player] = unassignedPlayers.splice(index, 1);
+            // Add to non-bibs
+            nonBibsPlayers.push(player);
+            // Re-render
+            renderLists();
+        }
+
+        /**
+         * Moves a player from a team back to Unassigned
+         */
+        function moveToUnassigned(fromTeam, index) {
+            let player;
+            if (fromTeam === 'bibs') {
+                [player] = bibsPlayers.splice(index, 1);
+            } else {
+                [player] = nonBibsPlayers.splice(index, 1);
+            }
+            // Add back to unassigned
+            unassignedPlayers.push(player);
+            // Sort unassigned list alphabetically
+            unassignedPlayers.sort();
+            // Re-render
+            renderLists();
+        }
+
+        /**
+         * Builds the text output for copying and sharing
+         */
+        function getTeamText() {
+            let output = "--- T-Shirts--- \n";
+            output += bibsPlayers.join('\n') || "(No players assigned)";
+            output += "\n\n";
+            output += "--- 👕 Bibs 👕 ---\n";
+            output += nonBibsPlayers.join('\n') || "(No players assigned)";
+            return output;
+        }
+
+        /**
+         * Copies the generated team lists to the clipboard
+         */
+        function copyTeams() {
+            const teamText = getTeamText();
+            
+            // Create a temporary textarea to hold the text
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = teamText;
+            document.body.appendChild(tempTextArea);
+            
+            // Select and copy
+            tempTextArea.select();
+            document.execCommand('copy');
+            
+            // Remove the temporary element
+            document.body.removeChild(tempTextArea);
+
+            // Show "Copied!" message
+            const msgEl = document.getElementById('copyMessage');
+            msgEl.textContent = 'Copied to clipboard!';
+            setTimeout(() => {
+                msgEl.textContent = '';
+            }, 2500);
+        }
+
+        /**
+         * Opens WhatsApp with the team list pre-filled
+         */
+        function shareToWhatsApp() {
+            const teamText = getTeamText();
+            const encodedText = encodeURIComponent(teamText);
+            const whatsappUrl = `https://wa.me/?text=${encodedText}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Initial render on load
+        renderLists();
+
+    </script>
+</body>
+</html>
