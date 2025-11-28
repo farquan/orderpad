@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0" name="viewport"/>
+<title>Running Order Pad (Robust)</title>
+<meta content="#0f1115" name="theme-color"/>
+<style>
+/* =========================================
+   1. CORE VARIABLES & RESET
+   ========================================= */
+:root {
+  --bg: #0f1115;
+  --card: #161a22;
+  --ink: #e9eef5;
+  --muted: #9fb0c2;
+  --border: #242b3b;
+  --green: #20c997;
+  --accent: #5c7cfa;
+  --red: #ff4d4d;
+  --orange: #ff9f43;
+  --yellow: #FFD700;
+}
+* { box-sizing: border-box; touch-action: manipulation; }
+html, body {
+  margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+  font-family: system-ui, -apple-system, sans-serif;
+  padding-bottom: 160px; /* Space for fixed bottom bar */
+}
+.wrap { max-width: 820px; margin: 0 auto; padding: 8px 14px 24px; }
+
+/* =========================================
+   2. HEADER & PROGRESS
+   ========================================= */
+header {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--accent); color: #fff;
+  border-bottom: 1px solid var(--border);
+}
+#progressWrap {
+  display: flex; align-items: center; gap: 12px; padding: 8px 14px;
+  background: rgba(0,0,0,0.1);
+}
+#progressBar { flex: 1; height: 8px; background: rgba(255,255,255,0.25); border-radius: 99px; overflow: hidden; }
+#progressFill { height: 100%; width: 0%; background: var(--green); transition: width .25s ease; }
+#progressTally { font-size: 12px; font-weight: 700; min-width: 80px; text-align: right; }
+
+.head { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; }
+h1 {
+  margin: 0; font-size: clamp(20px, 4vw, 28px); font-weight: 900;
+  text-align: center; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: #000; background: var(--yellow);
+  padding: 6px 12px; border-radius: 8px; margin: 0 10px;
+}
+.navbtn {
+  background: #0d1219; color: var(--ink); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 10px; font-weight: 700; min-width: 80px;
+}
+.navbtn:active { transform: translateY(1px); }
+
+/* =========================================
+   3. CARDS & INPUTS
+   ========================================= */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; margin: 14px 0; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+
+.stepperwrap { display: flex; align-items: center; gap: 10px; }
+.stepbtn {
+  background: #0d1219; color: var(--ink); border: 1px solid var(--border);
+  border-radius: 10px; font-weight: 900; font-size: 20px;
+  width: 44px; height: 44px;
+}
+.inp {
+  flex: 1; text-align: center; font-size: 24px; font-weight: 800;
+  padding: 10px; background: #0f141d; border: 2px solid var(--border);
+  color: var(--ink); border-radius: 12px;
+}
+.inp:focus { outline: none; border-color: var(--accent); }
+
+.btnrow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+.btn {
+  border: 0; border-radius: 14px; padding: 14px; font-weight: 800; font-size: 14px; cursor: pointer; width: 100%;
+}
+.btn.green { background: var(--green); color: #00150f; }
+.btn.red { background: var(--red); color: #fff; }
+.btn.ghost { background: #0d1219; color: var(--ink); border: 1px solid var(--border); }
+
+/* Save Buttons */
+.btn-passions { background: var(--green); color: #00150f; }
+.btn-mk { background: var(--accent); color: #fff; }
+.btn-other { background: var(--orange); color: #00150f; }
+
+/* Filter Buttons */
+#filterRow { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+#filterRow .btn { flex: 1; min-width: 80px; font-size: 12px; position: relative; transition: all 0.2s; }
+#filterRow .btn.active {
+  background: var(--orange) !important;
+  color: #000 !important;
+  box-shadow: 0 0 15px rgba(255, 159, 67, 0.4);
+  border: 1px solid var(--orange);
+}
+
+/* =========================================
+   4. ALPHABET CONTROLS
+   ========================================= */
+#azBar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(13, 18, 25, 0.95);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+  padding: 10px;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+}
+
+#azIndex {
+  position: fixed; right: 8px; top: 55%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 6px; z-index: 999;
+}
+
+.azbtn {
+  background: var(--yellow);
+  color: #000;
+  border: none;
+  border-radius: 50%;
+  width: 34px; height: 34px;
+  font-weight: 800; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  cursor: pointer; position: relative;
+  user-select: none;
+}
+.azbtn:active, .azbtn.active {
+  background: #fff; transform: scale(1.15); box-shadow: 0 0 10px #fff;
+}
+.azbtn.empty { opacity: 0.3; background: #333; color: #aaa; pointer-events: none; }
+
+.az-badge {
+  position: absolute; top: -5px; right: -5px;
+  background: var(--green); color: #fff;
+  font-size: 10px; padding: 2px 5px; border-radius: 10px;
+  pointer-events: none;
+}
+
+/* =========================================
+   5. UTILS
+   ========================================= */
+.note { width: 100%; min-height: 60px; background: #0f141d; border: 1px solid var(--border); color: var(--ink); border-radius: 12px; padding: 10px; }
+.area { white-space: pre-wrap; background: #0f141d; padding: 12px; border-radius: 12px; border: 1px solid var(--border); font-size: 14px; min-height: 100px; }
+.notneeded { text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 3px; }
+#topFlash {
+  position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+  background: var(--green); color: #000; padding: 8px 16px;
+  border-radius: 20px; font-weight: bold; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s; z-index: 2000;
+}
+#topFlash.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="topFlash">Saved!</div>
+
+<header>
+  <div id="progressWrap">
+    <div id="progressBar"><div id="progressFill"></div></div>
+    <div id="progressTally">Total: 0 / 0</div>
+    <button class="navbtn" id="nextUnansweredBtn" style="padding: 6px 10px; font-size: 12px;">Next Unanswered ▶</button>
+  </div>
+  <div class="head">
+    <button class="navbtn" id="prevBtn">◀ Prev</button>
+    <h1 id="itemName">LOADING...</h1>
+    <button class="navbtn" id="nextBtn">Next ▶</button>
+  </div>
+  <div id="counter" style="text-align:center; font-size:12px; padding-bottom:6px;">0 / 0</div>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="label">FILTER BY LOCATION</div>
+    <div id="filterRow">
+      <button class="btn ghost active" data-filter="all" id="filterAll">All</button>
+      <button class="btn ghost" data-filter="Cold Room" id="filterCold">Cold Room</button>
+      <button class="btn ghost" data-filter="Garden" id="filterGarden">Garden</button>
+      <button class="btn ghost" data-filter="Side Door" id="filterSide">Side Door</button>
+      <button class="btn ghost" data-filter="Outside" id="filterOutside">Outside</button>
+    </div>
+  </div>
+
+  <div class="card" id="itemCard">
+    <div class="grid">
+      <div>
+        <div class="label">STOCK</div>
+        <div class="stepperwrap">
+          <button class="stepbtn" onclick="step('stock', -1)">−</button>
+          <input class="inp" id="stockInput" type="number" inputmode="decimal" placeholder="0">
+          <button class="stepbtn" onclick="step('stock', 1)">+</button>
+        </div>
+      </div>
+      <div>
+        <div class="label">ORDER</div>
+        <div class="stepperwrap">
+          <button class="stepbtn" onclick="step('order', -1)">−</button>
+          <input class="inp" id="orderInput" type="number" inputmode="decimal" placeholder="0">
+          <button class="stepbtn" onclick="step('order', 1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn btn-passions" onclick="saveItem('passions')">PASSIONS</button>
+      <button class="btn btn-mk" onclick="saveItem('mk')">MK</button>
+      <button class="btn btn-other" onclick="saveItem('other')">OTHER</button>
+    </div>
+    
+    <div style="margin-top:10px">
+      <button class="btn red" id="notNeededBtn">NOT NEEDED / SKIPPED</button>
+    </div>
+
+    <hr style="border:0; border-top:1px solid var(--border); margin:16px 0;">
+    <div class="label">NOTE</div>
+    <textarea class="note" id="noteInput" placeholder="Optional note..."></textarea>
+  </div>
+
+  <div class="card">
+    <div class="label">PASSIONS ORDER</div>
+    <div class="area" id="listPassions"></div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="copyText('listPassions')">COPY</button>
+      <a class="btn green" id="waPassions" href="#" target="_blank">WHATSAPP</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">MK ORDER</div>
+    <div class="area" id="listMk"></div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="copyText('listMk')">COPY</button>
+      <a class="btn green" id="waMk" href="#" target="_blank">WHATSAPP</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">OTHER ORDER</div>
+    <div class="area" id="listOther"></div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="copyText('listOther')">COPY</button>
+      <a class="btn green" id="waOther" href="#" target="_blank">WHATSAPP</a>
+    </div>
+  </div>
+
+  <div style="margin-top:20px; text-align:center;">
+    <button class="btn red" onclick="hardReset()">⚠️ RESET ALL DATA ⚠️</button>
+  </div>
+  
+  <div class="card" style="margin-top:20px">
+    <div class="label">UNANSWERED ITEMS</div>
+    <pre class="area" id="unansweredList" style="font-size:12px; color:#aaa;"></pre>
+  </div>
+
+</div>
+
+<div id="azIndex"></div>
+<div id="azBar"></div>
+
+<script>
+// --- CONFIG ---
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9pTMWZLNo6EJGOu475l8_cUMtiOTd9P0hGS4pR43Z0cNpUiDT9-O4kGPQ6czmigUuhWTD6sAhYLYc/pub?gid=223224205&single=true&output=csv";
+const STORAGE_KEY = "orderpad_v2_data";
+const ITEMS_KEY = "orderpad_v2_items";
+
+// --- STATE ---
+let ITEMS = [];
+let LOCATIONS = {}; 
+let state = {
+  i: 0,
+  map: {}, // name -> { stock, order, note, status, bucket }
+  filter: 'all'
+};
+
+// --- INIT ---
+function init() {
+  loadLocalStorage();
+
+  // Event Bindings
+  document.getElementById('prevBtn').onclick = () => nav(-1);
+  document.getElementById('nextBtn').onclick = () => nav(1);
+  document.getElementById('nextUnansweredBtn').onclick = navNextUnanswered;
+  document.getElementById('notNeededBtn').onclick = () => saveItem('notneeded');
+
+  document.querySelectorAll('#filterRow .btn').forEach(btn => {
+    btn.onclick = (e) => setFilter(e.target.dataset.filter);
+  });
+  
+  // FIX 1: Sync Filter UI on load
+  document.querySelectorAll('#filterRow .btn').forEach(btn => {
+    if (btn.dataset.filter === state.filter) btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+
+  // FIX 3: Avoid Race Condition
+  if (ITEMS.length > 0) {
+    // We have cached data, show immediately
+    rebuildAZ();
+    show(state.i);
+    // Background fetch to check for updates
+    fetchSheet(); 
+  } else {
+    // No cache? Wait for fetch
+    document.getElementById('itemName').textContent = "SYNCING DATA...";
+    fetchSheet(); 
+  }
+}
+
+// --- LOGIC: SHOW ITEM ---
+function show(index) {
+  if (!ITEMS.length) {
+    document.getElementById('itemName').textContent = "NO ITEMS LOADED";
+    return;
+  }
+
+  // Bounds
+  let n = ITEMS.length;
+  state.i = ((index % n) + n) % n;
+  let name = ITEMS[state.i];
+
+  // FILTER CHECK
+  if (!matchesFilter(name)) {
+    let found = findNextMatch(state.i, 1);
+    if (found === -1) {
+       document.getElementById('itemName').textContent = "NO ITEMS IN FILTER";
+       return;
+    }
+    state.i = found;
+    name = ITEMS[state.i];
+  }
+
+  // Render UI
+  let rec = state.map[name] || {};
+  
+  document.getElementById('itemName').textContent = name;
+  document.getElementById('counter').textContent = `${state.i + 1} / ${n}`;
+  
+  document.getElementById('stockInput').value = rec.stock || "";
+  document.getElementById('orderInput').value = rec.order || "";
+  document.getElementById('noteInput').value = rec.note || "";
+  
+  // Styling
+  let itemCard = document.getElementById('itemCard');
+  let h1 = document.getElementById('itemName');
+  
+  if (rec.status === 'notneeded') {
+    h1.classList.add('notneeded');
+    itemCard.style.opacity = '0.7';
+  } else {
+    h1.classList.remove('notneeded');
+    itemCard.style.opacity = '1';
+  }
+  
+  if (rec.status === 'saved' && rec.order > 0) {
+    h1.style.background = 'var(--green)'; 
+  } else if (rec.status !== 'notneeded') {
+    h1.style.background = 'var(--yellow)';
+  }
+
+  highlightAZ(name);
+  saveState();
+}
+
+// --- LOGIC: NAVIGATION ---
+function nav(dir) {
+  let next = findNextMatch(state.i, dir);
+  if (next !== -1) show(next);
+}
+
+function navNextUnanswered() {
+  let start = state.i;
+  let n = ITEMS.length;
+  for (let step = 1; step <= n; step++) {
+    let idx = (start + step) % n;
+    let name = ITEMS[idx];
+    let rec = state.map[name];
+    
+    if (matchesFilter(name)) {
+      let isAnswered = rec && (rec.status === 'notneeded' || (rec.status === 'saved' && rec.order > 0));
+      if (!isAnswered) {
+        show(idx);
+        return;
+      }
+    }
+  }
+  showFlash("All items in this filter are done!");
+}
+
+function findNextMatch(start, dir) {
+  let n = ITEMS.length;
+  for (let step = 1; step <= n; step++) {
+    let idx = (start + (step * dir) + n) % n;
+    if (matchesFilter(ITEMS[idx])) return idx;
+  }
+  return -1;
+}
+
+// --- LOGIC: DATA HANDLING ---
+function saveItem(bucket) {
+  let name = ITEMS[state.i];
+  let rec = state.map[name] || {};
+  
+  // GUARD: Prevent saving empty orders (unless Not Needed)
+  let orderVal = parseFloat(document.getElementById('orderInput').value) || 0;
+  if (bucket !== 'notneeded' && orderVal <= 0) {
+      showFlash("Enter quantity first!");
+      return;
+  }
+  
+  // Grab values
+  rec.stock = document.getElementById('stockInput').value;
+  rec.order = document.getElementById('orderInput').value;
+  rec.note = document.getElementById('noteInput').value;
+  
+  if (bucket === 'notneeded') {
+    rec.status = 'notneeded';
+    rec.bucket = '';
+  } else {
+    rec.status = 'saved';
+    rec.bucket = bucket;
+  }
+  
+  state.map[name] = rec;
+  saveState();
+  
+  updateLists();
+  showFlash(bucket === 'notneeded' ? "Marked Not Needed" : "Saved to " + bucket.toUpperCase());
+  
+  nav(1);
+}
+
+function updateLists() {
+  let buckets = { passions: [], mk: [], other: [] };
+  let answeredCount = 0;
+  let totalCount = 0;
+  let unansweredNames = [];
+
+  ITEMS.forEach(name => {
+    let rec = state.map[name];
+    let matches = matchesFilter(name);
+    
+    if (matches) totalCount++;
+    
+    if (rec) {
+      if (rec.status === 'notneeded') {
+        if (matches) answeredCount++;
+      } else if (rec.status === 'saved' && rec.order > 0) {
+        if (matches) answeredCount++;
+        let line = `${rec.order} x ${name}`;
+        if (rec.note) line += ` (${rec.note})`;
+        if (rec.bucket && buckets[rec.bucket]) buckets[rec.bucket].push(line);
+      } else {
+        if (matches) unansweredNames.push(name);
+      }
+    } else {
+      if (matches) unansweredNames.push(name);
+    }
+  });
+
+  document.getElementById('listPassions').textContent = buckets.passions.join('\n');
+  document.getElementById('listMk').textContent = buckets.mk.join('\n');
+  document.getElementById('listOther').textContent = buckets.other.join('\n');
+  
+  document.getElementById('waPassions').href = "https://wa.me/?text=" + encodeURIComponent(buckets.passions.join('\n'));
+  document.getElementById('waMk').href = "https://wa.me/?text=" + encodeURIComponent(buckets.mk.join('\n'));
+  document.getElementById('waOther').href = "https://wa.me/?text=" + encodeURIComponent(buckets.other.join('\n'));
+
+  // PROGRESS LABEL
+  let pct = totalCount ? Math.round((answeredCount / totalCount) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + "%";
+  
+  let label = state.filter === 'all' ? 'Total' : state.filter;
+  document.getElementById('progressTally').textContent = `${label}: ${answeredCount} / ${totalCount}`;
+  
+  document.getElementById('unansweredList').textContent = unansweredNames.join('\n');
+}
+
+// --- FILTERING ---
+function setFilter(f) {
+  state.filter = f;
+  
+  document.querySelectorAll('#filterRow .btn').forEach(b => {
+    if (b.dataset.filter === f) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+  
+  show(state.i);
+  updateLists(); 
+}
+
+function matchesFilter(name) {
+  if (state.filter === 'all') return true;
+  let loc = LOCATIONS[name] || 'Other'; 
+  return loc === state.filter;
+}
+
+// --- ALPHABET UI ---
+function rebuildAZ() {
+  let letters = "#ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  let groups = {};
+  
+  ITEMS.forEach(name => {
+    let l = name[0].toUpperCase();
+    if (!/[A-Z]/.test(l)) l = '#';
+    if (!groups[l]) groups[l] = [];
+    groups[l].push(name);
+  });
+  
+  let barHtml = "";
+  let indexHtml = "";
+  
+  letters.forEach(l => {
+    let count = (groups[l] || []).length;
+    let className = count > 0 ? "azbtn" : "azbtn empty";
+    let btn = `<button class="${className}" onclick="jumpToLetter('${l}')">${l}<span class="az-badge" ${count === 0 ? 'style="display:none"' : ''}>${count}</span></button>`;
+    
+    barHtml += btn;
+    indexHtml += btn;
+  });
+  
+  document.getElementById('azBar').innerHTML = barHtml;
+  document.getElementById('azIndex').innerHTML = indexHtml;
+}
+
+function jumpToLetter(l) {
+  let idx = ITEMS.findIndex(name => {
+    let first = name[0].toUpperCase();
+    if (!/[A-Z]/.test(first)) first = '#';
+    return first === l;
+  });
+  
+  if (idx !== -1) show(idx);
+}
+
+function highlightAZ(name) {
+  let l = name[0].toUpperCase();
+  if (!/[A-Z]/.test(l)) l = '#';
+  
+  document.querySelectorAll('.azbtn').forEach(b => b.classList.remove('active'));
+  
+  document.querySelectorAll('.azbtn').forEach(b => {
+    // Robust text check
+    let letter = b.firstChild ? b.firstChild.textContent.trim() : '';
+    if (letter === l) b.classList.add('active');
+  });
+}
+
+// --- SHEET LOADING ---
+function fetchSheet() {
+  fetch(SHEET_URL + "&t=" + Date.now())
+    .then(r => r.text())
+    .then(csv => {
+      let rows = csv.split(/\r?\n/).slice(1); 
+      let names = [];
+      let locs = {};
+      
+      rows.forEach(row => {
+        let parts = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+        if (!parts) parts = row.split(',');
+        
+        let name = parts[0] ? parts[0].replace(/^"|"$/g, '').trim() : '';
+        let cat = parts[1] ? parts[1].replace(/^"|"$/g, '').trim() : '';
+        
+        if (name) {
+          names.push(name);
+          if (cat) locs[name] = cat;
+        }
+      });
+      
+      if (names.length) {
+        ITEMS = names;
+        LOCATIONS = Object.assign(LOCATIONS, locs);
+
+        // FIX 2: Garbage Collection (Remove ghost data)
+        Object.keys(state.map).forEach(key => {
+          if (!names.includes(key)) delete state.map[key];
+        });
+        saveState();
+
+        localStorage.setItem(ITEMS_KEY, JSON.stringify({items: ITEMS, locs: LOCATIONS}));
+        rebuildAZ();
+        
+        // Refresh view to show new data
+        show(state.i);
+        showFlash("Updated from Sheet!");
+      }
+    })
+    .catch(e => {
+        console.log("Sheet load failed", e);
+        if(!ITEMS.length) document.getElementById('itemName').textContent = "CONNECTION FAILED";
+    });
+}
+
+// --- UTILS ---
+function step(type, val) {
+  let id = type + 'Input';
+  let el = document.getElementById(id);
+  let v = parseFloat(el.value) || 0;
+  v = Math.max(0, v + val);
+  el.value = v > 0 ? v : "";
+}
+
+function showFlash(msg) {
+  let el = document.getElementById('topFlash');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+function copyText(id) {
+  let txt = document.getElementById(id).textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(() => showFlash("Copied!"));
+  } else {
+    alert("Manual copy required");
+  }
+}
+
+function hardReset() {
+  if (confirm("⚠️ FACTORY RESET ⚠️\n\nThis will wipe all saved counts AND the cached item list.\nThe app will reload to fetch fresh data.")) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(ITEMS_KEY); 
+    location.reload();
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  updateLists();
+}
+
+function loadLocalStorage() {
+  let storedItems = JSON.parse(localStorage.getItem(ITEMS_KEY));
+  if (storedItems) {
+    ITEMS = storedItems.items || [];
+    LOCATIONS = storedItems.locs || {};
+  }
+  
+  let storedState = JSON.parse(localStorage.getItem(STORAGE_KEY));
+  if (storedState) state = storedState;
+  
+  if (!state.map) state.map = {};
+}
+
+init();
+</script>
+</body>
+</html>
