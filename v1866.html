@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- FULL FILE v1866 WITH CRITICAL ITEM WARNING ON COPY / WHATSAPP ONLY -->
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Running Order Pad v1866</title>
+<meta name="theme-color" content="#0f1115" />
+<style>
+:root{--bg:#0f1115;--card:#161a22;--ink:#e9eef5;--muted:#9fb0c2;--border:#242b3b;--green:#20c997;--accent:#5c7cfa;--red:#ff4d4d;--orange:#ff9f43;}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+.wrap{max-width:820px;margin:0 auto;padding:8px 14px 24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin:14px 0}
+.label{font-size:12px;color:var(--muted);margin-bottom:6px}
+.inp{width:100%;font-size:26px;font-weight:800;text-align:center;padding:14px;border-radius:14px;border:2px solid var(--border);background:#0f141d;color:#e9eef5}
+.btn{border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:16px;cursor:pointer;width:100%}
+.btn.green{background:var(--green);color:#00150f}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:#0d1219;color:#e9eef5;border:1px solid var(--border)}
+.area{white-space:pre-wrap;background:#0f141d;border:1px solid var(--border);border-radius:14px;padding:12px;font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h2>Running Order</h2>
+
+<div class="card">
+<div class="label">ORDER — PASSIONS</div>
+<div class="area" id="orderListPassions"></div>
+<div style="display:flex;gap:10px;margin-top:10px">
+<button class="btn" id="copyPassions">COPY</button>
+<a class="btn green" id="waPassions" target="_blank">WHATSAPP</a>
+</div>
+</div>
+
+<div class="card">
+<div class="label">ORDER — MK</div>
+<div class="area" id="orderListMk"></div>
+<div style="display:flex;gap:10px;margin-top:10px">
+<button class="btn" id="copyMk">COPY</button>
+<a class="btn green" id="waMk" target="_blank">WHATSAPP</a>
+</div>
+</div>
+
+<div class="card">
+<div class="label">ORDER — OTHER</div>
+<div class="area" id="orderListOther"></div>
+<div style="display:flex;gap:10px;margin-top:10px">
+<button class="btn" id="copyOther">COPY</button>
+<a class="btn green" id="waOther" target="_blank">WHATSAPP</a>
+</div>
+</div>
+</div>
+
+<script>
+var state={map:{}};
+
+var CRITICAL_ITEMS=["coriander","vine tomato","loose tomato","onion bag 4kg"];
+
+function checkCriticalItemsMissing(){
+  var missing=[];
+  CRITICAL_ITEMS.forEach(function(ci){
+    var found=false;
+    for(var name in state.map){
+      if(name.toLowerCase()===ci){
+        var qty=parseInt(state.map[name].order||"0",10);
+        if(qty>0) found=true;
+        break;
+      }
+    }
+    if(!found) missing.push(ci);
+  });
+  if(missing.length){
+    return "⚠️ POSSIBLE MISSING CORE ITEMS\n\nYou have not ordered:\n\n• "+
+      missing.map(x=>x.replace(/\b\w/g,c=>c.toUpperCase())).join("\n• ")+
+      "\n\nIf intentional, ignore this warning.";
+  }
+  return null;
+}
+
+function guarded(action){
+  var warn=checkCriticalItemsMissing();
+  if(warn) alert(warn);
+  action();
+}
+
+document.getElementById("copyPassions").onclick=()=>guarded(()=>navigator.clipboard.writeText(orderListPassions.textContent||""));
+document.getElementById("copyMk").onclick=()=>guarded(()=>navigator.clipboard.writeText(orderListMk.textContent||""));
+document.getElementById("copyOther").onclick=()=>guarded(()=>navigator.clipboard.writeText(orderListOther.textContent||""));
+
+document.getElementById("waPassions").onclick=()=>guarded(()=>{});
+document.getElementById("waMk").onclick=()=>guarded(()=>{});
+document.getElementById("waOther").onclick=()=>guarded(()=>{});
+
+// Submit Stock intentionally untouched
+</script>
+</body>
+</html>
