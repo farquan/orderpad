@@ -837,6 +837,22 @@ button#resetAllBtn {
 }
 </style>
 
+
+<style>
+details { width: 100%; }
+summary.list-summary {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 8px 0;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+summary.list-summary::marker { display: none; }
+</style>
 </head>
 <body><div id="topFlash"></div>
 <header><div id="progressWrap"><div id="progressBar"><div id="progressFill"></div></div><div id="progressRight"><div id="progressTally">Responded: 0 / 0</div><button class="navbtn" id="nextUnansweredBtn">Next Unanswered ▶</button></div></div>
@@ -888,28 +904,40 @@ button#resetAllBtn {
 </div>
 </div>
 <div class="card">
-<div class="small" style="margin-bottom:6px">RUNNING ORDER — PASSIONS (Needed × Item)</div>
-<div class="area" id="orderListPassions"></div>
-<div class="copyopen">
+  <details>
+    <summary class="list-summary">
+      PASSIONS (Needed × Item) <span class="arrow">▼</span>
+    </summary>
+    <div class="area" id="orderListPassions"></div>
+    <div class="copyopen">
 <button class="btn" id="copyPassions">COPY</button>
 <a class="btn green" href="#" id="waPassions" rel="noopener" target="_blank">WHATSAPP</a>
-</div>
+    </div>
+  </details>
 </div>
 <div class="card">
-<div class="small" style="margin-bottom:6px">RUNNING ORDER — MK (Needed × Item)</div>
-<div class="area" id="orderListMk"></div>
-<div class="copyopen">
+  <details>
+    <summary class="list-summary">
+      MK (Needed × Item) <span class="arrow">▼</span>
+    </summary>
+    <div class="area" id="orderListMk"></div>
+    <div class="copyopen">
 <button class="btn" id="copyMk">COPY</button>
 <a class="btn green" href="#" id="waMk" rel="noopener" target="_blank">WHATSAPP</a>
-</div>
+    </div>
+  </details>
 </div>
 <div class="card">
-<div class="small" style="margin-bottom:6px">RUNNING ORDER — OTHER (Needed × Item)</div>
-<div class="area" id="orderListOther"></div>
-<div class="copyopen">
+  <details>
+    <summary class="list-summary">
+      OTHER (Needed × Item) <span class="arrow">▼</span>
+    </summary>
+    <div class="area" id="orderListOther"></div>
+    <div class="copyopen">
 <button class="btn" id="copyOther">COPY</button>
 <a class="btn green" href="#" id="waOther" rel="noopener" target="_blank">WHATSAPP</a>
-</div>
+    </div>
+  </details>
 </div>
 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
 <button class="btn red" id="resetBtn">⚠️ RESET ALL ⚠️</button>
@@ -3377,8 +3405,6 @@ window.LOCATIONS = {
 
 
 <script>
-
-<script>
 /* Guarantee NOT NEEDED records + advances inside the active category (safeguarded, with full UI refresh) */
 (function(){
   function activeCategory(){
@@ -4462,6 +4488,90 @@ document.addEventListener("DOMContentLoaded", function(){
 
 // === Auto-import stock
 
+// === AUTO-IMPORT FROM ?d= (Robust Fix) ===
+(function(){
+  try{
+    var params = new URLSearchParams(location.search);
+    if (!params.has("d")) return;
+
+    // 1. Get raw string and CLEAN it (remove spaces/newlines that break Base64)
+    var rawBase = (params.get("d") || "").replace(/\s/g, '');
+
+    function applyOnce(){
+      try{
+        // Wait for ITEMS to be loaded from Google Sheet
+        if (!Array.isArray(window.ITEMS) || !window.ITEMS.length) return false;
+
+        // 2. Safe Decode
+        var raw = rawBase;
+        try { 
+          raw = atob(raw); 
+        } catch(e) { 
+          console.error("Base64 decode failed", e); 
+          return true; // Stop trying if data is corrupted
+        } 
+
+        var parts = raw.split(",");
+        if (!Array.isArray(parts) || !parts.length) return true;
+
+        if (!window.state) window.state = {};
+        if (!state.map) state.map = {};
+        if (!state.notes) state.notes = state.notes || {};
+
+        var applied = 0;
+        for (var i=0; i<parts.length && i<ITEMS.length; i++){
+          var qty = (parts[i] || "").trim();
+          if (!qty) qty = "0"; // Default to 0 if empty
+
+          var num = parseFloat(qty);
+          if (!isFinite(num)) num = 0;
+
+          var name = ITEMS[i];
+          if (!name) continue;
+
+          var rec = state.map[name] || {stock:"",order:"",note:"",status:"",bucket:""};
+
+          // Preserve existing notes/status, just update stock
+          if (state.notes[name]) rec.note = state.notes[name];
+
+          rec.stock = String(num);
+          state.map[name] = rec;
+          applied++;
+        }
+
+        if (applied > 0){
+          if (typeof save === "function") save();
+
+          // Refresh UI
+          if (typeof show === "function") show(state.i || 0);
+          if (typeof updateProgressUI === "function") updateProgressUI();
+          if (typeof buildRunning === "function") buildRunning();
+
+          // 3. Visual Feedback (So you know it worked)
+          if (typeof showTopFlash === "function") {
+             showTopFlash("Imported stock for " + applied + " items", 3000);
+          }
+        }
+        return true; // Success, stop the timer
+      }catch(e){
+        console.error(e);
+        return true; // Stop timer on crash
+      }
+    }
+
+    // Retry loop: Tries for 20 seconds to wait for Google Sheet to load items
+    if (!applyOnce()){
+      var tries = 0;
+      var timer = setInterval(function(){
+        tries++;
+        if (applyOnce() || tries > 200) clearInterval(timer);
+      }, 100);
+    }
+  }catch(e){ console.error(e); }
+})();
+
+
+
 // === Auto-import from ?x= (1-based index) ===
 (function(){
   var params = new URLSearchParams(location.search);
@@ -4626,12 +4736,21 @@ try {
   if (anyNote) {
     lines.unshift("🚨🚨 **NOTES PRESENT** 🚨🚨");
   }
-  var msgText = "FRUIT & VEG STOCK ✅\n\n" + lines.join("\n");
-  fetch("https://api.telegram.org/bot8478412877:AAHxot18T5GnPrBjPmiD6vHETpJenMoy5_0/sendMessage", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({chat_id: 7782476287, text: msgText})
-  }).catch(function(){});
+  var msgText =
+  "FRUIT & VEG STOCK ✅\n\n" +
+  lines.join("\n") +
+  "\n\n🔗 Stock Entry Link:\n" +
+  reviewUrl;
+
+fetch("https://api.telegram.org/bot8478412877:AAHxot18T5GnPrBjPmiD6vHETpJenMoy5_0/sendMessage", {
+  method: "POST",
+  headers: {"Content-Type": "application/json"},
+  body: JSON.stringify({
+    chat_id: 7782476287,
+    text: msgText
+  })
+}).catch(function(){});
+
 } catch(e){}
 window.open(reviewUrl, "_blank");
 
