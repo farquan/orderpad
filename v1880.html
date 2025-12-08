@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0" name="viewport"/>
-<title>Running Order Pad (Fixed)</title>
+<title>Running Order Pad (Compat)</title>
 <meta content="#0f1115" name="theme-color"/>
 <style>
 :root{
@@ -14,10 +14,11 @@
 html,body{
   margin:0;height:100%;background:var(--bg);color:var(--ink);
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-  touch-action: manipulation;
+  touch-action: manipulation; /* stop smart zoom double/triple-tap */
 }
 .wrap{max-width:820px;margin:0 auto;padding:8px 14px 24px}
 
+/* Light blue header bar */
 header{
   position:sticky;top:0;z-index:20;
   background:#5c7cfa; color:#fff;
@@ -27,7 +28,7 @@ header{
 .head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
 h1{
   margin:0;
-  font-size:32px;
+  font-size:32px; /* ~20% smaller */
   font-weight:900;
   letter-spacing:.3px;
   text-align:center;
@@ -35,6 +36,7 @@ h1{
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 
+/* Hide the counter under the header */
 .counter{display:none}
 
 .navbtn{background:#0d1219;color:var(--ink);border:1px solid var(--border);border-radius:10px;padding:12px 6px;font-weight:700;width:20%}
@@ -54,15 +56,20 @@ h1{
 .small{font-size:12px;color:#c6d2e0}
 hr.sep{border:0;border-top:1px solid var(--border);margin:12px 0}
 
+/* A–Z bar */
 .azbar{display:flex;gap:6px;overflow:auto;padding:8px 10px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);scrollbar-width:none;-ms-overflow-style:none;background:rgba(22,26,34,.9)}
 .azbar::-webkit-scrollbar{display:none}
 .azbtn{min-width:34px;padding:6px 0;border-radius:9px;border:1px solid var(--border);text-align:center;font-weight:800;background:#0d1219;color:#e9eef5;flex:0 0 auto}
 .azbtn.active{outline:2px solid var(--accent)}
 .azbtn:disabled{opacity:.35}
 
+/* Hide the old status line entirely */
 .status{display:none}
+
+/* Button row */
 .btnrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
 
+/* Items Editor panel */
 .editor{display:none}
 .editor.open{display:block}
 .textarea{width:100%;min-height:220px;padding:12px;border-radius:12px;border:1px solid var(--border);background:#0f141d;color:#e9eef5;font-size:14px}
@@ -71,15 +78,18 @@ hr.sep{border:0;border-top:1px solid var(--border);margin:12px 0}
 .editor-tools input{flex:1;min-width:160px;padding:10px;border-radius:10px;border:1px solid var(--border);background:#0f141d;color:#e9eef5}
 .counterline{margin-top:6px;color:var(--muted);font-size:12px}
 
-.btn-passions { background:#20c997; color:#00150f; }
-.btn-mk       { background:#5c7cfa; color:#ffffff; }
-.btn-other    { background:#ff9f43; color:#00150f; }
+/* Save To button colors */
+.btn-passions { background:#20c997; color:#00150f; } /* green */
+.btn-mk       { background:#5c7cfa; color:#ffffff; } /* blue */
+.btn-other    { background:#ff9f43; color:#00150f; } /* orange */
 
 .stepperwrap{display:flex;align-items:center;gap:10px}
 .stepperwrap .inp{flex:1}
 .stepbtn{appearance:none;border:1px solid var(--border);background:#0d1219;color:var(--ink);border-radius:10px;font-weight:900;font-size:18px;line-height:1;padding:10px 12px;min-width:44px}
 .stepbtn:active{transform:translateY(1px)}
 
+
+/* Progress area */
 #progressWrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;background:#5268f6;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 #progressBar{flex:1;height:8px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
 #progressFill{height:100%;width:0%;background:#20c997;transition:width .25s ease}
@@ -89,23 +99,120 @@ hr.sep{border:0;border-top:1px solid var(--border);margin:12px 0}
 
 #answeredTick { color:white; font-size:22px; margin-left:6px; display:none; }
 
+/* Overall progress (top) */
 #overallProgress{padding:10px 14px}
 #overallBar{position:relative;height:12px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden}
 #overallFill{height:100%;width:0%;background:#20c997;transition:width .25s ease}
 #overallLabel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:700;color:#fff;white-space:nowrap;pointer-events:none}
 
+/* Fixed bottom A–Z bar (3 rows of 9) */
+#azBar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  z-index:9999;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:900px;
+  margin:0 auto;
+  padding:8px 10px;
+  background:rgba(15,23,48,.96);
+  backdrop-filter:saturate(120%) blur(4px);
+  box-shadow:0 -6px 16px rgba(0,0,0,.35);
+  border-top:1px solid rgba(255,255,255,.08);
+  border-radius:12px 12px 0 0;
+}
+#azBar .azbtn{
+  flex:0 0 calc(100% / 9 - 8px);
+  margin:4px;
+  text-align:center;
+}
+/* Make room so content isn't covered by fixed A–Z */
+body{ padding-bottom: 132px; }
+
 .btn:disabled{opacity:.5;cursor:not-allowed}
 
+/* Bottom-fixed A–Z keyboard: 3 rows x 9 (27 chars) */
+#azBar{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  z-index: 1000;
+  display:grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 6px 6px;
+  padding: 10px 12px 12px;
+  background: rgba(13, 18, 25, 0.96);
+  backdrop-filter: saturate(120%) blur(6px);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.25);
+}
+#azBar .azbtn{
+  text-align:center;
+  min-height: 38px;
+}
+/* Keep it centered within reasonable width on large screens */
+@media (min-width: 760px){
+  #azBar{ max-width: 720px; margin: 0 auto; left:0; right:0; }
+}
+/* Make sure page content isn't hidden behind the fixed keyboard */
 body{ padding-bottom: 160px; }
 
 .copyRow{display:flex;justify-content:center;gap:12px;margin-top:8px}
 .copyRow .btn{flex:1}
+
 .copyopen .btn{width:auto;flex:1}
 
+/* --- Safe area for fixed bottom A–Z keyboard --- */
 :root{ --azSafe: 0px; }
 body{ padding-bottom: var(--azSafe); }
+/* If your content uses a main container instead of body, this keeps it safe too */
 main{ padding-bottom: var(--azSafe); }
 
+/* Vertical A–Z index */
+#azIndex{
+  position: fixed;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10010;
+  background: transparent;
+  padding: 4px 0;
+}
+#azIndex .azIndexBtn{
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(255,255,255,0.06);
+  color: var(--ink, #cfd8e3);
+  border: 1px solid rgba(255,255,255,0.08);
+  user-select: none;
+}
+#azIndex .azIndexBtn.active{ background: rgba(64,147,255,0.35); }
+#azIndex .azIndexBtn.disabled{ opacity: 0.35; pointer-events: none; }
+
+/* Remove bottom A–Z keyboard entirely */
+#azBar{display:none !important;}
+:root{ --azSafe: 0px !important; }
+/* Remove any spacer effect */
+#azSafeSpacer, #azBottomPad{display:none !important; height:0 !important; margin:0 !important; padding:0 !important;}
+
+/* Bigger vertical A–Z index */
+#azIndex{ right: 8px; gap: 8px; }
+#azIndex .azIndexBtn{
+  width: 34px;
+  height: 34px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+/* Make right index not block scrolling, and give it its own background */
 #azIndex{
   position: fixed;
   right: 6px;
@@ -115,18 +222,16 @@ main{ padding-bottom: var(--azSafe); }
   flex-direction: column;
   gap: 8px;
   z-index: 10010;
+  /* visual container so it doesn't look like it's overlaying content */
   background: rgba(13,18,25,0.72);
   backdrop-filter: blur(6px);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 12px;
   padding: 8px 6px;
-  pointer-events: none;
-  max-height: 88vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  pointer-events: none; /* do NOT block page scroll drags */
 }
 #azIndex .azIndexBtn{
-  pointer-events: auto;
+  pointer-events: auto; /* only the letters are clickable */
   width: 34px;
   height: 34px;
   font-size: 14px;
@@ -134,33 +239,49 @@ main{ padding-bottom: var(--azSafe); }
   background: rgba(255,255,255,0.06);
   color: var(--ink, #cfd8e3);
   border: 1px solid rgba(255,255,255,0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  user-select: none;
 }
 #azIndex .azIndexBtn.active{ background: rgba(64,147,255,0.35); }
 #azIndex .azIndexBtn.disabled{ opacity: 0.35; pointer-events: none; }
 
+/* Make right index scrollable so you can reach A and Z */
+#azIndex{
+  pointer-events: auto;           /* allow scrolling inside the index */
+  max-height: 88vh;               /* fit on screen */
+  overflow-y: auto;               /* scroll the letters */
+  -webkit-overflow-scrolling: touch; /* smooth on iOS */
+}
+
+/* Anchor right A–Z index just below the header/progress (top set dynamically) */
+#azIndex{
+  position: fixed;
+  right: 6px;
+  transform: none;
+}
+
+/* Visually disable Not Needed when Order > 0 */
 #notNeededBtn:disabled{
   opacity: .5;
   pointer-events: none;
   filter: grayscale(0.2);
 }
 
+/* Plain text Not Needed list at bottom */
 #notNeededSection{ margin-top:24px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
 #notNeededSection h3{ margin:0 0 8px 0; font-size:14px; opacity:.85; }
 #notNeededList{ white-space:pre-wrap; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:13px; line-height:1.4; margin:0; }
 
+/* Fade answered current item */
 .answeredFade { opacity: 0.5; transition: opacity .2s ease; }
 
+/* Auto-shrinking running order window */
 #orderMinus {
   min-height: 40px;
   max-height: 40vh;
   overflow-y: auto;
   transition: max-height .3s ease;
 }
+
+/* Smaller top item name */
 
 #itemName {
   background: #FFD700 !important;
@@ -175,15 +296,33 @@ main{ padding-bottom: var(--azSafe); }
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  position: relative;
 }
 
+/* Bigger top item name */
+
+#itemName {
+  background: #FFD700 !important;
+  color: #000 !important;
+  font-weight: bold !important;
+  font-size: clamp(18px, 4vw, 28px) !important;
+  padding: 10px 12px !important;
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+
+/* Top flash notification (appears under header, fades out) */
 #topFlash{
   position: fixed;
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(25, 135, 84, 0.95);
+  background: rgba(25, 135, 84, 0.95); /* subtle green */
   color: #fff;
   padding: 8px 14px;
   border-radius: 999px;
@@ -200,14 +339,27 @@ main{ padding-bottom: var(--azSafe); }
   transform: translateX(-50%) translateY(0);
 }
 
+/* Plain text Unanswered list at bottom */
 #unansweredSection{ margin-top:24px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.08); }
 #unansweredSection h3{ margin:0 0 8px 0; font-size:14px; opacity:.85; }
 #unansweredList{ white-space:pre-wrap; font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:13px; line-height:1.4; margin:0; }
 
+.keybtn {
+  font-size:22px;
+  padding:14px;
+  min-width:50px;
+  min-height:50px;
+}
+
+
+/* Hold-to-scroll visual feedback */
 .azbtn.hold, .azIndexBtn.hold, .navbtn.hold, .stepbtn.hold, .prev.hold, .next.hold {
+  
   filter: brightness(1.15);
 }
 
+
+/* Bigger alphabet buttons */
 .azbtn, .azIndexBtn {
   font-size: clamp(24px, 5vw, 42px) !important;
   font-weight: bold !important;
@@ -223,6 +375,8 @@ main{ padding-bottom: var(--azSafe); }
   color: #fff !important;
 }
 
+
+/* === A–Z count badges (green style) === */
 .azbtn, .azIndexBtn { position: relative; }
 .az-badge {
   position: absolute;
@@ -235,29 +389,81 @@ main{ padding-bottom: var(--azSafe); }
   font-size: 12px;
   line-height: 20px;
   text-align: center;
-  background: #2ecc71;
+  background: #2ecc71; /* green */
   color: #fff;
   pointer-events: none;
+
+  pointer-events: none !important;
   user-select: none;
+  -webkit-user-select: none;
   touch-action: none;
 }
 .azbtn.az-empty, .azIndexBtn.az-empty { opacity: 0.5; }
+
+
+/* === A–Z count badges (green) === */
+.azbtn, .azIndexBtn { position: relative; }
+.az-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  background: #2ecc71; /* green */
+  color: #fff;
+  pointer-events: none;
+}
+.azbtn.az-empty, .azIndexBtn.az-empty { opacity: 0.5; }
+
+
+.az-badge {
+  pointer-events: none !important;
+  user-select: none !important;
+  touch-action: none !important;
+}
+
+
+/* Hide-empty support */
 .az-hidden { display: none !important; }
+
+
+/* Answered filtering */
 .answered-flag { outline: 2px dashed #2ecc71; outline-offset: 4px; }
 
+</style>
+
+<style>
 #filterCard .btnrow button {
   flex: 1 1 auto;
   font-size: 0.9em;
   padding: 6px 8px;
   min-width: auto;
 }
+</style>
 
+
+<style>
 #filterRow .btn.filter-active { outline: 5px solid #ff9800 !important; box-shadow: 0 0 25px 8px #ff9800 !important; border-color: #ff9800 !important; }
+</style>
+
+
+<style>
+/* Force the 'All' button to show a thick orange border + glow */
 #filterAllBtn{
   outline: 5px solid #ff9800 !important;
   box-shadow: 0 0 25px 8px #ff9800 !important;
   border-color: #ff9800 !important;
 }
+</style>
+
+
+<style>
+/* Make the selected/tapped (focus/active) category show an orange glow instead of blue */
 #filterRow .btn:focus,
 #filterRow .btn:focus-visible,
 #filterRow .btn:active {
@@ -265,23 +471,39 @@ main{ padding-bottom: var(--azSafe); }
   box-shadow: 0 0 25px 8px #ff9800 !important;
   border-color: #ff9800 !important;
 }
+/* Kill the global blue focus ring inside the filter row */
 #filterRow .btn:focus { box-shadow: 0 0 25px 8px #ff9800 !important; }
+</style>
+
+
+<style>
+/* Disable focus/active glow on filter buttons so only the active class controls it */
 #filterRow .btn:focus,
 #filterRow .btn:focus-visible,
 #filterRow .btn:active {
   outline: none !important;
   box-shadow: none !important;
 }
+</style>
+
+
+<style>
+/* Only glow when .filter-active; explicitly suppress glow on ALL when not active */
 #filterAllBtn:not(.filter-active){
   outline: none !important;
   box-shadow: none !important;
-  border-color: var(--ui-2, #2a2f3a) !important;
+  border-color: var(--ui-2, #2a2f3a) !important; /* neutral border */
 }
+/* Also neutralize the 'ghost' style when not active */
 #filterRow #filterAllBtn.ghost:not(.filter-active){
   background: var(--chip-bg, #d9dbe3) !important;
   color: var(--chip-fg, #1a1f2a) !important;
 }
+</style>
 
+
+<style>
+/* Floating Prev/Next controls */
 #floatingNav {
   position: fixed;
   left: 0;
@@ -291,10 +513,10 @@ main{ padding-bottom: var(--azSafe); }
   justify-content: center;
   gap: 16px;
   z-index: 9999;
-  pointer-events: none;
+  pointer-events: none; /* container ignores taps so clicks only hit buttons */
 }
 #floatingNav .float-btn {
-  pointer-events: auto;
+  pointer-events: auto; /* buttons remain clickable */
   padding: 12px 18px;
   border-radius: 999px;
   font-size: 16px;
@@ -311,11 +533,15 @@ main{ padding-bottom: var(--azSafe); }
 @media (max-width: 480px){
   #floatingNav .float-btn { padding: 12px 14px; font-size: 15px; }
 }
+</style>
 
-#filterRow .btn { position: relative; }
+
+<style>
+/* === Category 'left' badges (green like the alphabet counts) === */
+#filterRow .btn { position: relative; } /* anchor */
 .cat-left-badge{
   position: absolute;
-  top: -10px !important;
+  top: -12px;
   left: 50%;
   transform: translateX(-50%);
   min-width: 18px;
@@ -331,7 +557,11 @@ main{ padding-bottom: var(--azSafe); }
   pointer-events: none;
   box-shadow: 0 2px 6px rgba(0,0,0,0.35);
 }
+</style>
 
+
+<style>
+/* Snugger A–Z alphabet badges */
 .alpha-badge, .alphabet-badge, .letter-btn {
   padding: 2px 6px !important;
   min-width: 20px !important;
@@ -339,12 +569,62 @@ main{ padding-bottom: var(--azSafe); }
   line-height: 20px !important;
   font-size: 12px !important;
   border-radius: 6px !important;
+}
+</style>
+
+
+<style>
+/* Plain A–Z letters, no background bezel */
+.alpha-badge, .alphabet-badge, .letter-btn {
   background: none !important;
   border: none !important;
-  color: #000 !important;
+  padding: 0 !important;
+  min-width: auto !important;
+  height: auto !important;
+  line-height: 1.2 !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  color: #000 !important; /* black text */
 }
+</style>
 
-#azIndex, #azIndex *, .azIndex, .azIndex *, .azbar, .azbar *, .azIndexWrap, .azIndexWrap * {
+
+<style>
+/* Remove any vertical rail/panel background behind the alphabet */
+#azIndex, #azIndex::before, #azIndex::after,
+.azIndexWrap, .alphabet-rail, .alpha-rail, .az-rail, .azContainer, .alphaContainer {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+</style>
+
+
+<style>
+/* Make alphabet letter buttons fully transparent (no blur/box) */
+.azbtn, .azIndexBtn, .alpha-badge, .alphabet-badge, .letter-btn {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+/* Keep letters visible */
+.azbtn, .azIndexBtn {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+</style>
+
+
+<style>
+/* Nuke ALL backgrounds/blur/shadows on the alphabet rail and its descendants */
+#azIndex, #azIndex *,
+.azIndex, .azIndex *, 
+.azbar, .azbar *, 
+.azIndexWrap, .azIndexWrap *,
+.alpha-rail, .alpha-rail *, 
+.alphabet-rail, .alphabet-rail * {
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
@@ -352,32 +632,84 @@ main{ padding-bottom: var(--azSafe); }
   -webkit-backdrop-filter: none !important;
   filter: none !important;
 }
+</style>
 
+
+<style>
+/* Small yellow oval behind alphabet letters (override previous transparent rule) */
 body #azIndex .azbtn,
 body #azIndex button.azbtn,
 body .azIndex .azbtn {
-  background: #FFD54A !important;
-  color: #000 !important;
+  background: #FFD54A !important;   /* warm yellow */
+  color: #000 !important;            /* black text */
   border: none !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  padding: 2px 6px !important;
+  padding: 2px 6px !important;       /* snug */
   min-width: auto !important;
   height: auto !important;
   line-height: 1.1 !important;
-  border-radius: 999px !important;
-  text-decoration: none !important;
+  border-radius: 999px !important;   /* oval / pill */
+  text-decoration: none !important;  /* no underline for the letter itself */
   display: inline-block !important;
 }
+/* Keep the surrounding rail fully transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
 
+
+<style>
+/* Yellow round circle behind alphabet letters - apply to all likely classes */
 #azIndex button,
 #azIndex .azbtn,
 #azIndex .azIndexBtn,
 #azIndex .letter-btn,
 .azbtn, .azIndexBtn, .letter-btn {
-  background: #FFD700 !important;
-  color: #000 !important;
+  background: #FFD700 !important;    /* bright yellow */
+  color: #000 !important;            /* black text */
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  width: 22px !important;
+  height: 22px !important;
+  line-height: 22px !important;
+  border-radius: 50% !important;
+  text-align: center !important;
+  font-weight: bold !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+  display: inline-block !important;
+}
+/* Ensure the alphabet rail container is transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
+
+
+<style>
+/* FORCE yellow circular style for ALL alphabet letter buttons */
+#azIndex button,
+#azIndex .azbtn,
+#azIndex .azIndexBtn,
+#azIndex .letter-btn,
+.azIndex .azbtn,
+.azIndex .azIndexBtn,
+.azIndex .letter-btn {
+  background: #FFD700 !important;    /* bright yellow */
+  color: #000 !important;            /* black text */
   border: none !important;
   box-shadow: 0 2px 4px rgba(0,0,0,0.25) !important;
   backdrop-filter: none !important;
@@ -393,17 +725,39 @@ body .azIndex .azbtn {
   display: inline-block !important;
 }
 
+/* Make sure any inner spans don't override background */
+#azIndex button *,
+#azIndex .azbtn *,
+#azIndex .azIndexBtn *,
+#azIndex .letter-btn * {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Rail stays transparent */
+#azIndex, .azIndex, .azbar, .azIndexWrap {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+</style>
+
+
+<style>
+/* Floating Back to Top button (safe-area aware; offset from A–Z rail) */
 #backToTop{
   position: fixed;
   bottom: calc(env(safe-area-inset-bottom, 0px) + 86px);
-  right: calc(env(safe-area-inset-right, 0px) + 72px);
+  right: calc(env(safe-area-inset-right, 0px) + 72px); /* leave room for A–Z rail */
   z-index: 2147483000;
-  pointer-events: none;
+  pointer-events: none; /* container ignores taps */
 }
 
 #backToTopBtn {
   pointer-events: auto;
-  background: #ffcc00;
+  background: #ffcc00;    /* bright yellow */
   color: #000;
   font-weight: 800;
   border: 2px solid #000;
@@ -416,58 +770,113 @@ body .azIndex .azbtn {
 @media (max-width: 420px){
   #backToTop{ right: calc(env(safe-area-inset-right, 0px) + 68px); }
 }
+</style>
 
+
+
+
+
+
+<style>
+/* Only fade elements marked notneeded; no strike-through globally */
 .notneeded {
   opacity: 0.5 !important;
   text-decoration: none !important;
 }
+</style>
 
+
+<style>
+/* Ensure strike-through is visible on the big title too */
 #itemName.notneeded, #itemName.notneeded * {
   text-decoration: line-through !important;
   text-decoration-color: #ff3b30 !important;
   text-decoration-thickness: 2px;
   text-decoration-skip-ink: none;
 }
+#itemName { position: relative; }
+/* Red line fallback overlay for stubborn WebKit cases */
 
 #itemName.notneeded::after {
   content: "";
   position: absolute;
   left: 12px;
   right: 12px;
-  top: 1.1em;
+  top: 1.1em; /* adjusted to align with text */
   border-top: 2px solid #ff3b30;
   pointer-events: none;
 }
 
+</style>
+
+
+<style>
+/* Robust strike-through for the title text */
+#itemName .nn-strike {
+  text-decoration: line-through;
+  text-decoration-color: #ff3b30;
+  text-decoration-thickness: 3px;
+  text-decoration-skip-ink: none;
+}
+</style>
+
+
+
+
+
+
+
+
+<style>
 button#resetAllBtn {
-  background: #d32f2f !important;
-  color: #000 !important;
+  background: #d32f2f !important; /* strong red */
+  color: #000 !important;         /* black text */
   font-weight: 900 !important;
-  font-size: 24px !important;
+  font-size: 24px !important;     /* larger text */
   border: 2px solid #000 !important;
 }
+</style>
 
-#filterRow {
+
+<style>
+details { width: 100%; }
+summary.list-summary {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 8px 0;
+  cursor: pointer;
+  list-style: none;
   display: flex;
-  overflow-x: auto;
+  justify-content: space-between;
+  align-items: center;
+}
+summary.list-summary::marker { display: none; }
+</style>
+
+<style>
+/* === Filter chips (horizontal scroll) === */
+#filterRow {
+  display: flex; /* Switch from grid to flex */
+  overflow-x: auto; /* Allow horizontal scrolling */
   white-space: nowrap;
   gap: 12px;
-  padding: 4px 4px 12px 4px;
-  scrollbar-width: none;
+  padding: 4px 4px 12px 4px; /* Room for shadow */
+  scrollbar-width: none; /* Hide scrollbar Firefox */
   -webkit-overflow-scrolling: touch;
-  padding-top: 16px !important;
 }
-#filterRow::-webkit-scrollbar { display: none; }
+#filterRow::-webkit-scrollbar { display: none; } /* Hide scrollbar Chrome/Safari */
 
 #filterRow .btn {
-  flex: 0 0 auto;
-  border-radius: 999px;
+  flex: 0 0 auto; /* Don't shrink */
+  border-radius: 999px; /* Pill shape */
   padding: 10px 20px;
   font-size: 14px;
   background: #1c212c;
   border: 1px solid var(--border);
 }
 
+/* Active State (Orange) */
 #filterRow .btn.filter-active {
   background: var(--orange);
   color: #000;
@@ -475,10 +884,68 @@ button#resetAllBtn {
   box-shadow: 0 4px 12px rgba(255, 159, 67, 0.4) !important;
   outline: none !important;
 }
+</style>
 
+<style>
+/* === Capsule Stepper (Modern Input Steppers) === */
+.stepperwrap {
+  display: flex;
+  align-items: center;
+  background: #1c212c; /* Darker distinct background */
+  border-radius: 16px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.stepbtn {
+  width: 48px;
+  height: 48px; /* Larger touch target */
+  border-radius: 12px;
+  border: none;
+  background: #2c3545; /* Slightly lighter than bg */
+  color: #fff;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: transform 0.1s;
+}
+
+.stepbtn:active { 
+  transform: scale(0.95); 
+}
+
+.stepperwrap .inp {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #fff;
+  font-size: 28px;
+  padding: 0;
+  margin: 0 8px; /* Breathing room */
+}
+
+/* Highlight the Order Input specifically */
+#orderInput { 
+  color: var(--green); 
+}
+</style>
+
+<style>
+/* === FIX: allow chip badges to be visible === */
 #filterCard,
 #filterRow {
   overflow: visible !important;
+}
+
+/* Give chips room on top so badges don't clip */
+#filterRow {
+  padding-top: 16px !important;
+}
+
+/* Ensure badges sit above chips cleanly */
+.cat-left-badge {
+  top: -10px !important;
 }
 </style>
 </head>
@@ -882,84 +1349,115 @@ function buildRunning(){
   waOther.href    = "https://wa.me/?text="+encodeURIComponent(to);
 }
 
-// === REWRITTEN CLEAN COMMIT FUNCTION ===
 function commitTo(bucket){
-  // 1. Check if Items are loaded
-  if (!ITEMS || !ITEMS.length) return;
+  // Require a positive order before saving + advancing
+  var orderInputEl = (typeof orderInput !== "undefined")
+    ? orderInput
+    : document.getElementById("orderInput");
+  var orderVal = parseInt(
+    (orderInputEl && orderInputEl.value) ? orderInputEl.value : "0",
+    10
+  );
+
+  // If no quantity, do nothing (no save, no jump)
+  if (isNaN(orderVal) || orderVal <= 0) {
+    return;
+  }
+
+  if (!TOTAL) return;
 
   var name = ITEMS[state.i];
-  var rec = state.map[name] || {};
+  var rec  = state.map[name] || {};
 
-  // 2. Undo snapshot
-  var __prevRec = state.map[name] ? JSON.parse(JSON.stringify(state.map[name])) : null;
+  // Undo snapshot (before mutation)
+  var __prevRec = state.map[name]
+    ? JSON.parse(JSON.stringify(state.map[name]))
+    : null;
   __setUndoSnapshot(name, __prevRec);
 
-  // 3. Save Logic
-  rec.stock = digits(stockInput.value);
-  rec.order = digits(orderInput.value);
-  rec.note  = (noteInput.value||"").trim();
+  // Save current fields
+  rec.stock  = digits(stockInput.value);
+  rec.order  = digits(orderInput.value);
+  rec.note   = (noteInput.value || "").trim();
   rec.status = "saved";
-  rec.bucket = bucket; 
-  
+  rec.bucket = bucket; // "passions" | "mk" | "other"
+
   state.map[name] = rec;
-  if (rec.note) state.notes[name]=rec.note; else delete state.notes[name];
-  
-  save(); 
+  if (rec.note) state.notes[name] = rec.note;
+  else delete state.notes[name];
 
-  // 4. Update UI
-  try{ updateProgressUI(); }catch(e){}
-  try{ buildRunning(); }catch(e){}
-  try{ buildUnansweredList(); }catch(e){}
-  try{ buildNotNeededList(); }catch(e){}
-  
-  // 5. Flash Feedback
-  try{ showTopFlash("Saved to " + bucket.toUpperCase(), 800); }catch(e){}
+  // Wrap all the UI/update noise so a random error
+  // cannot block the auto-advance.
+  try {
+    save();
+    try { updateProgressUI(); playClick(); buildUnansweredList(); } catch(e){}
+    buildRunning();
+    buildNotNeededList();
+    if (typeof updateProgressUI === "function") updateProgressUI();
+    playClick();
+    buildUnansweredList();
+    if (typeof updateAZDimming === "function") updateAZDimming();
+    autoAdvanceIfGroupDone();
+    updateProgressUI();
+    playClick();
+    buildUnansweredList();
+    buildUnansweredList();
+  } catch(e) {
+    try { console.error("commitTo UI error", e); } catch(_) {}
+  }
 
-  // 6. AUTO ADVANCE (Guaranteed)
-  setTimeout(function(){
-    // Check if letter group is done, but regardless, move next
-    try { autoAdvanceIfGroupDone(); } catch(e){}
-    safeShow(state.i+1);
-    
-    // Focus order input for the new item
-    if (typeof window.focusOrderSoon==='function') window.focusOrderSoon();
-  }, 10);
+  // 🔑 Always move on to the next item
+  safeShow(state.i + 1);
+
+  // And re-focus the ORDER box on the new item
+  try {
+    if (typeof window.focusOrderSoon === "function") {
+      window.focusOrderSoon();
+    }
+  } catch(e){}
 }
 
-// === REWRITTEN CLEAN NOT NEEDED FUNCTION ===
+
 function markNotNeeded(){
-  if (!ITEMS || !ITEMS.length) return;
+  if (!TOTAL) return;
   var name = ITEMS[state.i];
   var rec = state.map[name] || {};
-
-  // Undo snapshot
+  // Undo snapshot (before mutation)
   var __prevRec = state.map[name] ? JSON.parse(JSON.stringify(state.map[name])) : null;
   __setUndoSnapshot(name, __prevRec);
 
-  // Logic
   rec.stock = digits(stockInput.value);
   rec.order = digits(orderInput.value);
   rec.note  = (noteInput.value||"").trim();
   rec.status = "notneeded";
-  rec.bucket = "";
-  
+  rec.bucket = ""; // clear bucket
   state.map[name] = rec;
   if (rec.note) state.notes[name]=rec.note; else delete state.notes[name];
-  
-  save(); 
+  save(); try{updateProgressUI(); playClick(); buildUnansweredList();}catch(e){}; buildRunning(); buildNotNeededList(); if (typeof updateProgressUI==="function") updateProgressUI(); playClick(); buildUnansweredList(); if (typeof updateAZDimming==="function") updateAZDimming(); autoAdvanceIfGroupDone(); updateProgressUI(); playClick(); buildUnansweredList(); buildUnansweredList(); // --- Append current item name to bottom list visibly ---
+  try {
+    var nameEl = ITEMS[state.i];
+    var listEl = document.getElementById('notNeededList');
+    if (nameEl && listEl) {
+      // avoid duplicates via id
+      var id = 'nn-' + nameEl;
+      if (!document.getElementById(id)) {
+        var li = document.createElement('li');
+        li.id = id;
+        li.textContent = nameEl;
+        listEl.appendChild(li);
+      }
+    }
+  } catch(e) {}
 
-  // Update UI
-  try{ updateProgressUI(); }catch(e){}
-  try{ buildRunning(); }catch(e){}
-  try{ buildUnansweredList(); }catch(e){}
-  try{ buildNotNeededList(); }catch(e){}
+  try {
+    var nameEl = ITEMS[state.i];
+    var row = document.getElementById(nameEl);
+    if (row) row.classList.add("notneeded");
+  } catch(e) {}
 
-  // Auto Advance
-  setTimeout(function(){
-    try { autoAdvanceIfGroupDone(); } catch(e){}
-    safeShow(state.i+1);
-    if (typeof window.focusOrderSoon==='function') window.focusOrderSoon();
-  }, 10);
+  safeShow(state.i+1);
+
+  try{ if (typeof window.focusOrderSoon==='function') window.focusOrderSoon(); }catch(e){}
 }
 
 
@@ -1639,45 +2137,22 @@ function showTopFlash(msg, ms){
     var node = document.getElementById('topFlash')
     if (!node) return;
     
-    node.style.background = ''; // <-- ADD THIS LINE
-    node.style.color = '';      // <-- ADD THIS LINE
+    node.style.background = 'var(--orange, #ff9f43)'; 
+          node.style.color = '#000';
 
-    node.textContent = msg || 'Done';
-    
-    node.classList.add('show');
-    clearTimeout(window.__topFlashTimer);
-    window.__topFlashTimer = setTimeout(function(){
-      node.classList.remove('show');
-    }, ms || 1400);
-  }catch(e){}
-}
-
-
-
-function buildUnansweredList(){
-  try{
-    var box = document.getElementById('unansweredList');
-    if (!box) return;
-    var list = [];
-    for (var i=0;i<ITEMS.length;i++){
-      var nm = ITEMS[i];
-      var rec = state.map[nm];
-      var answered = false;
-      try{
-        if (typeof isResponded === 'function'){
-          answered = isResponded(rec);
-        } else {
-          answered = !!(rec && (rec.status === 'notneeded' || rec.bucket));
+          if (typeof showTopFlash === "function") {
+             showTopFlash("Stock Check: " + formattedDate, 5000);
+          } else {
+             node.textContent = "Stock Check: " + formattedDate;
+             node.classList.add('show');
+             setTimeout(function(){ node.classList.remove('show'); }, 5000);
+          }
         }
-      }catch(e){ answered = false; }
-      if (!answered) list.push(nm);
-    }
-    list.sort(function(a,b){ return a.localeCompare(b,'en',{sensitivity:'base'}); });
-    box.textContent = list.join("\n");
-  }catch(e){}
-}
-</script><section id="unansweredSection"><h3>Unanswered (A–Z)</h3><pre id="unansweredList"></pre></section>
-<section id="notNeededSection"><h3>Not Needed (A–Z)</h3><pre id="notNeededList"></pre></section><script>try{buildUnansweredList();}catch(e){}
+      }
+    } catch(e) { console.error(e); }
+  });
+</script>
+<script>try{buildUnansweredList();}catch(e){}
 
 // --- Soft click sound (always on) ---
 (function(){
@@ -3769,4 +4244,824 @@ window.LOCATIONS = {
 <style>
 /* --- Undo toast for Not Needed --- */
 #undoToast {
-  position: fixed; left: 50%;
+  position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+  display: none; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 999px;
+  background: rgba(0,0,0,0.82); color: #fff; z-index: 99999;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+#undoToast button {
+  border: 0; padding: 6px 12px; border-radius: 999px; font-weight: 700;
+  background: #ffb300; color: #000; cursor: pointer;
+}
+#undoMsg { font-size: 14px; }
+</style>
+
+<div id="undoToast" aria-live="polite" aria-atomic="true">
+  <span id="undoMsg">Marked Not Needed.</span>
+  <button id="undoBtn" type="button">Undo</button>
+</div>
+
+<script>
+// ---- Not Needed: Undo support (non-invasive) ----
+(function(){
+  var undo = { name:null, prev:null, after:null, index:-1 };
+  var hideTimer = null;
+
+  function deepClone(o){ try{return JSON.parse(JSON.stringify(o||{}));}catch(e){return (o?Object.assign({},o):{});} }
+  function showToast(msg){
+    var t = document.getElementById('undoToast');
+    var m = document.getElementById('undoMsg');
+    if (!t || !m) return;
+    m.textContent = msg || 'Marked Not Needed.';
+    t.style.display = 'flex';
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hideToast, 5000);
+  }
+  function hideToast(){
+    var t = document.getElementById('undoToast');
+    if (t) t.style.display = 'none';
+    clearTimeout(hideTimer); hideTimer = null;
+  }
+
+  // Restore previous snapshot
+  function doUndo(){
+    try{
+      if (!undo || !undo.name) return hideToast();
+      if (!window.state) window.state = {};
+      if (!state.map) state.map = {};
+      state.map[undo.name] = deepClone(undo.prev);
+      try{ if (typeof saveState==='function') saveState(); }catch(e){}
+      try{ if (typeof updateNotNeededState==='function') updateNotNeededState(); }catch(e){}
+      try{ if (typeof buildUnansweredList==='function') buildUnansweredList(); }catch(e){}
+      try{ if (typeof forceProgressRefresh==='function') forceProgressRefresh(); }catch(e){}
+      try{ if (typeof refreshAllUI==='function') refreshAllUI(); }catch(e){}
+      try{
+        if (typeof show==='function' && Array.isArray(ITEMS) && undo.index>=0) show(undo.index);
+      }catch(e){}
+    }finally{
+      hideToast();
+      undo = { name:null, prev:null, after:null, index:-1 };
+    }
+  }
+
+  // Bind Undo button
+  (function(){
+    var b = document.getElementById('undoBtn');
+    if (b) b.addEventListener('click', function(ev){ ev.preventDefault(); doUndo(); });
+  })();
+
+  // Helper: current item name & index
+  function currentName(){
+    try{
+      if (Array.isArray(window.ITEMS) && window.state && typeof state.i==='number'){
+        var idx = state.i;
+        var nm = ITEMS[idx];
+        return {name:nm, index:idx};
+      }
+    }catch(e){}
+    return {name:null,index:-1};
+  }
+
+  // CAPTURE phase: before original handler runs, take a snapshot
+  function beforeNotNeeded(){
+    var cur = currentName();
+    if (!cur.name) return;
+    if (!window.state) window.state = {};
+    if (!state.map) state.map = {};
+    undo.name = cur.name;
+    undo.index = cur.index;
+    undo.prev  = deepClone(state.map[cur.name] || {});
+  }
+
+  // After original handler completes, capture "after", then show toast
+  function afterNotNeeded(){
+    setTimeout(function(){
+      var cur = currentName();
+      if (!cur.name || cur.name !== undo.name) {
+        // If navigated, still show toast for the one we changed
+      }
+      try{
+        undo.after = deepClone((state.map && state.map[undo.name]) || {});
+      }catch(e){}
+      showToast((undo.name || 'Item') + ' marked Not Needed');
+    }, 40);
+  }
+
+  // Attach to the Not Needed button if present
+  function bind(){
+    var btn = document.getElementById('notNeededBtn');
+    if (!btn) return;
+    // Capture BEFORE
+    btn.addEventListener('click', function(ev){ beforeNotNeeded(); }, true);
+    // Then AFTER
+    btn.addEventListener('click', function(ev){ afterNotNeeded(); }, false);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+
+  // Hide toast on orientation change
+  window.addEventListener('orientationchange', function(){ hideToast(); }, {passive:true});
+})();
+</script>
+
+
+<script>
+(function(){
+  function renderNotNeeded(){
+    try {
+      var box = document.getElementById('notNeededList');
+      if (!box || !window.ITEMS || !window.state || !state.map) return;
+      var names = [];
+      for (var i=0;i<ITEMS.length;i++){
+        var nm = ITEMS[i];
+        var rec = state.map[nm];
+        if (rec && rec.status === "notneeded") names.push(nm);
+      }
+      names.sort(function(a,b){ return (''+a).localeCompare((''+b),'en',{sensitivity:'base'}); });
+      if (box.tagName === 'PRE'){
+        box.textContent = names.join("\n");
+      } else {
+        while (box.firstChild) box.removeChild(box.firstChild);
+        for (var j=0;j<names.length;j++){
+          var li = document.createElement('li');
+li.textContent = names[j];
+li.style.cursor = 'pointer';
+li.addEventListener('click', function(){
+  try {
+    var idx = ITEMS.indexOf(this.textContent);
+    if (idx >= 0) {
+      safeShow(idx);
+      try { window.scrollTo({top: 0, behavior: 'smooth'}); } catch(e) { window.scrollTo(0,0); }
+    }
+  } catch(e) {}
+});
+box.appendChild(li);
+        }
+      }
+    } catch(e) {}
+  }
+  // Re-render after "Not Needed" clicks
+  document.addEventListener('DOMContentLoaded', function(){
+    var nn = document.getElementById('notNeededBtn');
+    if (nn) nn.addEventListener('click', function(){ setTimeout(renderNotNeeded, 0); }, {passive:true});
+  });
+  // Re-render after navigation (wrap show())
+  try {
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        setTimeout(renderNotNeeded, 0);
+        return r;
+      };
+    }
+  } catch(e) {}
+  // Initial render
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', renderNotNeeded);
+  } else {
+    renderNotNeeded();
+  }
+  // Expose for debugging
+  window.renderNotNeeded = renderNotNeeded;
+})();
+</script>
+
+
+<div id="backToTop" aria-hidden="false">
+  <button id="backToTopBtn" class="btn pill small" type="button" aria-label="Back to top">Top ⬆️</button>
+</div>
+
+
+<script>
+(function(){
+  var btn = document.getElementById('backToTopBtn');
+  if (btn){
+    btn.addEventListener('click', function(){
+      try { window.scrollTo({top: 0, behavior: 'smooth'}); }
+      catch(e){ window.scrollTo(0,0); }
+    });
+  }
+})();
+</script>
+
+
+<script>
+// Keep the red strike-through in sync with the CURRENT item
+(function(){
+  function updateTitleStrike(){
+    try {
+      var title = document.getElementById('itemName');
+      if (!title || !window.state || !window.ITEMS) return;
+      var name = ITEMS[state.i];
+      var rec = state.map ? state.map[name] : null;
+      if (rec && rec.status === 'notneeded') {
+        title.classList.add('notneeded');
+      } else {
+        title.classList.remove('notneeded');
+      }
+    } catch(e){}
+  }
+  // After Not Needed tap
+  document.addEventListener('DOMContentLoaded', function(){
+    var btn = document.getElementById('notNeededBtn');
+    if (btn) btn.addEventListener('click', function(){ setTimeout(updateTitleStrike, 0); }, {passive:true});
+  });
+  // After navigation: wrap show()
+  try {
+    var _show = window.show;
+    if (typeof _show === 'function'){
+      window.show = function(i){
+        var r = _show.apply(this, arguments);
+        setTimeout(updateTitleStrike, 0);
+        return r;
+      };
+    }
+  } catch(e){}
+  // First paint
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', updateTitleStrike);
+  } else {
+    updateTitleStrike();
+  }
+  // expose for debug
+  window.updateTitleStrike = updateTitleStrike;
+})();
+</script>
+
+
+<script>
+(function(){
+  window.focusOrderSoon = function(){
+    try{
+      setTimeout(function(){
+        try{
+          var orderEl = document.getElementById('orderInput') 
+                      || document.getElementById('order') 
+                      || document.querySelector('input[name="order"]');
+          if (orderEl){
+            if (!orderEl.getAttribute('inputmode')) orderEl.setAttribute('inputmode','numeric');
+            if (!orderEl.getAttribute('pattern')) orderEl.setAttribute('pattern','[0-9]*');
+            orderEl.focus();
+            if (typeof orderEl.select === 'function') orderEl.select();
+          }
+        }catch(e){}
+      }, 40);
+    }catch(e){}
+  };
+})();
+</script>
+
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  var note = document.getElementById('noteInput');
+  if (!note) return;
+
+  function createBtn(label, insertText){
+    let btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = label;
+    btn.style.display = 'none';
+    btn.style.marginTop = '6px';
+    btn.style.marginLeft = '8px';
+    btn.style.padding = '6px 12px';
+    btn.style.borderRadius = '6px';
+    btn.style.fontWeight = 'bold';
+    btn.style.background = '#ffcc00';
+    btn.style.border = '1px solid #aaa';
+    note.insertAdjacentElement('afterend', btn);
+
+    btn.addEventListener('click', function(e){
+      e.preventDefault();
+      var insert = insertText + ' ';
+      var start = note.selectionStart ?? note.value.length;
+      var end   = note.selectionEnd ?? note.value.length;
+      note.value = note.value.slice(0, start) + insert + note.value.slice(end);
+      note.focus();
+      var pos = start + insert.length;
+      if (note.setSelectionRange) note.setSelectionRange(pos, pos);
+    });
+    return btn;
+  }
+
+  const btns = [
+    createBtn('Size','Size'),
+    createBtn('Display','Display'),
+    createBtn('Small','Small'),
+    createBtn('Medium','Medium'),
+    createBtn('Large','Large')
+  ];
+
+  note.addEventListener('focus', function(){ btns.forEach(b=>b.style.display='inline-block'); });
+  note.addEventListener('blur', function(){ setTimeout(()=>{ btns.forEach(b=>b.style.display='none'); },200); });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// === Auto-import stock
+
+// === AUTO-IMPORT FROM ?d= (Robust Fix) ===
+(function(){
+  try{
+    var params = new URLSearchParams(location.search);
+    if (!params.has("d")) return;
+
+    // 1. Get raw string and CLEAN it (remove spaces/newlines that break Base64)
+    var rawBase = (params.get("d") || "").replace(/\s/g, '');
+
+    function applyOnce(){
+      try{
+        // Wait for ITEMS to be loaded from Google Sheet
+        if (!Array.isArray(window.ITEMS) || !window.ITEMS.length) return false;
+
+        // 2. Safe Decode
+        var raw = rawBase;
+        try { 
+          raw = atob(raw); 
+        } catch(e) { 
+          console.error("Base64 decode failed", e); 
+          return true; // Stop trying if data is corrupted
+        } 
+
+        var parts = raw.split(",");
+        if (!Array.isArray(parts) || !parts.length) return true;
+
+        if (!window.state) window.state = {};
+        if (!state.map) state.map = {};
+        if (!state.notes) state.notes = state.notes || {};
+
+        var applied = 0;
+        for (var i=0; i<parts.length && i<ITEMS.length; i++){
+          var qty = (parts[i] || "").trim();
+          if (!qty) qty = "0"; // Default to 0 if empty
+
+          var num = parseFloat(qty);
+          if (!isFinite(num)) num = 0;
+
+          var name = ITEMS[i];
+          if (!name) continue;
+
+          var rec = state.map[name] || {stock:"",order:"",note:"",status:"",bucket:""};
+
+          // Preserve existing notes/status, just update stock
+          if (state.notes[name]) rec.note = state.notes[name];
+
+          rec.stock = String(num);
+          state.map[name] = rec;
+          applied++;
+        }
+
+        if (applied > 0){
+          if (typeof save === "function") save();
+
+          // Refresh UI
+          if (typeof show === "function") show(state.i || 0);
+          if (typeof updateProgressUI === "function") updateProgressUI();
+          if (typeof buildRunning === "function") buildRunning();
+
+          // 3. Visual Feedback (So you know it worked)
+          if (typeof showTopFlash === "function") {
+             showTopFlash("Imported stock for " + applied + " items", 3000);
+          }
+        }
+        return true; // Success, stop the timer
+      }catch(e){
+        console.error(e);
+        return true; // Stop timer on crash
+      }
+    }
+
+    // Retry loop: Tries for 20 seconds to wait for Google Sheet to load items
+    if (!applyOnce()){
+      var tries = 0;
+      var timer = setInterval(function(){
+        tries++;
+        if (applyOnce() || tries > 200) clearInterval(timer);
+      }, 100);
+    }
+  }catch(e){ console.error(e); }
+})();
+
+
+
+// === Auto-import from ?x= (1-based index) ===
+(function(){
+  var params = new URLSearchParams(location.search);
+  if (!params.has("x")) return;
+  var raw = params.get("x")||"";
+  var parts = raw.split(",");
+  var applied = 0;
+  for (var p of parts){
+    var t = p.trim().split(":");
+    if (t.length!==2) continue;
+    var idx = parseInt(t[0],10);
+    var qty = parseInt(t[1],10);
+    if (isNaN(idx) || idx<1 || idx>ITEMS.length) continue;
+    if (isNaN(qty) || qty<=0) continue;
+    var name = ITEMS[idx-1];
+    if (!state.map) state.map={};
+    var rec = state.map[name] || {};
+    rec.stock = String(qty);
+    state.map[name] = rec;
+    applied++;
+  }
+  if (applied>0){
+    try{ save(); show(state.i||0); }catch(e){}
+  }
+})();
+// from ?stock=ITEM:QTY,... and apply to state (no cosmetic changes) ===
+(function(){
+  try{
+    var params = new URLSearchParams(window.location.search);
+    if (!params.has("stock")) return;
+    var raw = params.get("stock")||"";
+    if (!raw.trim()) return;
+    // Build a lookup of ITEMS by case-insensitive name
+    var nameMap = {};
+    for (var i=0; i<(ITEMS||[]).length; i++){
+      var nm = ITEMS[i];
+      nameMap[nm.toLowerCase()] = nm;
+    }
+    var pairs = raw.split(",");
+    var applied = 0;
+    pairs.forEach(function(tok){
+      var t = (tok||"").trim();
+      if (!t) return;
+      var k = t.indexOf(":");
+      if (k < 0) return;
+      var nm = t.slice(0, k).trim();
+      var qStr = t.slice(k+1).trim();
+      var qty = parseInt(qStr, 10);
+      if (!nm) return;
+      if (isNaN(qty) || qty <= 0) return; // follow Rule B as well
+      var key = nm.toLowerCase();
+      var actual = nameMap[key];
+      if (!actual) return;
+      // Apply to state.map[actual].stock only (do not change order/status/notes)
+      if (!state.map) state.map = {};
+      var rec = state.map[actual] || {};
+      rec.stock = String(qty);
+      state.map[actual] = rec;
+      applied++;
+    });
+    if (applied > 0){
+      try{ save(); }catch(e){}
+      // Refresh the current view values safely
+      try{
+        updateProgressUI();
+        buildRunning();
+        buildNotNeededList && buildNotNeededList();
+        show(state.i||0);
+      }catch(e){}
+      // Subtle notification without styling changes
+      try{
+        if (typeof showTopFlash === "function"){
+          showTopFlash("Imported stock for " + applied + " item(s)", 1400);
+        } else {
+          console.log("Imported stock for " + applied + " item(s).");
+        }
+      }catch(e){}
+    }
+  }catch(e){
+    try{ console.error(e); }catch(_){}
+  }
+})();
+</script>
+
+<script>
+// === Compact submit + WhatsApp + auto-import (?d=) ===
+(function(){
+  function getThisFile(){
+    try{
+      var f = location.pathname.split("/").pop();
+      return f && f.trim() ? f : "v169.html";
+    }catch(e){ return "v169.html"; }
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    var btn = document.getElementById("submitStockBtn");
+    if (!btn) return;
+    btn.onclick = null;
+    btn.addEventListener("click", function(){
+      try{
+        if (!ITEMS || !state || !state.map) return;
+
+        // Guard: list blanks (0 is allowed)
+        var notChecked = [];
+        for (var i=0;i<ITEMS.length;i++){
+          var name = ITEMS[i];
+          var rec = state.map[name] || {};
+          var raw = (rec.stock || "").trim();
+          if (raw === "" || isNaN(parseFloat(raw))) {
+            notChecked.push(name);
+          }
+        }
+        if (notChecked.length){
+          showNotChecked(notChecked);
+      return;
+        }
+
+        // Build compact data string of all items
+        var values = [];
+        for (var j=0;j<ITEMS.length;j++){
+          var nm = ITEMS[j];
+          var rc = state.map[nm] || {};
+          var v = (rc.stock || "").trim();
+          if (v === "" || isNaN(parseFloat(v))) v = "0";
+          values.push(v);
+        }
+        var rawStr = values.join(",");
+
+        // Encode to base64
+        var encoded;
+        try { encoded = btoa(rawStr); }
+        catch(e){ encoded = btoa(unescape(encodeURIComponent(rawStr))); }
+
+        var thisFile = getThisFile();
+        var ts = new Date().toISOString(); // Get current timestamp
+	var reviewUrl = "https://farquan.github.io/orderpad/" + thisFile + "?d=" + encodeURIComponent(encoded) + "&t=" + encodeURIComponent(ts);
+
+        // Copy link
+        if (navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(reviewUrl).catch(function(){});
+        }
+
+        // Open review page
+        
+// --- Telegram send ---
+try {
+  var lines = [];
+  var anyNote = false;
+  for (var ti=0; ti<ITEMS.length; ti++){
+    var nm = ITEMS[ti];
+    var rc = state.map[nm] || {};
+    var v = (rc.stock || "").trim();
+    var note = (rc.note || "").trim();
+    if (note) anyNote = true;
+    if (v === "" || isNaN(parseFloat(v))) v = "0";
+    if (note) {
+      lines.push(nm + ": " + v + " (🚨 **" + note + "** 🚨)");
+    } else {
+      lines.push(nm + ": " + v);
+    }
+  }
+  if (anyNote) {
+    lines.unshift("🚨🚨 **NOTES PRESENT** 🚨🚨");
+  }
+  var msgText =
+  "FRUIT & VEG STOCK ✅\n\n" +
+  lines.join("\n") +
+  "\n\n🔗 Stock Entry Link:\n" +
+  reviewUrl;
+
+fetch("https://api.telegram.org/bot8478412877:AAHxot18T5GnPrBjPmiD6vHETpJenMoy5_0/sendMessage", {
+  method: "POST",
+  headers: {"Content-Type": "application/json"},
+  body: JSON.stringify({
+    chat_id: 7782476287,
+    text: msgText
+  })
+}).catch(function(){});
+
+} catch(e){}
+window.open(reviewUrl, "_blank");
+
+        // Open WhatsApp (no recipient)
+        var wa = "https://wa.me/?text=" + encodeURIComponent("Stock Completed ✅\n" + reviewUrl);
+        window.open(wa, "_blank");
+      }catch(e){ try{ console.error(e); }catch(_){ } }
+    });
+  });
+})();
+</script>
+
+
+<div id="notCheckedModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+  <div style="background:#222; position:relative; color:#fff; padding:20px; border-radius:12px; max-height:80%; overflow-y:auto; width:80%; max-width:400px;">
+<div style="position:absolute; top:10px; right:12px; cursor:pointer; font-size:24px; color:#fff;" onclick="hideMissingAndJump();">&times;</div>
+    <div style="font-weight:bold; font-size:18px; margin-bottom:12px;">You have NOT checked stock for:</div>
+    <div id="notCheckedList" style="white-space:pre-line; font-size:16px; line-height:1.4;"></div>
+    <div style="text-align:right; margin-top:15px;">
+      <button onclick="hideMissingAndJump();" style="background:#444; color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:16px;">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showNotChecked(list){
+  window._missingList = list;
+  var modal = document.getElementById("notCheckedModal");
+  var box = document.getElementById("notCheckedList");
+  box.textContent = list.join("\n");
+  modal.style.display = "flex";
+}
+</script>
+
+
+<script>
+(function(){
+  var btn = document.getElementById('submitStockBtn');
+  if(!btn) return;
+  btn.onclick = function(){
+    var missing = [];
+    window.__firstMissingIdx = -1;
+    for(var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm] || {};
+      var st = (rec.stock||"").trim();
+      if(rec.status !== "notneeded" && st === ""){
+        missing.push(nm);
+        if (window.__firstMissingIdx === -1) window.__firstMissingIdx = i;
+      }
+    }
+    if(missing.length){
+      // Show modal list
+      alert("You still need to check:\n\n" + missing.join("\n"));
+      // Auto-jump to first missing
+      // jump moved to close event
+      return;
+    }
+    // Build compact values
+    var values = [];
+    for(var i=0;i<ITEMS.length;i++){
+      var nm = ITEMS[i];
+      var rec = state.map[nm] || {};
+      if(rec.status === "notneeded"){
+        values.push("-1");
+      } else {
+        var v = (rec.stock||"").trim();
+        if(v === "") v = "0";
+        values.push(v);
+      }
+    }
+    var encoded = encodeURIComponent(values.join(","));
+    var thisFile = (function(){
+      var s = location.pathname.split("/"); return s[s.length-1]||"v174.html";
+    })();
+    var url = "https://farquan.github.io/orderpad/" + thisFile + "?x=" + encoded;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).catch(function(){});
+    }
+    window.open(url, "_blank");
+    var wa = "https://wa.me/?text=" + encodeURIComponent("Stock Completed ✅\n" + url);
+    window.open(wa, "_blank");
+  };
+})();
+</script>
+
+
+<script>
+document.addEventListener('click', function(e){
+    if(e.target && (e.target.classList.contains('modal-close') || e.target.innerText === '×')){
+        if(typeof window.__firstMissingIdx === 'number' && window.__firstMissingIdx >= 0){
+            show(window.__firstMissingIdx);
+        }
+    }
+});
+</script>
+
+
+<script>
+function hideMissingAndJump(){
+  var modal = document.getElementById('notCheckedModal');
+  modal.style.display='none';
+  if(window._missingList && window._missingList.length > 0){
+    var first = window._missingList[0];
+    var idx = ITEMS.indexOf(first);
+    if(idx >= 0){
+      // reset inputs
+      state.map[first] = state.map[first] || {};
+      state.map[first].stock = "";
+      show(idx);
+    }
+  }
+}
+</script>
+
+<script>
+  // Show timestamp banner on load (waits for page to be ready)
+  document.addEventListener("DOMContentLoaded", function() {
+    try {
+      var params = new URLSearchParams(location.search);
+      if (params.has("t")) {
+        var tsParam = params.get("t");
+        var d = new Date(tsParam);
+        
+        // Format the date nicely, e.g., "09 Nov 2025, 21:23"
+        var options = { 
+          day: '2-digit', 
+          month: 'short', 
+          year: 'numeric', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        };
+        var formattedDate = d.toLocaleString('en-GB', options);
+
+        // --- THIS PART SETS THE ORANGE COLOR ---
+        var node = document.getElementById('topFlash');
+        if (node) {
+          // Use the orange color variable from your file's CSS
+          node.style.background = 'var(--orange, #ff9f43)'; 
+          node.style.color = '#000';
+
+          if (typeof showTopFlash === "function") {
+             showTopFlash("Stock Check: " + formattedDate, 5000);
+          } else {
+             node.textContent = "Stock Check: " + formattedDate;
+             node.classList.add('show');
+             setTimeout(function(){ node.classList.remove('show'); }, 5000);
+          }
+        }
+      }
+    } catch(e) { console.error(e); }
+  });
+</script>
+<script>
+// === Critical Item Guard (Alerts on Send/Copy) ===
+(function(){
+  // 1. Define items that MUST be ordered
+  var CRITICAL_ITEMS = ["Coriander"]; 
+
+  function checkCriticals() {
+    var missing = [];
+    for (var i = 0; i < CRITICAL_ITEMS.length; i++) {
+      var name = CRITICAL_ITEMS[i];
+      var rec = (window.state && state.map) ? state.map[name] : null;
+      var isOrdered = rec && rec.status === 'saved' && parseFloat(rec.order || '0') > 0;
+      if (!isOrdered) missing.push(name);
+    }
+
+    if (missing.length > 0) {
+      var msg = "⚠️ WAIT! Essential items missing:\n\n" +
+                "• " + missing.join("\n• ") +
+                "\n\nAre you sure you want to send/copy without them?";
+      return confirm(msg);
+    }
+    return true;
+  }
+
+  // Intercept WhatsApp buttons
+  ['waPassions', 'waMk', 'waOther'].forEach(function(id){
+    var btn = document.getElementById(id);
+    if (btn) {
+      btn.addEventListener('click', function(e){
+        if (!checkCriticals()) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      });
+    }
+  });
+
+  // Intercept Copy buttons
+  ['copyPassions', 'copyMk', 'copyOther'].forEach(function(id){
+    var btn = document.getElementById(id);
+    if (btn) {
+      var originalClick = btn.onclick;
+      btn.onclick = function(e){
+        if (checkCriticals()) {
+          if (typeof originalClick === 'function') {
+            originalClick.call(this, e);
+          }
+        }
+      };
+    }
+  });
+})();
+</script>
+e
