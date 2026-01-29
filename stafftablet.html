@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="refresh" content="300">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#10b981">
+    
     <title>Staff Tablet - Task Board</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
     <style>
@@ -44,11 +49,8 @@
             justify-content: space-between; 
             align-items: center; 
             padding: 15px 25px; 
-            
-            /* UPDATED TO GREEN GRADIENT */
             background: linear-gradient(90deg, #10b981 0%, #059669 100%);
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            
             color: white; 
             flex-shrink: 0; 
             z-index: 20; 
@@ -98,6 +100,10 @@
         .header-btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-1px); }
         .header-btn:active { transform: scale(0.96); }
 
+        /* Full Screen Button Specific Style */
+        .fs-btn { background: #2563eb; border-color: #60a5fa; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .fs-btn:hover { background: #1d4ed8; }
+
         .logs-btn { background: rgba(0,0,0,0.4); border-color: rgba(0,0,0,0.5); color: #fbbf24; }
 
         .edit-ticker-btn {
@@ -120,13 +126,13 @@
         /* --- CHALKBOARD NOTICEBOARD CSS --- */
         .chalkboard {
             width: 95%;
-            margin: 15px auto 15px auto; /* Increased top margin slightly due to new header */
-            background-color: #262626; /* Dark Chalkboard Grey */
-            border: 8px solid #5c4033; /* Wood Frame */
+            margin: 15px auto 15px auto;
+            background-color: #262626;
+            border: 8px solid #5c4033;
             border-radius: 4px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             padding: 15px;
-            font-family: 'Patrick Hand', cursive; /* Handwriting Font */
+            font-family: 'Patrick Hand', cursive;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -145,7 +151,7 @@
             padding-bottom: 8px;
             margin-bottom: 2px;
             font-size: 20px;
-            color: #ff6b6b; /* Red Chalk */
+            color: #ff6b6b;
             display: flex; align-items: center; gap: 10px;
         }
         
@@ -157,11 +163,10 @@
 
         .chalk-general-text {
             font-size: 22px;
-            color: #ffffff; /* White Chalk */
+            color: #ffffff;
             line-height: 1.3;
-            white-space: pre-line; /* ALLOWS MULTI-LINE LISTS */
+            white-space: pre-line;
         }
-
 
         /* TASK PANEL */
         #task-panel { 
@@ -385,6 +390,8 @@
     <div class="header-bar">
         <h2>✨ Staff Board</h2>
         <div class="header-right">
+            <button class="header-btn fs-btn" onclick="toggleFullScreen()">🖥️ Full Screen</button>
+            
             <button class="header-btn" onclick="playSound('click'); alert('Lunch & Break Rota coming soon!')">🥪 Lunch Rota</button>
             <button class="header-btn" onclick="playSound('click'); openPayoutModal()">💸 Pay Outs</button>
             <button class="header-btn" onclick="playSound('click'); openSafeDropModal()">🔒 Safe Drops</button>
@@ -547,6 +554,19 @@
     </div>
 
     <script>
+        // --- NEW FULL SCREEN FUNCTION ---
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
         // --- SOUND & INIT ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
@@ -779,8 +799,8 @@
             c.appendChild(d);
         }
 
-        // --- UPDATED CLOCK FUNCTION (With Auto-Close Logic) ---
-        let autoClosedOpening = false; // Flag to ensure we only auto-close once
+        // --- UPDATED CLOCK FUNCTION ---
+        let autoClosedOpening = false;
 
         function updateClock() {
             const now = new Date();
@@ -794,20 +814,17 @@
             // 1. AUTO-MINIMIZE OPENING DUTIES (10 AM)
             if (currentHour >= 10 && !autoClosedOpening) {
                 const oList = document.getElementById('openingList');
-                const oArrow = document.getElementById('openingArrow');
                 if (oList && !oList.classList.contains('hidden')) {
                      manualToggle('openingList', 'openingArrow');
                 }
-                autoClosedOpening = true; // Mark as done so user can re-open if needed
+                autoClosedOpening = true; 
             }
 
             // 2. LOCK CLOSING DUTIES (Before 8 PM)
             const locked = mins < 1200; // 1200 mins = 20:00 (8 PM)
             document.getElementById('closingList').classList.toggle('locked', locked);
             
-            // Force color refresh
             updateAllSections(); 
-            
             setTimeout(updateClock, 10000);
         }
 
@@ -829,28 +846,20 @@
             const now = new Date();
             const currentHour = now.getHours();
 
-            // 1. Always reset to Neutral first
             title.classList.remove('title-green', 'title-red');
 
             if (total > 0) {
                 if (completed === total) {
-                    // COMPLETE: Always Green
                     title.classList.add('title-green');
                     if (!list.classList.contains('hidden')) {
                          manualToggle(listId, arrowId); 
                     }
                 } else {
-                    // INCOMPLETE: Decide based on specific list rules
-                    
-                    // Logic for Closing Duties:
                     if (listId === 'closingList') {
-                        // If it is BEFORE 8 PM (20:00), stay Neutral (do nothing)
                         if (currentHour < 20) {
                             return; 
                         }
                     }
-                    
-                    // Otherwise (if it's 8 PM+ OR any other list), turn Red
                     title.classList.add('title-red');
                 }
             }
@@ -878,7 +887,6 @@
                 activeCard.onclick = null;
                 addToLog('TASK_COMPLETE', { task: activeTaskName, staff: init });
                 
-                // Trigger status update (Change Header Color)
                 const listId = activeCard.parentElement.id;
                 if(listId === 'openingList') updateSectionStatus('openingList', 'openingTitle', 'openingArrow');
                 if(listId === 'closingList') updateSectionStatus('closingList', 'closingTitle', 'closingArrow');
