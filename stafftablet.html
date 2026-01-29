@@ -43,7 +43,7 @@
             background-size: cover;
         }
         
-        /* HEADER - GREEN BACKGROUND */
+        /* HEADER */
         .header-bar { 
             display: flex; 
             justify-content: space-between; 
@@ -62,308 +62,168 @@
         .header-right { display: flex; align-items: center; gap: 10px; }
         
         #date-display { 
-            font-size: 20px; 
-            font-weight: 700; 
-            color: rgba(255,255,255,0.95); 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px; 
-            margin-left: 10px;
+            font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.95); 
+            text-transform: uppercase; letter-spacing: 0.5px; margin-left: 10px;
         }
         
         #clock { 
             font-size: 20px; font-weight: 700; color: #ffffff; 
             font-family: 'Poppins', monospace; 
-            background: rgba(255,255,255,0.2); 
-            backdrop-filter: blur(5px);
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);
             padding: 6px 16px; border-radius: 12px; 
             border: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            margin-left: 5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-left: 5px;
         }
 
         /* BUTTON STYLES */
         .header-btn {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.2s;
-            white-space: nowrap;
+            color: white; padding: 8px 16px; border-radius: 10px;
+            font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 13px;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+            transition: all 0.2s; white-space: nowrap;
         }
         .header-btn:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-1px); }
         .header-btn:active { transform: scale(0.96); }
 
-        /* Full Screen Button Specific Style */
         .fs-btn { background: #2563eb; border-color: #60a5fa; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .fs-btn:hover { background: #1d4ed8; }
-
         .logs-btn { background: rgba(0,0,0,0.4); border-color: rgba(0,0,0,0.5); color: #fbbf24; }
 
         .edit-ticker-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: background 0.2s;
-            margin-left: 5px;
+            background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white; width: 36px; height: 36px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; transition: background 0.2s; margin-left: 5px;
         }
         .edit-ticker-btn:hover { background: rgba(255, 255, 255, 0.4); }
 
-        /* --- CHALKBOARD NOTICEBOARD CSS --- */
+        /* --- CHALKBOARD --- */
         .chalkboard {
-            width: 95%;
-            margin: 15px auto 15px auto;
-            background-color: #262626;
-            border: 8px solid #5c4033;
-            border-radius: 4px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            padding: 15px;
-            font-family: 'Patrick Hand', cursive;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            position: relative;
-            color: #eeeeee;
-            flex-shrink: 0;
+            width: 95%; margin: 15px auto 15px auto;
+            background-color: #262626; border: 8px solid #5c4033;
+            border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            padding: 15px; font-family: 'Patrick Hand', cursive;
+            display: flex; flex-direction: column; gap: 8px; position: relative;
+            color: #eeeeee; flex-shrink: 0;
         }
-
-        .chalkboard::after {
-            content: ''; position: absolute; bottom: -8px; left: -8px; right: -8px;
-            height: 4px; background: rgba(0,0,0,0.3);
-        }
+        .chalkboard::after { content: ''; position: absolute; bottom: -8px; left: -8px; right: -8px; height: 4px; background: rgba(0,0,0,0.3); }
 
         .chalk-urgent-row {
-            border-bottom: 1px dashed rgba(255,255,255,0.3);
-            padding-bottom: 8px;
-            margin-bottom: 2px;
-            font-size: 20px;
-            color: #ff6b6b;
+            border-bottom: 1px dashed rgba(255,255,255,0.3); padding-bottom: 8px;
+            margin-bottom: 2px; font-size: 20px; color: #ff6b6b;
             display: flex; align-items: center; gap: 10px;
         }
-        
         .urgent-badge {
             background: #c53030; color: white;
             font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 700;
             padding: 2px 6px; border-radius: 4px; letter-spacing: 1px;
         }
-
-        .chalk-general-text {
-            font-size: 22px;
-            color: #ffffff;
-            line-height: 1.3;
-            white-space: pre-line;
-        }
+        .chalk-general-text { font-size: 22px; color: #ffffff; line-height: 1.3; white-space: pre-line; }
 
         /* TASK PANEL */
         #task-panel { 
-            flex-grow: 1; 
-            padding: 20px; 
-            overflow-y: auto; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 5px; 
+            flex-grow: 1; padding: 20px; overflow-y: auto; 
+            display: flex; flex-direction: column; gap: 5px; 
             background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px); 
             background-size: 30px 30px; 
         }
 
-        /* SECTION TITLE */
         .section-title { 
-            font-size: 14px; 
-            font-weight: 700; 
-            color: rgba(255,255,255,0.9); 
-            margin: 8px 0 5px 0; 
-            display: flex; 
-            align-items: center; 
-            gap: 10px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            cursor: pointer; 
-            user-select: none;
-            transition: all 0.3s ease;
-            padding: 12px 15px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid transparent;
+            font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.9); 
+            margin: 8px 0 5px 0; display: flex; align-items: center; gap: 10px; 
+            text-transform: uppercase; letter-spacing: 1px; cursor: pointer; user-select: none;
+            transition: all 0.3s ease; padding: 12px 15px; border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid transparent;
         }
         .section-title:active { opacity: 0.9; transform: scale(0.99); }
-        
         .section-title span.icon-box { 
             background: rgba(0,0,0,0.2); color: white; width: 32px; height: 32px; 
             display: flex; align-items: center; justify-content: center; 
-            border-radius: 10px; font-size: 18px; 
-            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 10px; font-size: 18px; border: 1px solid rgba(255,255,255,0.1); 
         }
 
-        /* STATUS CLASSES */
         .title-green {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-            border: 1px solid #34d399;
-            color: white;
+            border: 1px solid #34d399; color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
-        
         .title-red {
             background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
             box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-            border: 1px solid #f87171;
-            color: white;
+            border: 1px solid #f87171; color: white;
             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
 
-        .section-note { 
-            margin-left: auto; 
-            font-size: 11px; font-weight: 600; 
-            background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; 
-            color: #e5e7eb; border: 1px solid rgba(255,255,255,0.2); 
-        }
+        .section-note { margin-left: auto; font-size: 11px; font-weight: 600; background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; color: #e5e7eb; border: 1px solid rgba(255,255,255,0.2); }
+        .toggle-arrow { margin-left: 10px; font-size: 12px; opacity: 0.8; transition: transform 0.2s; }
 
-        .toggle-arrow {
-            margin-left: 10px;
-            font-size: 12px;
-            opacity: 0.8;
-            transition: transform 0.2s;
-        }
-
-        .daily-row { 
-            display: flex; gap: 15px; overflow-x: auto; 
-            padding: 5px; 
-            white-space: nowrap; -webkit-overflow-scrolling: touch; 
-            min-height: 95px; 
-            scrollbar-width: none; align-items: center; transition: all 0.3s ease; 
-        }
-        
+        .daily-row { display: flex; gap: 15px; overflow-x: auto; padding: 5px; white-space: nowrap; -webkit-overflow-scrolling: touch; min-height: 95px; scrollbar-width: none; align-items: center; transition: all 0.3s ease; }
         .daily-row::-webkit-scrollbar { display: none; }
+        .locked { opacity: 0.3; filter: grayscale(100%); pointer-events: none; }
         
-        /* LOCKED STATE */
-        .locked { 
-            opacity: 0.3; 
-            filter: grayscale(100%); 
-            pointer-events: none; 
-        }
-        
-        /* CARD STYLES */
+        /* CARDS */
         .daily-card { 
-            min-width: 160px; 
-            height: 82px; 
-            background: var(--card-bg); 
-            border-radius: 16px; padding: 12px; 
-            box-shadow: var(--card-shadow); 
+            min-width: 160px; height: 82px; background: var(--card-bg); 
+            border-radius: 16px; padding: 12px; box-shadow: var(--card-shadow); 
             display: flex; flex-direction: column; justify-content: center; 
             cursor: pointer; white-space: normal; position: relative; 
             transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); 
-            border: 1px solid rgba(255,255,255,0.05); 
-            overflow: hidden; 
+            border: 1px solid rgba(255,255,255,0.05); overflow: hidden; 
         }
-        
         .daily-card:active { transform: scale(0.96); }
         .daily-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); }
         .daily-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         
-        .daily-card strong { 
-            font-size: 14px; 
-            display: block; 
-            line-height: 1.2; 
-            margin-top: 10px; 
-            margin-bottom: 2px; 
-            color: var(--text-dark); 
-            font-weight: 600;
-        }
-        
-        .card-subtext { 
-            font-size: 10px; 
-            color: var(--text-light); 
-            margin-top: 0; 
-            font-weight: 500; 
-        }
-
+        .daily-card strong { font-size: 14px; display: block; line-height: 1.2; margin-top: 10px; margin-bottom: 2px; color: var(--text-dark); font-weight: 600; }
+        .card-subtext { font-size: 10px; color: var(--text-light); margin-top: 0; font-weight: 500; }
         .due-badge { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 700; background: #374151; color: #e5e7eb; padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         
-        /* STACKED CARD STYLES */
         .card-stack { overflow: visible !important; margin-right: 15px; }
-        .card-stack::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--card-bg); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);
-            z-index: -1; transform: rotate(5deg);
-            box-shadow: var(--card-shadow); opacity: 0.6;
-        }
-        .card-stack::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--card-bg); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);
-            z-index: -2; transform: rotate(10deg);
-            box-shadow: var(--card-shadow); opacity: 0.3;
-        }
-        .stack-top-layer {
-            position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: var(--card-bg); border-radius:16px; z-index:2; padding:12px;
-            display:flex; flex-direction:column; justify-content: center;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
+        .card-stack::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--card-bg); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); z-index: -1; transform: rotate(5deg); box-shadow: var(--card-shadow); opacity: 0.6; }
+        .card-stack::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--card-bg); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); z-index: -2; transform: rotate(10deg); box-shadow: var(--card-shadow); opacity: 0.3; }
+        .stack-top-layer { position: absolute; top:0; left:0; width:100%; height:100%; background: var(--card-bg); border-radius:16px; z-index:2; padding:12px; display:flex; flex-direction:column; justify-content: center; border: 1px solid rgba(255,255,255,0.05); }
         .stack-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--col-multi); border-top-left-radius: 16px; border-bottom-left-radius: 16px;}
 
-        /* COLORS */
         .opening-card::before { background: var(--col-opening); box-shadow: 0 0 10px var(--col-opening); }
         .day-card::before { background: var(--col-day); box-shadow: 0 0 10px var(--col-day); }
         .closing-card::before { background: var(--col-closing); box-shadow: 0 0 10px var(--col-closing); }
-
         .green { background: #059669 !important; color: white !important; border: 1px solid #34d399 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
         .green strong { color: white; }
         .green .card-subtext { color: rgba(255,255,255,0.9); }
         
-        .add-btn-inline { 
-            width: 100%; margin-top: 20px; padding: 18px; 
-            background-color: rgba(255,255,255,0.1); border: 2px dashed #ffffff; border-radius: 16px; 
-            color: #ffffff; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; 
-            transition: all 0.2s;
-        }
+        .add-btn-inline { width: 100%; margin-top: 20px; padding: 18px; background-color: rgba(255,255,255,0.1); border: 2px dashed #ffffff; border-radius: 16px; color: #ffffff; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; }
         .add-btn-inline:active { background: rgba(255, 255, 255, 0.2); transform: scale(0.98); }
 
+        /* MODALS */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; }
         .modal-box { background: #1f2937; padding: 30px; border-radius: 24px; width: 340px; text-align: center; border: 1px solid #374151; box-shadow: 0 20px 40px rgba(0,0,0,0.4); color: white; }
+        
         .save-btn { flex: 1; padding: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
         .cancel-btn { flex: 1; padding: 14px; background: #374151; color: #d1d5db; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;}
+        
+        /* FACE ID BUTTON STYLE */
+        .bio-btn {
+            width: 100%; padding: 14px; margin-bottom: 20px;
+            background: #6366f1; color: white; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: transform 0.1s;
+        }
+        .bio-btn:active { transform: scale(0.98); background: #4f46e5; }
+        
         input, select, textarea { width: 100%; padding: 15px; margin-bottom: 20px; background: #111827; border: 2px solid #374151; border-radius: 12px; font-family: 'Poppins', sans-serif; color: white; outline: none; transition: border-color 0.2s; resize: none; }
         input:focus, select:focus, textarea:focus { border-color: #6366f1; }
         .hidden { display: none !important; }
-        
         .form-label { text-align: left; display: block; margin-bottom: 5px; font-size: 12px; color: #94a3b8; }
 
-        /* TILL TOGGLE BUTTONS */
-        .till-btn {
-            flex: 1;
-            padding: 12px;
-            background: #374151;
-            border: 2px solid transparent;
-            border-radius: 10px;
-            color: #9ca3af;
-            cursor: pointer;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            transition: all 0.2s;
-        }
+        .till-btn { flex: 1; padding: 12px; background: #374151; border: 2px solid transparent; border-radius: 10px; color: #9ca3af; cursor: pointer; font-weight: 600; font-family: 'Poppins', sans-serif; transition: all 0.2s; }
         .till-btn:hover { background: #4b5563; }
-        .till-btn.active {
-            background: #2563eb;
-            color: white;
-            border-color: #60a5fa;
-            box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
-        }
+        .till-btn.active { background: #2563eb; color: white; border-color: #60a5fa; box-shadow: 0 0 10px rgba(37, 99, 235, 0.4); }
 
-        /* LOG VIEWER STYLES */
         .log-table-container { max-height: 400px; overflow-y: auto; text-align: left; margin-top: 10px; border: 1px solid #374151; border-radius: 10px; }
         .log-table { width: 100%; border-collapse: collapse; font-size: 12px; color: #d1d5db; }
         .log-table th { background: #374151; padding: 10px; position: sticky; top: 0; text-align: left; color: white; }
@@ -372,7 +232,6 @@
         .tab-btn { background: #374151; color: #9ca3af; border: none; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 12px; margin-right: 5px; }
         .tab-btn.active { background: #2563eb; color: white; }
 
-        /* PRESET & SUPPLIER GRID STYLES */
         .preset-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
         .preset-btn { background: #374151; border: 1px solid rgba(255,255,255,0.05); color: #d1d5db; padding: 10px 5px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: 'Poppins', sans-serif; transition: all 0.2s; }
         .preset-btn:hover { background: #4b5563; color: white; border-color: rgba(255,255,255,0.2); }
@@ -382,7 +241,6 @@
         .supplier-btn { background: #374151; border: 2px solid transparent; color: #f3f4f6; padding: 15px; border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 600; text-align: center; transition: all 0.2s; }
         .supplier-btn:hover { background: #4b5563; }
         .supplier-btn.active { background: #2563eb; border-color: #60a5fa; color: white; box-shadow: 0 0 10px rgba(37, 99, 235, 0.4); }
-
     </style>
 </head>
 <body>
@@ -391,12 +249,10 @@
         <h2>✨ Staff Board</h2>
         <div class="header-right">
             <button class="header-btn fs-btn" onclick="toggleFullScreen()">🖥️ Full Screen</button>
-            
             <button class="header-btn" onclick="playSound('click'); alert('Lunch & Break Rota coming soon!')">🥪 Lunch Rota</button>
             <button class="header-btn" onclick="playSound('click'); openPayoutModal()">💸 Pay Outs</button>
             <button class="header-btn" onclick="playSound('click'); openSafeDropModal()">🔒 Safe Drops</button>
             <button class="header-btn logs-btn" onclick="playSound('click'); openPinModal()">📋 View Logs</button>
-            
             <button class="edit-ticker-btn" onclick="playSound('click'); openEditTickerModal()">⚙️</button>
             <div id="date-display">Mon 01 Jan</div>
             <div id="clock">00:00</div>
@@ -414,10 +270,8 @@
     </div>
     
     <div id="task-panel">
-        
         <div class="section-title" id="openingTitle" onclick="playSound('click'); manualToggle('openingList', 'openingArrow')">
-            <span class="icon-box">🌅</span> Opening Duties
-            <span id="openingArrow" class="toggle-arrow">▼</span>
+            <span class="icon-box">🌅</span> Opening Duties <span id="openingArrow" class="toggle-arrow">▼</span>
         </div>
         <div class="daily-row" id="openingList"></div>
         
@@ -428,9 +282,7 @@
         <div class="daily-row" id="dayList"></div>
 
         <div class="section-title" id="closingTitle" onclick="playSound('click'); manualToggle('closingList', 'closingArrow')">
-            <span class="icon-box">🌙</span> Closing Duties 
-            <span class="section-note">(Unlocks 20:00)</span>
-            <span id="closingArrow" class="toggle-arrow">▼</span>
+            <span class="icon-box">🌙</span> Closing Duties <span class="section-note">(Unlocks 20:00)</span> <span id="closingArrow" class="toggle-arrow">▼</span>
         </div>
         <div class="daily-row" id="closingList"></div>
 
@@ -441,7 +293,14 @@
         <div class="modal-box">
             <h3>Sign Off</h3>
             <p id="signOffPrompt" style="color:#94a3b8; margin-bottom:20px;"></p>
-            <input type="text" id="initials" maxlength="3" style="text-align:center; font-size:24px; text-transform:uppercase;" placeholder="Initials">
+            
+            <button class="bio-btn" onclick="useBiometrics()">
+                <span style="font-size: 20px;">👤</span> Use Face ID
+            </button>
+            
+            <p style="font-size: 11px; color: #6b7280; margin-bottom: 10px;">— OR ENTER INITIALS —</p>
+
+            <input type="text" id="initials" maxlength="3" style="text-align:center; font-size:24px; text-transform:uppercase;" placeholder="ABC">
             <div style="display:flex;gap:15px;">
                 <button class="cancel-btn" onclick="playSound('click'); closeModal('sign-modal')">Back</button>
                 <button class="save-btn" onclick="confirmComplete()">Confirm</button>
@@ -497,7 +356,6 @@
             
             <label class="form-label">Witness Initials</label>
             <input type="text" id="sd-witness" maxlength="3" style="text-align:center; text-transform:uppercase;" placeholder="Witness">
-
             <div style="display:flex;gap:15px;">
                 <button class="cancel-btn" onclick="playSound('click'); closeModal('safedrop-modal')">Cancel</button>
                 <button class="save-btn" onclick="saveSafeDrop()">Confirm Drop</button>
@@ -522,16 +380,13 @@
                 <h3>📋 Daily Logs</h3>
                 <button class="cancel-btn" style="flex:0; padding:5px 10px;" onclick="closeModal('logs-modal')">✖</button>
             </div>
-            
             <div style="display:flex; margin-bottom:10px;">
                 <button class="tab-btn active" onclick="switchLogTab(this, 'tasks')">Tasks</button>
                 <button class="tab-btn" onclick="switchLogTab(this, 'safedrops')">Safe Drops</button>
                 <button class="tab-btn" onclick="switchLogTab(this, 'payouts')">Pay Outs</button>
             </div>
-
             <div class="log-table-container">
-                <table class="log-table" id="log-table-body">
-                    </table>
+                <table class="log-table" id="log-table-body"></table>
             </div>
         </div>
     </div>
@@ -539,13 +394,10 @@
     <div id="edit-ticker-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Edit Chalkboard</h3>
-            
             <label class="form-label">Urgent Alert (Red)</label>
             <input type="text" id="input-urgent">
-            
             <label class="form-label">General Messages (White)</label>
             <textarea id="input-general" rows="5"></textarea>
-            
             <div style="display:flex;gap:15px;">
                 <button class="cancel-btn" onclick="closeModal('edit-ticker-modal')">Cancel</button>
                 <button class="save-btn" onclick="saveTicker()">Save</button>
@@ -554,16 +406,61 @@
     </div>
 
     <script>
-        // --- NEW FULL SCREEN FUNCTION ---
+        // --- FACE ID / BIOMETRIC LOGIC ---
+        async function useBiometrics() {
+            // Check if browser supports WebAuthn (Must be HTTPS)
+            if (!window.PublicKeyCredential) {
+                alert("Face ID not supported or site is not HTTPS.");
+                return;
+            }
+            
+            try {
+                // This 'create' call triggers the Android System verification (Face/Fingerprint/PIN)
+                // We don't save the credential, we just use the success as proof of owner presence.
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+                
+                await navigator.credentials.create({
+                    publicKey: {
+                        challenge: challenge,
+                        rp: { name: "Staff Tablet" },
+                        user: {
+                            id: new Uint8Array(16),
+                            name: "StaffUser",
+                            displayName: "Staff Member"
+                        },
+                        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+                        authenticatorSelection: {
+                            authenticatorAttachment: "platform", // Forces on-device FaceID/Fingerprint
+                            userVerification: "required"
+                        },
+                        timeout: 60000
+                    }
+                });
+
+                // If code reaches here, authentication passed
+                playSound('success');
+                document.getElementById('initials').value = "BIO"; // Auto-fill
+                confirmComplete(); // Auto-submit
+                
+            } catch (err) {
+                console.error(err);
+                playSound('error');
+                // Don't alert if user just cancelled
+                if (err.name !== 'NotAllowedError') {
+                    alert("Face ID failed. Please try again or use initials.");
+                }
+            }
+        }
+
+        // --- FULL SCREEN FUNCTION ---
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
                     alert(`Error attempting to enable full-screen mode: ${err.message}`);
                 });
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
+                if (document.exitFullscreen) document.exitFullscreen();
             }
         }
 
@@ -599,9 +496,8 @@
                 date: now.toLocaleDateString(),
                 details: details
             };
-            
             let logs = JSON.parse(localStorage.getItem('staffLogs')) || [];
-            logs.unshift(entry); // Add to top
+            logs.unshift(entry);
             localStorage.setItem('staffLogs', JSON.stringify(logs));
         }
 
@@ -638,13 +534,10 @@
             const logs = JSON.parse(localStorage.getItem('staffLogs')) || [];
             const table = document.getElementById('log-table-body');
             table.innerHTML = "";
-
-            // Mapping for display
             let headers = "";
             if (filterType === 'tasks') headers = "<tr><th>Time</th><th>Task Name</th><th>Staff</th></tr>";
             if (filterType === 'safedrops') headers = "<tr><th>Time</th><th>Amount</th><th>Till</th><th>Witness</th></tr>";
             if (filterType === 'payouts') headers = "<tr><th>Time</th><th>Amount</th><th>Supplier</th><th>Till</th></tr>";
-            
             table.innerHTML = headers;
 
             const filtered = logs.filter(l => {
@@ -661,7 +554,6 @@
 
             filtered.forEach(log => {
                 let row = `<tr><td>${log.date} ${log.time}</td>`;
-                
                 if (filterType === 'tasks') {
                     row += `<td>${log.details.task}</td><td>${log.details.staff}</td>`;
                 } else if (filterType === 'safedrops') {
@@ -685,11 +577,8 @@
         function saveSafeDrop() {
             const amt = document.getElementById('sd-amount').value;
             const wit = document.getElementById('sd-witness').value.toUpperCase();
-            
             if(!amt || !wit) { playSound('error'); return alert("Fill all fields"); }
-            
             addToLog('SAFE_DROP', { amount: amt, till: selectedTillSD, witness: wit });
-            
             playSound('success');
             alert(`✅ Safe Drop Recorded: £${amt}`);
             closeModal('safedrop-modal');
@@ -725,9 +614,7 @@
             const supp = document.getElementById('payout-supplier').value;
             const amt = document.getElementById('payout-amount').value;
             if(!supp || !amt) { playSound('error'); return alert("Missing info"); }
-            
             addToLog('PAYOUT', { amount: amt, supplier: supp, till: selectedTillPO });
-
             playSound('success'); 
             alert(`✅ Payout Recorded: £${amt}`);
             closeModal('payout-modal');
@@ -773,7 +660,7 @@
             renderVegStack(); populateList('dayList', dayTasks, 'day-card');
             populateList('closingList', closingTasks, 'closing-card');
             updateClock(); loadSavedTicker();
-            updateAllSections(); // Initial check on load
+            updateAllSections();
         };
 
         function populateList(cid, tasks, cls) {
@@ -799,36 +686,26 @@
             c.appendChild(d);
         }
 
-        // --- UPDATED CLOCK FUNCTION ---
+        // --- CLOCK & STATUS ---
         let autoClosedOpening = false;
-
         function updateClock() {
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
             document.getElementById('date-display').innerText = now.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
-            if(document.getElementById('live-ticker-time')) document.getElementById('live-ticker-time').textContent = now.toLocaleDateString() + " " + now.toLocaleTimeString();
             
             const mins = (now.getHours()*60)+now.getMinutes();
-            const currentHour = now.getHours();
-
-            // 1. AUTO-MINIMIZE OPENING DUTIES (10 AM)
-            if (currentHour >= 10 && !autoClosedOpening) {
+            if (now.getHours() >= 10 && !autoClosedOpening) {
                 const oList = document.getElementById('openingList');
-                if (oList && !oList.classList.contains('hidden')) {
-                     manualToggle('openingList', 'openingArrow');
-                }
+                if (oList && !oList.classList.contains('hidden')) manualToggle('openingList', 'openingArrow');
                 autoClosedOpening = true; 
             }
 
-            // 2. LOCK CLOSING DUTIES (Before 8 PM)
-            const locked = mins < 1200; // 1200 mins = 20:00 (8 PM)
+            const locked = mins < 1200; // 20:00
             document.getElementById('closingList').classList.toggle('locked', locked);
-            
             updateAllSections(); 
             setTimeout(updateClock, 10000);
         }
 
-        // --- UPDATED COLOR STATUS LOGIC ---
         function updateAllSections() {
             updateSectionStatus('openingList', 'openingTitle', 'openingArrow');
             updateSectionStatus('closingList', 'closingTitle', 'closingArrow');
@@ -838,29 +715,16 @@
             const list = document.getElementById(listId);
             const title = document.getElementById(titleId);
             const arrow = document.getElementById(arrowId);
-            
             if(!list || !title) return;
-
             const total = list.children.length;
             const completed = list.querySelectorAll('.green').length;
-            const now = new Date();
-            const currentHour = now.getHours();
-
             title.classList.remove('title-green', 'title-red');
-
             if (total > 0) {
                 if (completed === total) {
                     title.classList.add('title-green');
-                    if (!list.classList.contains('hidden')) {
-                         manualToggle(listId, arrowId); 
-                    }
+                    if (!list.classList.contains('hidden')) manualToggle(listId, arrowId); 
                 } else {
-                    if (listId === 'closingList') {
-                        if (currentHour < 20) {
-                            return; 
-                        }
-                    }
-                    title.classList.add('title-red');
+                    if (listId !== 'closingList' || new Date().getHours() >= 20) title.classList.add('title-red');
                 }
             }
         }
@@ -876,7 +740,7 @@
 
         function confirmComplete() {
             let init = document.getElementById('initials').value.toUpperCase();
-            if(!init) { playSound('error'); return alert("Initials required!"); }
+            if(!init) { playSound('error'); return alert("Initials or Face ID required!"); }
             
             if(isStackedTask) {
                 vegStack.current++; renderVegStack();
