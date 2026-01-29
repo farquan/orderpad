@@ -99,7 +99,7 @@
         }
         .edit-ticker-btn:hover { background: rgba(255, 255, 255, 0.4); }
 
-        /* --- CHALKBOARD --- */
+        /* --- CHALKBOARD (Standard) --- */
         .chalkboard {
             width: 95%; margin: 15px auto 15px auto;
             background-color: #262626; border: 8px solid #5c4033;
@@ -121,6 +121,18 @@
             padding: 2px 6px; border-radius: 4px; letter-spacing: 1px;
         }
         .chalk-general-text { font-size: 22px; color: #ffffff; line-height: 1.3; white-space: pre-line; }
+
+        /* --- MINIMIZED CHALKBOARD (Empty State) --- */
+        .empty-ticker-container {
+            width: 95%; margin: 10px auto; display: none; /* Hidden by default */
+            justify-content: center;
+        }
+        .add-msg-btn {
+            background: rgba(255,255,255,0.15); border: 2px dashed rgba(255,255,255,0.4);
+            color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer;
+            font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .add-msg-btn:hover { background: rgba(255,255,255,0.25); border-color: white; }
 
         /* TASK PANEL */
         #task-panel { 
@@ -259,13 +271,19 @@
         </div>
     </div>
 
-    <div class="chalkboard">
-        <div class="chalk-urgent-row">
+    <div id="main-chalkboard" class="chalkboard">
+        <div id="urgent-row" class="chalk-urgent-row">
             <span class="urgent-badge">URGENT</span>
-            <span id="ticker-urgent-text">Freezer #2 is running warm (-5°). Engineer called.</span>
+            <span id="ticker-urgent-text">Loading...</span>
         </div>
-        <div id="ticker-general-text" class="chalk-general-text">
-            New stock delivery expected at 14:00 today.
+        <div id="general-row">
+            <div id="ticker-general-text" class="chalk-general-text">Loading...</div>
+        </div>
+    </div>
+
+    <div id="empty-ticker-btn" class="empty-ticker-container">
+        <div class="add-msg-btn" onclick="openEditTickerModal()">
+            <span>➕</span> Add Message
         </div>
     </div>
     
@@ -406,7 +424,10 @@
     </div>
 
     <script>
-        // --- FACE ID / BIOMETRIC LOGIC ---
+        // --- 1. SETTINGS ---
+        const MESSAGE_LIFETIME_HOURS = 48; // Messages expire after 48 hours
+
+        // --- 2. FACE ID / BIOMETRIC LOGIC ---
         async function useBiometrics() {
             // Check if browser supports WebAuthn (Must be HTTPS)
             if (!window.PublicKeyCredential) {
@@ -416,7 +437,6 @@
             
             try {
                 // This 'create' call triggers the Android System verification (Face/Fingerprint/PIN)
-                // We don't save the credential, we just use the success as proof of owner presence.
                 const challenge = new Uint8Array(32);
                 window.crypto.getRandomValues(challenge);
                 
@@ -446,14 +466,98 @@
             } catch (err) {
                 console.error(err);
                 playSound('error');
-                // Don't alert if user just cancelled
                 if (err.name !== 'NotAllowedError') {
                     alert("Face ID failed. Please try again or use initials.");
                 }
             }
         }
 
-        // --- FULL SCREEN FUNCTION ---
+        // --- 3. TICKER / BLACKBOARD AUTO-EXPIRY & MINIMIZE ---
+        function saveTicker() {
+            const u = document.getElementById('input-urgent').value.trim();
+            const g = document.getElementById('input-general').value.trim();
+            
+            // Save data with a Timestamp
+            const data = {
+                urgent: u,
+                general: g,
+                timestamp: Date.now()
+            };
+            
+            localStorage.setItem('tickerData', JSON.stringify(data));
+            playSound('success');
+            closeModal('edit-ticker-modal');
+            loadSavedTicker(); // Refresh UI immediately
+        }
+
+        function loadSavedTicker() {
+            const savedRaw = localStorage.getItem('tickerData');
+            
+            if (savedRaw) {
+                const data = JSON.parse(savedRaw);
+                const ageMs = Date.now() - data.timestamp;
+                const limitMs = MESSAGE_LIFETIME_HOURS * 60 * 60 * 1000;
+
+                // Check Expiry
+                if (ageMs > limitMs) {
+                    // Expired! Clear it.
+                    localStorage.removeItem('tickerData');
+                    renderTicker("", ""); 
+                } else {
+                    // Valid
+                    renderTicker(data.urgent, data.general);
+                }
+            } else {
+                renderTicker("", "");
+            }
+        }
+
+        function renderTicker(urgent, general) {
+            const board = document.getElementById('main-chalkboard');
+            const emptyBtn = document.getElementById('empty-ticker-btn');
+            
+            // If both are empty, minimize
+            if (!urgent && !general) {
+                board.style.display = 'none';
+                emptyBtn.style.display = 'flex';
+            } else {
+                board.style.display = 'flex';
+                emptyBtn.style.display = 'none';
+                
+                // Toggle Urgent Row
+                const uRow = document.getElementById('urgent-row');
+                if (urgent) {
+                    uRow.style.display = 'flex';
+                    document.getElementById('ticker-urgent-text').innerText = urgent;
+                } else {
+                    uRow.style.display = 'none';
+                }
+
+                // Toggle General Row
+                const gRow = document.getElementById('general-row');
+                if (general) {
+                    gRow.style.display = 'block';
+                    document.getElementById('ticker-general-text').innerText = general;
+                } else {
+                    gRow.style.display = 'none';
+                }
+            }
+        }
+        
+        function openEditTickerModal() {
+            const savedRaw = localStorage.getItem('tickerData');
+            if (savedRaw) {
+                const data = JSON.parse(savedRaw);
+                document.getElementById('input-urgent').value = data.urgent;
+                document.getElementById('input-general').value = data.general;
+            } else {
+                document.getElementById('input-urgent').value = "";
+                document.getElementById('input-general').value = "";
+            }
+            document.getElementById('edit-ticker-modal').style.display = 'flex';
+        }
+
+        // --- 4. FULL SCREEN & SOUND ---
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => {
@@ -464,7 +568,6 @@
             }
         }
 
-        // --- SOUND & INIT ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -487,7 +590,7 @@
             }
         }
 
-        // --- GLOBAL LOGGING FUNCTION ---
+        // --- 5. LOGGING & DATA ---
         function addToLog(type, details) {
             const now = new Date();
             const entry = {
@@ -501,7 +604,6 @@
             localStorage.setItem('staffLogs', JSON.stringify(logs));
         }
 
-        // --- LOG VIEWER LOGIC ---
         function openPinModal() {
             document.getElementById('pin-modal').style.display = 'flex';
             document.getElementById('pin-input').value = '';
@@ -509,8 +611,7 @@
         }
 
         function verifyPin() {
-            const pin = document.getElementById('pin-input').value;
-            if (pin === "1234") {
+            if (document.getElementById('pin-input').value === "1234") {
                 closeModal('pin-modal');
                 openLogsModal();
             } else {
@@ -566,8 +667,10 @@
             });
         }
 
-        // --- SAFE DROP LOGIC ---
+        // --- 6. PAYOUT & SAFE DROP LOGIC ---
         let selectedTillSD = 1;
+        let selectedTillPO = 1;
+        
         function openSafeDropModal() {
             document.getElementById('safedrop-modal').style.display = 'flex';
             document.getElementById('sd-amount').value = '';
@@ -584,8 +687,6 @@
             closeModal('safedrop-modal');
         }
 
-        // --- PAYOUT LOGIC ---
-        let selectedTillPO = 1; 
         function openPayoutModal() {
             document.getElementById('payout-modal').style.display = 'flex';
             document.getElementById('payout-amount').value = ''; 
@@ -620,36 +721,16 @@
             closeModal('payout-modal');
         }
 
-        // --- TICKER & GENERAL ---
+        // --- 7. TASKS & CLOCK ---
         function manualToggle(listId, arrowId) {
             const list = document.getElementById(listId);
             const arrow = document.getElementById(arrowId);
             if (list.classList.contains('hidden')) { list.classList.remove('hidden'); arrow.innerText = '▼'; }
             else { list.classList.add('hidden'); arrow.innerText = '◀'; }
         }
-        function openEditTickerModal() {
-            document.getElementById('input-urgent').value = document.getElementById('ticker-urgent-text').innerText;
-            document.getElementById('input-general').value = document.getElementById('ticker-general-text').innerText;
-            document.getElementById('edit-ticker-modal').style.display = 'flex';
-        }
-        function saveTicker() {
-            const u = document.getElementById('input-urgent').value;
-            const g = document.getElementById('input-general').value;
-            document.getElementById('ticker-urgent-text').innerText = u;
-            document.getElementById('ticker-general-text').innerText = g;
-            localStorage.setItem('tickerUrgent', u); localStorage.setItem('tickerGeneral', g);
-            playSound('success'); closeModal('edit-ticker-modal');
-        }
-        function loadSavedTicker() {
-            const u = localStorage.getItem('tickerUrgent');
-            const g = localStorage.getItem('tickerGeneral');
-            if(u) document.getElementById('ticker-urgent-text').innerText = u;
-            if(g) document.getElementById('ticker-general-text').innerText = g;
-        }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function openAddModal() { alert("Add task functionality placeholder"); }
 
-        // --- TASK LISTS ---
         const openingTasks = [{name:"Temp Check",time:"10:00"},{name:"Milk/Eggs Stock",time:"10:30"}];
         let vegStack = {name:"Check Fruit/Veg",times:["11:00","15:00","19:00"],current:0};
         const dayTasks = [{name:"Bins Emptied",time:"14:00"}];
@@ -659,7 +740,8 @@
             populateList('openingList', openingTasks, 'opening-card');
             renderVegStack(); populateList('dayList', dayTasks, 'day-card');
             populateList('closingList', closingTasks, 'closing-card');
-            updateClock(); loadSavedTicker();
+            updateClock(); 
+            loadSavedTicker(); // Load Expiry Logic
             updateAllSections();
         };
 
@@ -686,20 +768,21 @@
             c.appendChild(d);
         }
 
-        // --- CLOCK & STATUS ---
         let autoClosedOpening = false;
         function updateClock() {
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
             document.getElementById('date-display').innerText = now.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
             
+            // Periodically check Blackboard expiry
+            loadSavedTicker();
+
             const mins = (now.getHours()*60)+now.getMinutes();
             if (now.getHours() >= 10 && !autoClosedOpening) {
                 const oList = document.getElementById('openingList');
                 if (oList && !oList.classList.contains('hidden')) manualToggle('openingList', 'openingArrow');
                 autoClosedOpening = true; 
             }
-
             const locked = mins < 1200; // 20:00
             document.getElementById('closingList').classList.toggle('locked', locked);
             updateAllSections(); 
