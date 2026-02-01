@@ -189,14 +189,65 @@
         .daily-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); }
         .daily-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         
+        /* OVERDUE STYLES (Red + Hazard) */
+        .overdue {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+            border: 2px solid #fee2e2 !important;
+            animation: pulse-red 2s infinite;
+        }
+        .hazard-icon {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            font-size: 28px;
+            z-index: 20;
+            display: none; 
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        .overdue .hazard-icon { display: block; } /* Only show when overdue */
+        
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
         .daily-card strong { font-size: 14px; display: block; line-height: 1.2; margin-top: 10px; margin-bottom: 2px; color: var(--text-dark); font-weight: 600; }
         .card-subtext { font-size: 10px; color: var(--text-light); margin-top: 0; font-weight: 500; }
         .due-badge { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 700; background: #374151; color: #e5e7eb; padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         
-        .card-stack { overflow: visible !important; margin-right: 15px; }
+        /* Task Images - Thumbnail on Card */
+        .task-thumb {
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            height: 50px;
+            width: auto;
+            border-radius: 6px;
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            z-index: 5;
+            transition: transform 0.2s;
+        }
+        .task-thumb:hover { transform: scale(1.5); z-index: 10; }
+        
+        /* Task Image - INSIDE MODAL */
+        #sign-task-image {
+            max-width: 100%;
+            height: auto;
+            max-height: 200px;
+            margin: 0 auto 15px auto;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.1);
+            display: none; /* Hidden by default */
+            object-fit: contain;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .card-stack { overflow: visible !important; margin-right: 15px; min-width: 170px; }
         .card-stack::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--card-bg); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); z-index: -1; transform: rotate(5deg); box-shadow: var(--card-shadow); opacity: 0.6; }
         .card-stack::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--card-bg); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); z-index: -2; transform: rotate(10deg); box-shadow: var(--card-shadow); opacity: 0.3; }
-        .stack-top-layer { position: absolute; top:0; left:0; width:100%; height:100%; background: var(--card-bg); border-radius:16px; z-index:2; padding:12px; display:flex; flex-direction:column; justify-content: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stack-top-layer { position: absolute; top:0; left:0; width:100%; height:100%; background: var(--card-bg); border-radius:16px; z-index:2; padding:12px; display:flex; flex-direction:column; justify-content: center; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; }
         .stack-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--col-multi); border-top-left-radius: 16px; border-bottom-left-radius: 16px;}
 
         .opening-card::before { background: var(--col-opening); box-shadow: 0 0 10px var(--col-opening); }
@@ -310,6 +361,8 @@
     <div id="sign-modal" class="modal-overlay">
         <div class="modal-box">
             <h3>Sign Off</h3>
+            <img id="sign-task-image" src="" alt="Task Image">
+            
             <p id="signOffPrompt" style="color:#94a3b8; margin-bottom:20px;"></p>
             
             <button class="bio-btn" onclick="useBiometrics()">
@@ -426,6 +479,26 @@
     <script>
         // --- 1. SETTINGS ---
         const MESSAGE_LIFETIME_HOURS = 48; // Messages expire after 48 hours
+        
+        // --- TELEGRAM CONFIG ---
+        // Replace these with your actual details!
+        const TELEGRAM_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"; 
+        const TELEGRAM_CHAT_ID = "YOUR_CHAT_ID_HERE";
+
+        function sendTelegramAlert(message) {
+            if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID || TELEGRAM_BOT_TOKEN.includes("YOUR_")) {
+                console.log("Telegram Token not set. Message not sent:", message);
+                return;
+            }
+            const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+            const data = { chat_id: TELEGRAM_CHAT_ID, text: message };
+            
+            fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            }).catch(err => console.error("Telegram Error:", err));
+        }
 
         // --- 2. FACE ID / BIOMETRIC LOGIC ---
         async function useBiometrics() {
@@ -452,7 +525,8 @@
                         pubKeyCredParams: [{ type: "public-key", alg: -7 }],
                         authenticatorSelection: {
                             authenticatorAttachment: "platform", // Forces on-device FaceID/Fingerprint
-                            userVerification: "required"
+                            // CHANGE HERE: 'preferred' tries biometrics but doesn't FORCE fallback to PIN if it fails instantly
+                            userVerification: "preferred" 
                         },
                         timeout: 60000
                     }
@@ -683,6 +757,10 @@
             if(!amt || !wit) { playSound('error'); return alert("Fill all fields"); }
             addToLog('SAFE_DROP', { amount: amt, till: selectedTillSD, witness: wit });
             playSound('success');
+            
+            // Telegram Alert for Safe Drop
+            sendTelegramAlert(`🔒 SAFE DROP: £${amt} from Till ${selectedTillSD} by ${wit}`);
+            
             alert(`✅ Safe Drop Recorded: £${amt}`);
             closeModal('safedrop-modal');
         }
@@ -732,13 +810,52 @@
         function openAddModal() { alert("Add task functionality placeholder"); }
 
         const openingTasks = [{name:"Temp Check",time:"10:00"},{name:"Milk/Eggs Stock",time:"10:30"}];
-        let vegStack = {name:"Check Fruit/Veg",times:["11:00","15:00","19:00"],current:0};
-        const dayTasks = [{name:"Bins Emptied",time:"14:00"}];
+        
+        // --- UPDATED REPEATABLE TASKS ---
+        let repeatableStacks = [
+            {
+                name: "Check Fruit/Veg",
+                times: ["11:00", "15:00", "19:00"],
+                current: 0,
+                img: null
+            },
+            {
+                name: "Fill Milk Fridge",
+                times: ["10:30", "14:30", "18:30"],
+                current: 0,
+                img: "milk.jpg"
+            },
+            {
+                name: "Refill Eggs",
+                times: ["10:00", "14:00", "18:00"],
+                current: 0,
+                img: "eggs.jpg"
+            },
+            {
+                name: "Refill Onions & Potatoes",
+                times: ["11:00", "15:00", "19:00"],
+                current: 0,
+                img: "onions.jpg"
+            }
+        ];
+
+        let dayTasks = [{name:"Bins Emptied",time:"14:00"}];
         const closingTasks = [{name:"Phone Charge",time:"20:30"},{name:"Freezers Closed",time:"20:30"},{name:"Zettle Charged",time:"20:30"},{name:"Bags Stacked",time:"20:30"},{name:"Till Roll",time:"20:30"},{name:"Bins",time:"20:30"},{name:"Onions/Potatoes",time:"20:45"},{name:"HAACP",time:"21:00"},{name:"Final Temps",time:"21:00"},{name:"Side Door",time:"21:15"}];
 
         window.onload = function() {
+            // Logic to add Pitta/Naan only on Sun(0), Wed(3), Fri(5)
+            const dayOfWeek = new Date().getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 3 || dayOfWeek === 5) {
+                dayTasks.push({
+                    name: "Stock Check (Pitta/Naan)",
+                    time: "17:00",
+                    img: "naan.jpg"
+                });
+            }
+
             populateList('openingList', openingTasks, 'opening-card');
-            renderVegStack(); populateList('dayList', dayTasks, 'day-card');
+            renderRepeatableSection(); 
+            populateList('dayList', dayTasks, 'day-card');
             populateList('closingList', closingTasks, 'closing-card');
             updateClock(); 
             loadSavedTicker(); // Load Expiry Logic
@@ -749,23 +866,56 @@
             const c = document.getElementById(cid); c.innerHTML = ""; 
             tasks.forEach(t => {
                 let d = document.createElement('div'); d.className = `daily-card ${cls}`;
-                d.onclick = function() { playSound('click'); openSignOff(this, t.name, false); };
-                d.innerHTML = `<span class="due-badge">${t.time}</span><strong>${t.name}</strong><div class="card-subtext">Tap to complete</div>`;
+                
+                // Show thumbnail if image exists
+                let imgHtml = t.img ? `<img src="${t.img}" class="task-thumb" onerror="this.style.display='none'">` : '';
+
+                d.onclick = function() { playSound('click'); openSignOff(this, t.name, -1, t.img); };
+                
+                d.innerHTML = `
+                    ${imgHtml}
+                    <span class="due-badge">${t.time}</span>
+                    <strong>${t.name}</strong>
+                    <div class="card-subtext">Tap to complete</div>`;
                 c.appendChild(d);
             });
         }
-        function renderVegStack() {
-            const c = document.getElementById('multiList'); c.innerHTML = ""; 
-            let d = document.createElement('div');
-            if(vegStack.current >= vegStack.times.length) {
-                d.className = "daily-card green"; d.innerHTML = `<strong>✅ ${vegStack.name}</strong><div class="card-subtext">Complete</div>`;
-            } else {
-                d.className = "daily-card card-stack";
-                let nt = vegStack.times[vegStack.current];
-                d.innerHTML = `<div class="stack-top-layer"><div class="stack-bar"></div><span class="due-badge">${nt}</span><strong>${vegStack.name}</strong><div class="card-subtext">Tap to sign off (${vegStack.current + 1}/${vegStack.times.length})</div></div>`;
-                d.onclick = function() { playSound('click'); openSignOff(this, `${vegStack.name} (${nt})`, true); };
-            }
-            c.appendChild(d);
+
+        // New function to handle multiple repeatable stacks
+        function renderRepeatableSection() {
+            const c = document.getElementById('multiList'); 
+            c.innerHTML = ""; 
+
+            repeatableStacks.forEach((stack, index) => {
+                let d = document.createElement('div');
+                
+                if(stack.current >= stack.times.length) {
+                    // All instances done
+                    d.className = "daily-card green"; 
+                    d.innerHTML = `<strong>✅ ${stack.name}</strong><div class="card-subtext">All checks complete</div>`;
+                } else {
+                    // Next instance active
+                    d.className = "daily-card card-stack";
+                    let nt = stack.times[stack.current];
+                    let imgHtml = stack.img ? `<img src="${stack.img}" class="task-thumb" onerror="this.style.display='none'">` : '';
+                    
+                    d.innerHTML = `
+                        <div class="stack-top-layer">
+                            <div class="stack-bar"></div>
+                            ${imgHtml}
+                            <span class="due-badge">${nt}</span>
+                            <strong>${stack.name}</strong>
+                            <div class="card-subtext">Tap to sign off (${stack.current + 1}/${stack.times.length})</div>
+                        </div>`;
+                    
+                    // PASSING IMAGE SOURCE HERE
+                    d.onclick = function() { 
+                        playSound('click'); 
+                        openSignOff(this, `${stack.name} (${nt})`, index, stack.img); 
+                    };
+                }
+                c.appendChild(d);
+            });
         }
 
         let autoClosedOpening = false;
@@ -777,6 +927,9 @@
             // Periodically check Blackboard expiry
             loadSavedTicker();
 
+            // Run Overdue Logic
+            checkOverdue();
+
             const mins = (now.getHours()*60)+now.getMinutes();
             if (now.getHours() >= 10 && !autoClosedOpening) {
                 const oList = document.getElementById('openingList');
@@ -786,7 +939,44 @@
             const locked = mins < 1200; // 20:00
             document.getElementById('closingList').classList.toggle('locked', locked);
             updateAllSections(); 
-            setTimeout(updateClock, 10000);
+            // UPDATED INTERVAL AS REQUESTED (5 mins)
+            setTimeout(updateClock, 300000); 
+        }
+
+        // --- NEW OVERDUE LOGIC ---
+        function checkOverdue() {
+            const now = new Date();
+            const currentMins = (now.getHours() * 60) + now.getMinutes();
+
+            document.querySelectorAll('.daily-card').forEach(card => {
+                // Skip if already completed (green) or if it's the "All checks complete" state
+                if (card.classList.contains('green')) return;
+
+                // Find the time badge
+                const badge = card.querySelector('.due-badge');
+                if (badge) {
+                    const timeStr = badge.innerText.trim(); // "14:00"
+                    const [h, m] = timeStr.split(':').map(Number);
+                    const taskMins = (h * 60) + m;
+
+                    // Check if icon exists, if not add it
+                    let icon = card.querySelector('.hazard-icon');
+                    if (!icon) {
+                        icon = document.createElement('div');
+                        icon.className = 'hazard-icon';
+                        icon.innerHTML = '⚠️';
+                        card.appendChild(icon);
+                    }
+
+                    // Logic: If current time > task time + buffer? (Maybe strict deadline).
+                    // User said "not been completed in tile" -> imply strictly past time.
+                    if (currentMins > taskMins) {
+                        card.classList.add('overdue');
+                    } else {
+                        card.classList.remove('overdue');
+                    }
+                }
+            });
         }
 
         function updateAllSections() {
@@ -812,10 +1002,25 @@
             }
         }
 
-        let activeCard, activeTaskName, isStackedTask;
-        function openSignOff(card, name, isStack) {
-            activeCard = card; activeTaskName = name; isStackedTask = isStack;
+        let activeCard, activeTaskName, activeStackIndex;
+        
+        // UPDATED FUNCTION: Now accepts imgSrc
+        function openSignOff(card, name, stackIndex, imgSrc = null) {
+            activeCard = card; 
+            activeTaskName = name; 
+            activeStackIndex = stackIndex; // -1 if not stack
+            
             document.getElementById('signOffPrompt').innerText = `Sign off: ${name}`;
+            
+            // HANDLE IMAGE LOGIC
+            const imgEl = document.getElementById('sign-task-image');
+            if (imgSrc) {
+                imgEl.src = imgSrc;
+                imgEl.style.display = 'block';
+            } else {
+                imgEl.style.display = 'none';
+            }
+
             document.getElementById('initials').value = "";
             document.getElementById('sign-modal').style.display = 'flex';
             document.getElementById('initials').focus();
@@ -825,11 +1030,14 @@
             let init = document.getElementById('initials').value.toUpperCase();
             if(!init) { playSound('error'); return alert("Initials or Face ID required!"); }
             
-            if(isStackedTask) {
-                vegStack.current++; renderVegStack();
+            if(activeStackIndex >= 0) {
+                // Update the specific stack in the array
+                repeatableStacks[activeStackIndex].current++; 
+                renderRepeatableSection();
                 addToLog('TASK_COMPLETE', { task: activeTaskName, staff: init });
             } else {
                 activeCard.classList.add('green');
+                activeCard.classList.remove('overdue'); // Remove red if completed late
                 activeCard.innerHTML = `<strong>✅ ${activeTaskName}</strong><div class="card-subtext">By ${init}</div>`;
                 activeCard.onclick = null;
                 addToLog('TASK_COMPLETE', { task: activeTaskName, staff: init });
