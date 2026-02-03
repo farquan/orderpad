@@ -2,8 +2,6 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="refresh" content="300">
-    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#10b981">
@@ -197,9 +195,10 @@
         }
         .hazard-icon {
             position: absolute;
-            top: -5px;
-            left: -5px;
-            font-size: 28px;
+            top: 38px; /* Positioned below time */
+            right: 10px; /* Aligned to right */
+            left: auto;
+            font-size: 20px; /* Smaller size */
             z-index: 20;
             display: none; 
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
@@ -214,22 +213,14 @@
 
         .daily-card strong { font-size: 14px; display: block; line-height: 1.2; margin-top: 10px; margin-bottom: 2px; color: var(--text-dark); font-weight: 600; }
         .card-subtext { font-size: 10px; color: var(--text-light); margin-top: 0; font-weight: 500; }
-        .due-badge { position: absolute; top: 8px; right: 8px; font-size: 10px; font-weight: 700; background: #374151; color: #e5e7eb; padding: 3px 6px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        
-        /* Task Images - Thumbnail on Card */
-        .task-thumb {
-            position: absolute;
-            right: 5px;
-            bottom: 5px;
-            height: 50px;
-            width: auto;
-            border-radius: 6px;
-            border: 2px solid rgba(255,255,255,0.3);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-            z-index: 5;
-            transition: transform 0.2s;
+        .due-badge { 
+            position: absolute; top: 8px; right: 8px; 
+            font-size: 13px; /* Bigger font */
+            font-weight: 700; background: #374151; color: #e5e7eb; 
+            padding: 4px 8px; border-radius: 6px; 
+            border: 1px solid rgba(255,255,255,0.1); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
         }
-        .task-thumb:hover { transform: scale(1.5); z-index: 10; }
         
         /* Task Image - INSIDE MODAL */
         #sign-task-image {
@@ -379,6 +370,33 @@
         </div>
     </div>
 
+    <div id="add-task-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>➕ Add New Task</h3>
+            
+            <label class="form-label">Task Name</label>
+            <input type="text" id="new-task-name" placeholder="e.g. Sweep Floors">
+            
+            <label class="form-label">Due Time</label>
+            <input type="time" id="new-task-time" style="text-align:center;">
+
+            <label class="form-label">Quick Presets</label>
+            <div class="preset-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <button class="preset-btn" onclick="fillTask('Sweep Floors')">🧹 Sweep</button>
+                <button class="preset-btn" onclick="fillTask('Check Dates')">📅 Dates</button>
+                <button class="preset-btn" onclick="fillTask('Restock Drinks')">🥤 Drinks</button>
+                <button class="preset-btn" onclick="fillTask('Wipe Counters')">🧽 Wipe</button>
+                <button class="preset-btn" onclick="fillTask('Empty Bins')">🗑️ Bins</button>
+                <button class="preset-btn" onclick="fillTask('Mop Floor')">🧼 Mop</button>
+            </div>
+
+            <div style="display:flex;gap:15px; margin-top:20px;">
+                <button class="cancel-btn" onclick="closeModal('add-task-modal')">Cancel</button>
+                <button class="save-btn" onclick="saveNewTask()">Add Task</button>
+            </div>
+        </div>
+    </div>
+
     <div id="payout-modal" class="modal-overlay">
         <div class="modal-box" style="width: 450px;"> 
             <h3>💸 Pay Out</h3>
@@ -480,6 +498,9 @@
         // --- 1. SETTINGS ---
         const MESSAGE_LIFETIME_HOURS = 48; // Messages expire after 48 hours
         
+        // GLOBAL VARIABLE TO TRACK DATE CHANGES
+        let lastCheckedDate = new Date().getDate();
+
         // --- TELEGRAM CONFIG ---
         // Replace these with your actual details!
         const TELEGRAM_BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"; 
@@ -807,7 +828,55 @@
             else { list.classList.add('hidden'); arrow.innerText = '◀'; }
         }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function openAddModal() { alert("Add task functionality placeholder"); }
+        
+        // --- NEW TASK MODAL LOGIC ---
+        function openAddModal() { 
+            document.getElementById('add-task-modal').style.display = 'flex';
+            
+            // Set default time to current time + 1 hour
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            const timeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            
+            document.getElementById('new-task-time').value = timeStr;
+            document.getElementById('new-task-name').value = '';
+            document.getElementById('new-task-name').focus();
+        }
+
+        function fillTask(name) {
+            document.getElementById('new-task-name').value = name;
+        }
+
+        function saveNewTask() {
+            const name = document.getElementById('new-task-name').value.trim();
+            const time = document.getElementById('new-task-time').value;
+
+            if (!name || !time) {
+                playSound('error');
+                alert("Please enter a name and time!");
+                return;
+            }
+
+            const newTask = {
+                name: name,
+                time: time,
+                img: null 
+            };
+
+            // Add to the dayTasks array
+            dayTasks.push(newTask);
+            
+            // Save to LocalStorage for persistence
+            let custom = JSON.parse(localStorage.getItem('customTasks') || '[]');
+            custom.push(newTask);
+            localStorage.setItem('customTasks', JSON.stringify(custom));
+
+            // Refresh the view
+            populateList('dayList', dayTasks, 'day-card');
+            
+            playSound('success');
+            closeModal('add-task-modal');
+        }
 
         const openingTasks = [{name:"Temp Check",time:"10:00"},{name:"Milk/Eggs Stock",time:"10:30"}];
         
@@ -836,10 +905,20 @@
                 times: ["11:00", "15:00", "19:00"],
                 current: 0,
                 img: "onions.jpg"
+            },
+           
+       ];
+
+        // --- ADDED FACE UP TASK HERE ---
+        let dayTasks = [
+            { name: "Bins Emptied", time: "14:00" },
+            { 
+                name: "Face Up (Pull to Front)", 
+                time: "16:00", 
+                img: "faceup.jpg" 
             }
         ];
 
-        let dayTasks = [{name:"Bins Emptied",time:"14:00"}];
         const closingTasks = [{name:"Phone Charge",time:"20:30"},{name:"Freezers Closed",time:"20:30"},{name:"Zettle Charged",time:"20:30"},{name:"Bags Stacked",time:"20:30"},{name:"Till Roll",time:"20:30"},{name:"Bins",time:"20:30"},{name:"Onions/Potatoes",time:"20:45"},{name:"HAACP",time:"21:00"},{name:"Final Temps",time:"21:00"},{name:"Side Door",time:"21:15"}];
 
         window.onload = function() {
@@ -851,6 +930,12 @@
                     time: "17:00",
                     img: "naan.jpg"
                 });
+            }
+
+            // LOAD SAVED CUSTOM TASKS
+            const savedCustom = JSON.parse(localStorage.getItem('customTasks') || '[]');
+            if (savedCustom.length > 0) {
+                dayTasks = dayTasks.concat(savedCustom);
             }
 
             populateList('openingList', openingTasks, 'opening-card');
@@ -867,13 +952,11 @@
             tasks.forEach(t => {
                 let d = document.createElement('div'); d.className = `daily-card ${cls}`;
                 
-                // Show thumbnail if image exists
-                let imgHtml = t.img ? `<img src="${t.img}" class="task-thumb" onerror="this.style.display='none'">` : '';
-
+                // --- IMAGE REMOVED FROM MAIN CARD ---
+                // We still pass t.img to the openSignOff function so it shows in the popup.
                 d.onclick = function() { playSound('click'); openSignOff(this, t.name, -1, t.img); };
                 
                 d.innerHTML = `
-                    ${imgHtml}
                     <span class="due-badge">${t.time}</span>
                     <strong>${t.name}</strong>
                     <div class="card-subtext">Tap to complete</div>`;
@@ -897,12 +980,12 @@
                     // Next instance active
                     d.className = "daily-card card-stack";
                     let nt = stack.times[stack.current];
-                    let imgHtml = stack.img ? `<img src="${stack.img}" class="task-thumb" onerror="this.style.display='none'">` : '';
+                    
+                    // --- IMAGE REMOVED FROM MAIN CARD ---
                     
                     d.innerHTML = `
                         <div class="stack-top-layer">
                             <div class="stack-bar"></div>
-                            ${imgHtml}
                             <span class="due-badge">${nt}</span>
                             <strong>${stack.name}</strong>
                             <div class="card-subtext">Tap to sign off (${stack.current + 1}/${stack.times.length})</div>
@@ -924,6 +1007,13 @@
             document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
             document.getElementById('date-display').innerText = now.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
             
+            // --- MIDNIGHT RESET LOGIC ---
+            // If the date has changed since the last check, refresh page to clear ticks
+            if (now.getDate() !== lastCheckedDate) {
+                location.reload(); 
+            }
+            lastCheckedDate = now.getDate();
+
             // Periodically check Blackboard expiry
             loadSavedTicker();
 
