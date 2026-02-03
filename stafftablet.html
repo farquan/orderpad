@@ -696,6 +696,12 @@
             };
             let logs = JSON.parse(localStorage.getItem('staffLogs')) || [];
             logs.unshift(entry);
+            
+            // Limit to last 150 entries to prevent infinite growth
+            if (logs.length > 150) {
+                logs = logs.slice(0, 150);
+            }
+            
             localStorage.setItem('staffLogs', JSON.stringify(logs));
         }
 
@@ -878,9 +884,86 @@
             closeModal('add-task-modal');
         }
 
+        // --- 8. STATE PERSISTENCE & DAILY RESET ---
+        let appState = {
+            date: new Date().toLocaleDateString(),
+            completedTasks: {}, // Map of "Task Name" -> "INITIALS"
+            stackCounts: []     // Array of integers
+        };
+
+        // Helper to generate the default day tasks dynamically
+        function getDefaultDayTasks() {
+            let tasks = [
+                { name: "Bins Emptied", time: "14:00" },
+                { name: "Face Up (Pull to Front)", time: "16:00", img: "faceup.jpg" }
+            ];
+            
+            // Weekday logic
+            const dayOfWeek = new Date().getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 3 || dayOfWeek === 5) {
+                tasks.push({
+                    name: "Stock Check (Pitta/Naan)",
+                    time: "17:00",
+                    img: "naan.jpg"
+                });
+            }
+            return tasks;
+        }
+
+        // This function wipes data when a new day is detected
+        function resetDailyData() {
+            console.log("New Day Detected! Resetting Board...");
+            
+            // 1. Reset Storage State
+            appState = {
+                date: new Date().toLocaleDateString(),
+                completedTasks: {},
+                stackCounts: new Array(repeatableStacks.length).fill(0)
+            };
+            saveState();
+
+            // 2. Reset In-Memory Stacks
+            repeatableStacks.forEach(s => s.current = 0);
+
+            // 3. Clear Daily Logs (Start fresh for the day)
+            localStorage.removeItem('staffLogs');
+
+            // 4. Clear Custom Tasks (Start fresh for the day)
+            localStorage.removeItem('customTasks');
+
+            // 5. Reset In-Memory Day Tasks to defaults
+            dayTasks = getDefaultDayTasks();
+        }
+
+        function loadState() {
+            const raw = localStorage.getItem('dailyTaskState');
+            const today = new Date().toLocaleDateString();
+            
+            if (raw) {
+                const data = JSON.parse(raw);
+                // Check if the saved state is from today
+                if (data.date === today) {
+                    appState = data;
+                    // Sync stack counts from storage
+                    if (appState.stackCounts && appState.stackCounts.length === repeatableStacks.length) {
+                         repeatableStacks.forEach((s, i) => s.current = appState.stackCounts[i]);
+                    }
+                } else {
+                    // It's a new day (state is old) -> WIPE EVERYTHING
+                    resetDailyData();
+                }
+            } else {
+                // First time ever running -> Initialize
+                resetDailyData();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('dailyTaskState', JSON.stringify(appState));
+        }
+
         const openingTasks = [{name:"Temp Check",time:"10:00"},{name:"Milk/Eggs Stock",time:"10:30"}];
         
-        // --- UPDATED REPEATABLE TASKS ---
         let repeatableStacks = [
             {
                 name: "Check Fruit/Veg",
@@ -906,33 +989,21 @@
                 current: 0,
                 img: "onions.jpg"
             },
-           
        ];
 
-        // --- ADDED FACE UP TASK HERE ---
-        let dayTasks = [
-            { name: "Bins Emptied", time: "14:00" },
-            { 
-                name: "Face Up (Pull to Front)", 
-                time: "16:00", 
-                img: "faceup.jpg" 
-            }
-        ];
+        let dayTasks = []; // Will be populated by onload
 
         const closingTasks = [{name:"Phone Charge",time:"20:30"},{name:"Freezers Closed",time:"20:30"},{name:"Zettle Charged",time:"20:30"},{name:"Bags Stacked",time:"20:30"},{name:"Till Roll",time:"20:30"},{name:"Bins",time:"20:30"},{name:"Onions/Potatoes",time:"20:45"},{name:"HAACP",time:"21:00"},{name:"Final Temps",time:"21:00"},{name:"Side Door",time:"21:15"}];
 
         window.onload = function() {
-            // Logic to add Pitta/Naan only on Sun(0), Wed(3), Fri(5)
-            const dayOfWeek = new Date().getDay();
-            if (dayOfWeek === 0 || dayOfWeek === 3 || dayOfWeek === 5) {
-                dayTasks.push({
-                    name: "Stock Check (Pitta/Naan)",
-                    time: "17:00",
-                    img: "naan.jpg"
-                });
-            }
+            // 1. Initialize Standard Tasks first
+            dayTasks = getDefaultDayTasks();
 
-            // LOAD SAVED CUSTOM TASKS
+            // 2. Load State (Checks for date mismatch)
+            // If date changed, this function calls resetDailyData() which wipes customTasks storage
+            loadState(); 
+
+            // 3. Load Custom Tasks (Only if they still exist after step 2)
             const savedCustom = JSON.parse(localStorage.getItem('customTasks') || '[]');
             if (savedCustom.length > 0) {
                 dayTasks = dayTasks.concat(savedCustom);
@@ -943,23 +1014,33 @@
             populateList('dayList', dayTasks, 'day-card');
             populateList('closingList', closingTasks, 'closing-card');
             updateClock(); 
-            loadSavedTicker(); // Load Expiry Logic
+            loadSavedTicker(); 
             updateAllSections();
         };
 
         function populateList(cid, tasks, cls) {
             const c = document.getElementById(cid); c.innerHTML = ""; 
             tasks.forEach(t => {
-                let d = document.createElement('div'); d.className = `daily-card ${cls}`;
+                let d = document.createElement('div'); 
                 
-                // --- IMAGE REMOVED FROM MAIN CARD ---
-                // We still pass t.img to the openSignOff function so it shows in the popup.
-                d.onclick = function() { playSound('click'); openSignOff(this, t.name, -1, t.img); };
+                // CHECK IF COMPLETED IN SAVED STATE
+                const completionInfo = appState.completedTasks[t.name];
                 
-                d.innerHTML = `
-                    <span class="due-badge">${t.time}</span>
-                    <strong>${t.name}</strong>
-                    <div class="card-subtext">Tap to complete</div>`;
+                if (completionInfo) {
+                    d.className = `daily-card ${cls} green`;
+                    d.innerHTML = `
+                        <span class="due-badge">${t.time}</span>
+                        <strong>✅ ${t.name}</strong>
+                        <div class="card-subtext">By ${completionInfo}</div>`;
+                    // No click handler for completed items
+                } else {
+                    d.className = `daily-card ${cls}`;
+                    d.onclick = function() { playSound('click'); openSignOff(this, t.name, -1, t.img); };
+                    d.innerHTML = `
+                        <span class="due-badge">${t.time}</span>
+                        <strong>${t.name}</strong>
+                        <div class="card-subtext">Tap to complete</div>`;
+                }
                 c.appendChild(d);
             });
         }
@@ -981,8 +1062,6 @@
                     d.className = "daily-card card-stack";
                     let nt = stack.times[stack.current];
                     
-                    // --- IMAGE REMOVED FROM MAIN CARD ---
-                    
                     d.innerHTML = `
                         <div class="stack-top-layer">
                             <div class="stack-bar"></div>
@@ -991,7 +1070,6 @@
                             <div class="card-subtext">Tap to sign off (${stack.current + 1}/${stack.times.length})</div>
                         </div>`;
                     
-                    // PASSING IMAGE SOURCE HERE
                     d.onclick = function() { 
                         playSound('click'); 
                         openSignOff(this, `${stack.name} (${nt})`, index, stack.img); 
@@ -1004,15 +1082,23 @@
         let autoClosedOpening = false;
         function updateClock() {
             const now = new Date();
+            const todayStr = now.toLocaleDateString();
+
             document.getElementById('clock').innerText = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
             document.getElementById('date-display').innerText = now.toLocaleDateString('en-GB', {weekday:'short',day:'numeric',month:'short'});
             
-            // --- MIDNIGHT RESET LOGIC ---
-            // If the date has changed since the last check, refresh page to clear ticks
-            if (now.getDate() !== lastCheckedDate) {
-                location.reload(); 
+            // --- SMART MIDNIGHT RESET LOGIC ---
+            // If the date in memory is different from today, reset the board without reloading
+            if (todayStr !== appState.date) {
+                resetDailyData(); // Clears logs, ticks, custom tasks
+                
+                // Re-render everything with the fresh clean state
+                populateList('openingList', openingTasks, 'opening-card');
+                renderRepeatableSection(); 
+                populateList('dayList', dayTasks, 'day-card');
+                populateList('closingList', closingTasks, 'closing-card');
+                updateAllSections();
             }
-            lastCheckedDate = now.getDate();
 
             // Periodically check Blackboard expiry
             loadSavedTicker();
@@ -1123,13 +1209,26 @@
             if(activeStackIndex >= 0) {
                 // Update the specific stack in the array
                 repeatableStacks[activeStackIndex].current++; 
+                
+                // SAVE STACK STATE
+                appState.stackCounts[activeStackIndex] = repeatableStacks[activeStackIndex].current;
+                saveState();
+
                 renderRepeatableSection();
                 addToLog('TASK_COMPLETE', { task: activeTaskName, staff: init });
             } else {
                 activeCard.classList.add('green');
                 activeCard.classList.remove('overdue'); // Remove red if completed late
-                activeCard.innerHTML = `<strong>✅ ${activeTaskName}</strong><div class="card-subtext">By ${init}</div>`;
+                activeCard.innerHTML = `
+                    <span class="due-badge">${activeCard.querySelector('.due-badge').innerText}</span>
+                    <strong>✅ ${activeTaskName}</strong>
+                    <div class="card-subtext">By ${init}</div>`;
                 activeCard.onclick = null;
+                
+                // SAVE TASK STATE
+                appState.completedTasks[activeTaskName] = init;
+                saveState();
+
                 addToLog('TASK_COMPLETE', { task: activeTaskName, staff: init });
                 
                 const listId = activeCard.parentElement.id;
