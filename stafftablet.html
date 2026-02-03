@@ -39,6 +39,8 @@
             background: var(--bg-gradient);
             background-attachment: fixed;
             background-size: cover;
+            user-select: none;
+            -webkit-user-select: none;
         }
         
         /* HEADER */
@@ -187,12 +189,33 @@
         .daily-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); }
         .daily-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
         
-        /* OVERDUE STYLES (Red + Hazard) */
+        /* --- URGENCY LEVELS --- */
+        
+        /* Level 1: Due Soon (Amber) - Within 15 mins before or after due time */
+        .due-soon {
+            border: 2px solid #fbbf24 !important;
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+        }
+        .due-soon .due-badge {
+            background: #fbbf24 !important;
+            color: #1f2937 !important;
+            border-color: #f59e0b !important;
+        }
+
+        /* Level 2: Overdue (Red) - 15+ mins late */
         .overdue {
             background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
             border: 2px solid #fee2e2 !important;
             animation: pulse-red 2s infinite;
         }
+        
+        /* Level 3: Very Overdue (Dark Red + Fast Pulse) - 60+ mins late */
+        .very-overdue {
+            background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%) !important;
+            border: 2px solid #ff0000 !important;
+            animation: pulse-red 0.8s infinite;
+        }
+
         .hazard-icon {
             position: absolute;
             top: 38px; /* Positioned below time */
@@ -203,7 +226,6 @@
             display: none; 
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
         }
-        .overdue .hazard-icon { display: block; } /* Only show when overdue */
         
         @keyframes pulse-red {
             0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
@@ -500,6 +522,9 @@
         
         // GLOBAL VARIABLE TO TRACK DATE CHANGES
         let lastCheckedDate = new Date().getDate();
+        
+        // UNDO CALLBACK
+        let onPinSuccess = null;
 
         // --- TELEGRAM CONFIG ---
         // Replace these with your actual details!
@@ -705,7 +730,12 @@
             localStorage.setItem('staffLogs', JSON.stringify(logs));
         }
 
-        function openPinModal() {
+        function openPinModal(callback) {
+            if(typeof callback === 'function') {
+                onPinSuccess = callback;
+            } else {
+                onPinSuccess = null; // Default view mode
+            }
             document.getElementById('pin-modal').style.display = 'flex';
             document.getElementById('pin-input').value = '';
             document.getElementById('pin-input').focus();
@@ -714,7 +744,12 @@
         function verifyPin() {
             if (document.getElementById('pin-input').value === "1234") {
                 closeModal('pin-modal');
-                openLogsModal();
+                if (onPinSuccess) {
+                    onPinSuccess(); // Execute Undo
+                    onPinSuccess = null;
+                } else {
+                    openLogsModal(); // Default View Logs
+                }
             } else {
                 playSound('error');
                 alert("Incorrect PIN");
@@ -737,13 +772,13 @@
             const table = document.getElementById('log-table-body');
             table.innerHTML = "";
             let headers = "";
-            if (filterType === 'tasks') headers = "<tr><th>Time</th><th>Task Name</th><th>Staff</th></tr>";
+            if (filterType === 'tasks') headers = "<tr><th>Time</th><th>Task Name</th><th>Action</th></tr>";
             if (filterType === 'safedrops') headers = "<tr><th>Time</th><th>Amount</th><th>Till</th><th>Witness</th></tr>";
             if (filterType === 'payouts') headers = "<tr><th>Time</th><th>Amount</th><th>Supplier</th><th>Till</th></tr>";
             table.innerHTML = headers;
 
             const filtered = logs.filter(l => {
-                if(filterType === 'tasks') return l.type === 'TASK_COMPLETE';
+                if(filterType === 'tasks') return l.type === 'TASK_COMPLETE' || l.type === 'TASK_UNDO';
                 if(filterType === 'safedrops') return l.type === 'SAFE_DROP';
                 if(filterType === 'payouts') return l.type === 'PAYOUT';
                 return false;
@@ -757,7 +792,11 @@
             filtered.forEach(log => {
                 let row = `<tr><td>${log.date} ${log.time}</td>`;
                 if (filterType === 'tasks') {
-                    row += `<td>${log.details.task}</td><td>${log.details.staff}</td>`;
+                    if (log.type === 'TASK_UNDO') {
+                        row += `<td>${log.details.task}</td><td style="color:#ef4444; font-weight:bold;">UNDO</td>`;
+                    } else {
+                        row += `<td>${log.details.task}</td><td>${log.details.staff}</td>`;
+                    }
                 } else if (filterType === 'safedrops') {
                     row += `<td>£${log.details.amount}</td><td>Till ${log.details.till}</td><td>${log.details.witness}</td>`;
                 } else if (filterType === 'payouts') {
@@ -1018,6 +1057,40 @@
             updateAllSections();
         };
 
+        // --- NEW HELPER FOR LONG PRESS ---
+        function addLongPressListener(el, callback) {
+            let timer;
+            let longPressTriggered = false;
+
+            function start() {
+                longPressTriggered = false;
+                timer = setTimeout(() => {
+                    longPressTriggered = true;
+                    if(navigator.vibrate) navigator.vibrate(50);
+                    callback(); 
+                }, 800); // 800ms Hold Time
+            }
+
+            function end() {
+                clearTimeout(timer);
+            }
+
+            el.addEventListener('mousedown', start);
+            el.addEventListener('touchstart', start, {passive: true});
+            el.addEventListener('mouseup', end);
+            el.addEventListener('mouseleave', end);
+            el.addEventListener('touchend', end);
+            el.addEventListener('touchmove', end);
+            
+            // Prevent context menu
+            el.oncontextmenu = function(e) {
+                e.preventDefault();
+                return false;
+            };
+            
+            return () => longPressTriggered; // Returns checker
+        }
+
         function populateList(cid, tasks, cls) {
             const c = document.getElementById(cid); c.innerHTML = ""; 
             tasks.forEach(t => {
@@ -1032,7 +1105,10 @@
                         <span class="due-badge">${t.time}</span>
                         <strong>✅ ${t.name}</strong>
                         <div class="card-subtext">By ${completionInfo}</div>`;
-                    // No click handler for completed items
+                    
+                    // Add Long Press Undo for Completed Items
+                    addLongPressListener(d, () => performUndo(t.name, -1));
+                    
                 } else {
                     d.className = `daily-card ${cls}`;
                     d.onclick = function() { playSound('click'); openSignOff(this, t.name, -1, t.img); };
@@ -1053,6 +1129,10 @@
             repeatableStacks.forEach((stack, index) => {
                 let d = document.createElement('div');
                 
+                // Add Long Press Listener for UNDO on Stacks
+                // We use a small closure to handle the click vs long-press conflict
+                const checkLongPress = addLongPressListener(d, () => performUndo(stack.name, index));
+
                 if(stack.current >= stack.times.length) {
                     // All instances done
                     d.className = "daily-card green"; 
@@ -1071,11 +1151,44 @@
                         </div>`;
                     
                     d.onclick = function() { 
+                        if (checkLongPress()) return; // Stop click if long press happened
                         playSound('click'); 
                         openSignOff(this, `${stack.name} (${nt})`, index, stack.img); 
                     };
                 }
                 c.appendChild(d);
+            });
+        }
+
+        // --- UNDO LOGIC ---
+        function performUndo(name, stackIndex) {
+            openPinModal(() => {
+                if (stackIndex >= 0) {
+                    // Undo Stack (Decrement)
+                    if (repeatableStacks[stackIndex].current > 0) {
+                        repeatableStacks[stackIndex].current--;
+                        appState.stackCounts[stackIndex] = repeatableStacks[stackIndex].current;
+                        saveState();
+                        renderRepeatableSection();
+                        addToLog('TASK_UNDO', { task: name, details: "Stack Decrement" });
+                        alert(`Rewound: ${name}`);
+                    }
+                } else {
+                    // Undo Single Task (Un-complete)
+                    if (appState.completedTasks[name]) {
+                        delete appState.completedTasks[name];
+                        saveState();
+                        
+                        // Brute-force re-render lists
+                        populateList('openingList', openingTasks, 'opening-card');
+                        populateList('dayList', dayTasks, 'day-card');
+                        populateList('closingList', closingTasks, 'closing-card');
+                        updateAllSections();
+                        
+                        addToLog('TASK_UNDO', { task: name, details: "Marked Incomplete" });
+                        playSound('success');
+                    }
+                }
             });
         }
 
@@ -1119,37 +1232,53 @@
             setTimeout(updateClock, 300000); 
         }
 
-        // --- NEW OVERDUE LOGIC ---
+        // --- NEW TRAFFIC LIGHT OVERDUE LOGIC ---
         function checkOverdue() {
             const now = new Date();
             const currentMins = (now.getHours() * 60) + now.getMinutes();
 
             document.querySelectorAll('.daily-card').forEach(card => {
-                // Skip if already completed (green) or if it's the "All checks complete" state
+                // Skip if already completed
                 if (card.classList.contains('green')) return;
 
-                // Find the time badge
                 const badge = card.querySelector('.due-badge');
                 if (badge) {
-                    const timeStr = badge.innerText.trim(); // "14:00"
+                    const timeStr = badge.innerText.trim(); // e.g., "14:00"
                     const [h, m] = timeStr.split(':').map(Number);
                     const taskMins = (h * 60) + m;
+                    const diff = currentMins - taskMins; // Positive = late, Negative = early
 
-                    // Check if icon exists, if not add it
+                    // Create icon if missing
                     let icon = card.querySelector('.hazard-icon');
                     if (!icon) {
                         icon = document.createElement('div');
                         icon.className = 'hazard-icon';
-                        icon.innerHTML = '⚠️';
                         card.appendChild(icon);
                     }
 
-                    // Logic: If current time > task time + buffer? (Maybe strict deadline).
-                    // User said "not been completed in tile" -> imply strictly past time.
-                    if (currentMins > taskMins) {
+                    // Reset all states first
+                    card.classList.remove('due-soon', 'overdue', 'very-overdue');
+                    icon.style.display = 'none';
+
+                    // --- TRAFFIC LIGHT LOGIC ---
+                    if (diff >= 60) {
+                        // Level 3: Very Overdue (60+ mins late) -> Dark Red + Fire
+                        card.classList.add('very-overdue');
+                        icon.innerHTML = '🔥';
+                        icon.style.display = 'block';
+                    } 
+                    else if (diff >= 15) {
+                        // Level 2: Overdue (15+ mins late) -> Red + Warning
                         card.classList.add('overdue');
-                    } else {
-                        card.classList.remove('overdue');
+                        icon.innerHTML = '⚠️';
+                        icon.style.display = 'block';
+                    } 
+                    else if (diff >= -15) {
+                        // Level 1: Due Soon / Grace Period (15 mins before <-> 15 mins after) -> Amber + Clock
+                        // This catches everything from 13:45 to 14:15 for a 14:00 task
+                        card.classList.add('due-soon');
+                        icon.innerHTML = '⏰';
+                        icon.style.display = 'block';
                     }
                 }
             });
